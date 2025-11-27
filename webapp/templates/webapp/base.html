@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>PizzaMania</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes slideIn {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideOut {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+        }
+        .toast-enter {
+            animation: slideIn 0.3s ease-out;
+        }
+        .toast-exit {
+            animation: slideOut 0.3s ease-in;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="toast-enter px-6 py-4 rounded-lg shadow-lg text-white {% if message.tags == 'error' %}bg-red-600{% else %}bg-green-600{% endif %} max-w-md">
+                <div class="flex items-center justify-between">
+                    <span>{{ message }}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+                        ✕
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <script>
+        // Auto-hide toasts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const toasts = document.querySelectorAll('#toast-container > div');
+            toasts.forEach(function(toast) {
+                setTimeout(function() {
+                    toast.classList.remove('toast-enter');
+                    toast.classList.add('toast-exit');
+                    setTimeout(function() {
+                        toast.remove();
+                    }, 300);
+                }, 5000);
+            });
+        });
+    </script>
+
+    <!-- Верхний навбар 1 -->
+    <nav class="bg-white shadow p-4 flex justify-between items-center text-sm">
+        <div class="flex space-x-6">
+            <a href="{% url 'about' %}">О нас</a>
+            <a href="{% url 'contacts' %}">Контакты</a>
+            <a href="{% url 'jobs' %}">Вакансии</a>
+        </div>
+
+        <div class="flex space-x-4 items-center">
+            {% if user.is_authenticated %}
+                <span class="text-gray-700">Привет, {{ user.first_name }}!</span>
+                <a href="{% url 'logout' %}" class="px-3 py-1 border rounded hover:bg-gray-100">Выйти</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="px-3 py-1 border rounded hover:bg-gray-100">Войти</a>
+                <a href="{% url 'register' %}" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">Регистрация</a>
+            {% endif %}
+            <select class="border rounded px-2 py-1">
+                <option>RU</option>
+                <option>EN</option>
+                <option>KZ</option>
+            </select>
+        </div>
+    </nav>
+
+    <!-- Верхний навбар 2 -->
+    <nav class="bg-red-600 text-white p-4 flex justify-between items-center sticky top-0 z-50">
+        <a href="{% url 'home' %}" class="text-xl font-bold hover:text-gray-200">🍕 PizzaMania</a>
+        <div class="space-x-4 text-sm">
+            {% for category in categories %}
+            <a href="{% url 'home' %}#{{ category.slug }}" class="hover:text-gray-200">{{ category.name }}</a>
+            {% endfor %}
+        </div>
+        <a href="{% url 'cart_view' %}" class="text-xl hover:text-gray-200 cursor-pointer">🛒</a>
+    </nav>
+
+    {% block content %}{% endblock %}
+
+    <!-- Футер -->
+    <footer class="bg-gray-800 text-white p-6 mt-10">
+        <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div>
+                <h3 class="font-bold mb-2">Адрес</h3>
+                <p>г. Алматы, ул. Достык 12</p>
+            </div>
+            <div>
+                <h3 class="font-bold mb-2">Контакты</h3>
+                <p>Тел: +7 777 123 4567</p>
+                <p>Email: info@pizzamania.kz</p>
+            </div>
+            <div>
+                <h3 class="font-bold mb-2">Мы в соцсетях</h3>
+                <p>Instagram: @pizzamania_kz</p>
+                <p>Telegram: @pizzamania</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
