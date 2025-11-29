@@ -27,7 +27,7 @@ class ProductAdmin(admin.ModelAdmin):
         # Автоматически добавляем категорию "Акции" если есть скидка
         if obj.discount > 0:
             promo_category, created = Category.objects.get_or_create(
-                slug='akcii',
+                slug='offers',
                 defaults={'name': 'Акции'}
             )
             if promo_category not in obj.categories.all():
@@ -35,7 +35,7 @@ class ProductAdmin(admin.ModelAdmin):
         else:
             # Удаляем категорию "Акции" если скидки нет
             try:
-                promo_category = Category.objects.get(slug='akcii')
+                promo_category = Category.objects.get(slug='offers')
                 if promo_category in obj.categories.all():
                     obj.categories.remove(promo_category)
             except Category.DoesNotExist:

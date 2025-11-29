@@ -7,38 +7,71 @@
 
         <form method="POST">
             {% csrf_token %}
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-sm font-medium mb-2">Имя *</label>
-                    <input type="text" name="first_name" value="{{ user_data.first_name }}" required class="w-full border rounded px-4 py-2">
+            {% if user.is_authenticated %}
+                <div class="bg-gray-50 p-4 rounded mb-4">
+                    <p class="text-sm text-gray-700">На этот адрес доставить?</p>
+                    <p class="font-medium">{{ user_data.street }}{% if user_data.entrance %}, подъезд {{ user_data.entrance }}{% endif %}{% if user_data.apartment %}, кв. {{ user_data.apartment }}{% endif %}</p>
+                    <label class="inline-flex items-center mt-3">
+                        <input id="edit-address-toggle" type="checkbox" class="mr-2">
+                        <span class="text-sm text-gray-600">Изменить адрес</span>
+                    </label>
+                    <input type="hidden" id="edit-address-input" name="edit_address" value="0">
                 </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">Фамилия *</label>
-                    <input type="text" name="last_name" value="{{ user_data.last_name }}" required class="w-full border rounded px-4 py-2">
-                </div>
-            </div>
 
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-2">Телефон *</label>
-                <input type="tel" name="phone" value="{{ user_data.phone }}" required placeholder="+7 777 123 4567" class="w-full border rounded px-4 py-2">
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-2">Улица *</label>
-                <input type="text" name="street" value="{{ user_data.street }}" required placeholder="ул. Достык 12" class="w-full border rounded px-4 py-2">
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-sm font-medium mb-2">Подъезд</label>
-                    <input type="text" name="entrance" value="{{ user_data.entrance }}" placeholder="Опционально" class="w-full border rounded px-4 py-2">
+                <div id="edit-address" class="hidden mb-4">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">Улица</label>
+                        <input type="text" name="street" value="{{ user_data.street }}" class="w-full border rounded px-4 py-2">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Подъезд</label>
+                            <input type="text" name="entrance" value="{{ user_data.entrance }}" class="w-full border rounded px-4 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Квартира</label>
+                            <input type="text" name="apartment" value="{{ user_data.apartment }}" class="w-full border rounded px-4 py-2">
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">Квартира</label>
-                    <input type="text" name="apartment" value="{{ user_data.apartment }}" placeholder="Опционально" class="w-full border rounded px-4 py-2">
+
+                <input type="hidden" name="first_name" value="{{ user_data.first_name }}">
+                <input type="hidden" name="last_name" value="{{ user_data.last_name }}">
+                <input type="hidden" name="phone" value="{{ user_data.phone }}">
+
+            {% else %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Имя *</label>
+                        <input type="text" name="first_name" value="{{ user_data.first_name }}" required class="w-full border rounded px-4 py-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Фамилия *</label>
+                        <input type="text" name="last_name" value="{{ user_data.last_name }}" required class="w-full border rounded px-4 py-2">
+                    </div>
                 </div>
-            </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Телефон *</label>
+                    <input type="tel" name="phone" value="{{ user_data.phone }}" required placeholder="+7 777 123 4567" class="w-full border rounded px-4 py-2">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Улица *</label>
+                    <input type="text" name="street" value="{{ user_data.street }}" required placeholder="ул. Достык 12" class="w-full border rounded px-4 py-2">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Подъезд</label>
+                        <input type="text" name="entrance" value="{{ user_data.entrance }}" placeholder="Опционально" class="w-full border rounded px-4 py-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Квартира</label>
+                        <input type="text" name="apartment" value="{{ user_data.apartment }}" placeholder="Опционально" class="w-full border rounded px-4 py-2">
+                    </div>
+                </div>
+            {% endif %}
 
             <div class="mb-6">
                 <label class="block text-sm font-medium mb-2">Комментарий курьеру</label>
@@ -49,6 +82,20 @@
                 Подтвердить заказ
             </button>
         </form>
+
+        <script>
+            const toggle = document.getElementById('edit-address-toggle');
+            const editInput = document.getElementById('edit-address-input');
+            if (toggle) {
+                toggle.addEventListener('change', function() {
+                    const block = document.getElementById('edit-address');
+                    if (block) block.classList.toggle('hidden');
+                    if (editInput) {
+                        editInput.value = toggle.checked ? '1' : '0';
+                    }
+                });
+            }
+        </script>
     </div>
 </main>
 {% endblock %}

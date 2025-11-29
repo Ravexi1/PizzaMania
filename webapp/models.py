@@ -45,23 +45,6 @@ class Product(models.Model):
     
 
 
-
-class Review(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews', verbose_name="Продукт")
-    name = models.CharField(max_length=100, verbose_name="Имя")
-    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)], verbose_name="Оценка")
-    comment = models.TextField(verbose_name="Отзыв")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата")
-    
-    class Meta:
-        verbose_name = "Отзыв"
-        verbose_name_plural = "Отзывы"
-        ordering = ['-created_at']
-    
-    def __str__(self):
-        return f"{self.name} - {self.product.name} ({self.rating}★)"
-
-
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile', verbose_name="Пользователь")
     phone = models.CharField(max_length=20, verbose_name="Телефон")
@@ -118,3 +101,23 @@ class OrderItem(models.Model):
     
     def __str__(self):
         return f"{self.product.name} x {self.quantity}"
+
+
+class Review(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews', verbose_name="Продукт")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews', null=True, blank=True, verbose_name="Пользователь")
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='reviews', null=True, blank=True, verbose_name="Заказ")
+    name = models.CharField(max_length=100, verbose_name="Имя")
+    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)], verbose_name="Оценка")
+    comment = models.TextField(verbose_name="Отзыв")
+    photo = models.ImageField(upload_to='reviews/', blank=True, null=True, verbose_name="Фото")
+    admin_comment = models.TextField(blank=True, default='', verbose_name="Комментарий администратора")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата")
+    
+    class Meta:
+        verbose_name = "Отзыв"
+        verbose_name_plural = "Отзывы"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.name} - {self.product.name} ({self.rating}★)"
