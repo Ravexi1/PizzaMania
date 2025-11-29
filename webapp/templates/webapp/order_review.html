@@ -1,0 +1,154 @@
+{% extends 'webapp/base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<main class="max-w-2xl mx-auto py-10">
+    <h1 class="text-3xl font-bold mb-6">Оставить отзыв на заказ #{{ order.id }}</h1>
+
+    <form method="POST" enctype="multipart/form-data" class="bg-white rounded-lg shadow-lg p-8" id="reviewForm">
+        {% csrf_token %}
+
+        <!-- Товары в заказе -->
+        <div class="mb-8">
+            <h2 class="text-xl font-bold mb-4">Товары в заказе:</h2>
+            <div class="space-y-6 border-b pb-6 mb-6">
+                {% for item in order.items.all %}
+                <div class="flex gap-4 pb-4 border-b last:border-b-0">
+                    <!-- Изображение товара -->
+                    {% if item.product.image %}
+                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="w-24 h-24 object-cover rounded">
+                    {% else %}
+                    <div class="w-24 h-24 bg-gray-200 rounded flex items-center justify-center">
+                        <span class="text-gray-400 text-xs">Нет фото</span>
+                    </div>
+                    {% endif %}
+
+                    <!-- Информация о товаре и оценка -->
+                    <div class="flex-1">
+                        <h3 class="text-lg font-bold mb-2">{{ item.product.name }}</h3>
+                        <p class="text-sm text-gray-600 mb-3">{{ item.quantity }} × {{ item.price }} ₸</p>
+
+                        <!-- Оценка товара (1-5 звезд с hover эффектом) -->
+                        <div class="flex items-center gap-3">
+                            <label class="text-sm font-semibold">Оценка:</label>
+                            <div class="flex gap-2 star-rating" data-product-id="{{ item.product.id }}">
+                                {% for star in "12345" %}
+                                <label class="cursor-pointer group relative">
+                                    <input type="radio" name="rating_{{ item.product.id }}" value="{{ star }}" required class="hidden" data-star="{{ star }}">
+                                    <span class="text-3xl text-gray-300 hover:text-yellow-400 transition-colors duration-100 star-icon" data-value="{{ star }}">★</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            <span class="text-sm text-red-600 error-message" data-product="{{ item.product.id }}" style="display:none;">
+                                Требуется оценка
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Общие комментарий и фото для всех товаров -->
+        <div class="mb-8">
+            <h2 class="text-xl font-bold mb-4">Отзыв на заказ</h2>
+
+            <!-- Комментарий -->
+            <div class="mb-6">
+                <label class="block text-sm font-semibold mb-2">Комментарий (необязательно):</label>
+                <textarea name="comment" rows="5" placeholder="Поделитесь впечатлением о заказе..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"></textarea>
+            </div>
+
+            <!-- Фото -->
+            <div class="mb-6">
+                <label class="block text-sm font-semibold mb-2">Фото (необязательно):</label>
+                <input type="file" name="photo" accept="image/*" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500">
+            </div>
+        </div>
+
+        <!-- Кнопки действия -->
+        <div class="flex gap-4">
+            <button type="submit" class="flex-1 bg-red-600 text-white py-3 rounded-lg font-bold hover:bg-red-700 transition">
+                Отправить отзыв
+            </button>
+            <a href="{% url 'order_history' %}" class="flex-1 bg-gray-300 text-gray-800 py-3 rounded-lg font-bold hover:bg-gray-400 transition text-center">
+                Отменить
+            </a>
+        </div>
+    </form>
+</main>
+
+<script>
+// Улучшенный UI для звёзд с правильным hover эффектом
+document.querySelectorAll('.star-rating').forEach(container => {
+    const productId = container.dataset.productId;
+    const stars = container.querySelectorAll('.star-icon');
+    const inputs = container.querySelectorAll('input[type="radio"]');
+    const errorMsg = document.querySelector(`.error-message[data-product="${productId}"]`);
+    
+    // Функция для обновления отображения звёзд
+    function updateStars(count) {
+        stars.forEach((star, index) => {
+            if (index < count) {
+                star.classList.remove('text-gray-300');
+                star.classList.add('text-yellow-400');
+            } else {
+                star.classList.add('text-gray-300');
+                star.classList.remove('text-yellow-400');
+            }
+        });
+    }
+    
+    // Hover - подсвечивает звёзды до той которую навели
+    stars.forEach((star, index) => {
+        star.addEventListener('mouseenter', () => {
+            updateStars(index + 1);
+        });
+    });
+    
+    // Уход мышки - показывает выбранное значение
+    container.addEventListener('mouseleave', () => {
+        const selected = container.querySelector('input[type="radio"]:checked');
+        if (selected) {
+            updateStars(parseInt(selected.value));
+        } else {
+            updateStars(0);
+        }
+    });
+    
+    // Клик - выбирает звезду
+    inputs.forEach((input, index) => {
+        input.addEventListener('change', () => {
+            updateStars(index + 1);
+            errorMsg.style.display = 'none';
+        });
+    });
+});
+
+// Валидация формы
+document.getElementById('reviewForm').addEventListener('submit', function(e) {
+    let isValid = true;
+    let errorFound = false;
+    
+    document.querySelectorAll('.star-rating').forEach(container => {
+        const productId = container.dataset.productId;
+        const selected = container.querySelector('input[type="radio"]:checked');
+        const errorMsg = document.querySelector(`.error-message[data-product="${productId}"]`);
+        
+        if (!selected) {
+            isValid = false;
+            errorMsg.style.display = 'inline';
+            errorFound = true;
+        } else {
+            errorMsg.style.display = 'none';
+        }
+    });
+    
+    if (!isValid) {
+        e.preventDefault();
+        alert('⚠️ Пожалуйста, оцените ВСЕ товары перед отправкой отзыва!');
+    }
+});
+</script>
+{% endblock %}
+

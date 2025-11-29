@@ -34,35 +34,104 @@
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
-    <!-- Toast Notifications -->
+    <!-- Toast Notifications (only show if there are messages) -->
+    {% if messages %}
     <div id="toast-container" class="fixed inset-x-0 top-6 z-[9999] flex flex-col items-center space-y-2">
-        {% if messages %}
-            {% for message in messages %}
-            <div class="toast-enter px-6 py-4 rounded-lg shadow-lg text-white {% if message.tags == 'error' %}bg-red-600{% else %}bg-green-600{% endif %} max-w-md pointer-events-auto">
+        {% for message in messages %}
+            {% if 'toast' in message.tags %}
+            <div data-message="{{ message|escapejs }}" class="toast-enter px-6 py-4 rounded-lg shadow-lg text-white {% if 'error' in message.tags %}bg-red-600{% else %}bg-green-600{% endif %} max-w-md pointer-events-auto">
                 <div class="flex items-center justify-between">
                     <span>{{ message }}</span>
-                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+                    <button class="ml-4 text-white hover:text-gray-200" onclick="(function(btn){const toast=btn.parentElement.parentElement; const msg = toast.getAttribute('data-message') || toast.textContent.trim(); toast.remove(); try{ let s = JSON.parse(sessionStorage.getItem('shown_toasts')||'[]').filter(m=>m!==msg); sessionStorage.setItem('shown_toasts', JSON.stringify(s)); }catch(e){} })(this)">
                         ✕
                     </button>
                 </div>
             </div>
-            {% endfor %}
-        {% endif %}
+            {% endif %}
+        {% endfor %}
     </div>
+    {% endif %}
 
     <script>
-        // Auto-hide toasts after 5 seconds
+        // If we're in admin area, do not show frontend toast notifications
+        if (window.location && window.location.pathname && window.location.pathname.indexOf('/admin') === 0) {
+            // Remove toast container if present and skip toast logic
+            var tc = document.getElementById('toast-container');
+            if (tc) tc.remove();
+        }
+
+        // Clear sessionStorage toast tracking on full page reload to prevent stale messages
+        // This ensures toasts don't carry over across logout/login or different user sessions
+        if (performance && performance.navigation && performance.navigation.type === 1) {
+            try { sessionStorage.removeItem('shown_toasts'); } catch (e) {}
+        }
+
+        // Auto-hide toasts after 2 seconds and avoid duplicate showing across quick navigations
         document.addEventListener('DOMContentLoaded', function() {
-            const toasts = document.querySelectorAll('#toast-container > div');
+            // Use sessionStorage to keep track of messages already shown in this tab
+            const STORAGE_KEY = 'shown_toasts';
+            let shown = [];
+            try {
+                shown = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '[]');
+            } catch (e) {
+                shown = [];
+            }
+
+            const toasts = Array.from(document.querySelectorAll('#toast-container > div'));
             toasts.forEach(function(toast) {
+                const msg = toast.getAttribute('data-message') || toast.textContent.trim();
+
+                // If this message was already shown recently in this tab, remove it immediately
+                if (shown.includes(msg)) {
+                    toast.remove();
+                    return;
+                }
+
+                // Mark as shown and save
+                shown.push(msg);
+                try {
+                    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(shown));
+                } catch (e) {
+                    // ignore storage errors
+                }
+
+                // Auto-hide animation
                 setTimeout(function() {
                     toast.classList.remove('toast-enter');
                     toast.classList.add('toast-exit');
                     setTimeout(function() {
+                        // Remove DOM element and also remove from shown list after a short delay so
+                        // the same message can appear again in a later, non-immediate navigation.
                         toast.remove();
+                        // Remove message from sessionStorage after it has been hidden
+                        try {
+                            shown = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '[]').filter(m => m !== msg);
+                            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(shown));
+                        } catch (e) {}
                     }, 300);
-                }, 5000);
+                }, 2000);
             });
+        });
+    </script>
+
+    <!-- Cart sync with localStorage: persist and restore cart across logout/login -->
+    <script>
+        // On page load, restore cart from localStorage if it exists
+        // This helps preserve cart across browser sessions
+        document.addEventListener('DOMContentLoaded', function() {
+            // Save current cart state to localStorage for persistence
+            const cartItems = [];
+            document.querySelectorAll('[data-product-id]').forEach(item => {
+                cartItems.push({
+                    id: item.dataset.productId,
+                    qty: item.querySelector('.quantity-input')?.value || 1
+                });
+            });
+            if (cartItems.length > 0) {
+                try {
+                    localStorage.setItem('pizzamania_cart', JSON.stringify(cartItems));
+                } catch (e) {}
+            }
         });
     </script>
 

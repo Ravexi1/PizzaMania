@@ -1,26 +1,60 @@
 {% extends 'webapp/base.html' %}
+{% load custom_filters %}
 
 {% block content %}
 <main class="max-w-5xl mx-auto py-10">
     <h1 class="text-3xl font-bold mb-8">Корзина</h1>
 
-    {% if messages %}
-        {% for message in messages %}
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-            {{ message }}
-        </div>
-        {% endfor %}
-    {% endif %}
-
     {% if cart_items %}
     <div class="bg-white rounded-lg shadow-lg p-6">
-        <div class="space-y-4">
+        <!-- Скрытая форма с CSRF для AJAX -->
+        <form id="csrf-form" style="display:none">{% csrf_token %}</form>
+
+        <style>
+            /* Затемнение карточки без затемнения кнопки */
+            .removed { background-color: #eef2f6; padding: 1rem; position: relative; min-height: 150px; display: flex; align-items: center; justify-content: center; }
+            .removed .product-name,
+            .removed .quantity-display,
+            .removed .subtotal-display,
+            .removed .product-image { opacity: 0.45; filter: grayscale(100%); }
+            .remove-btn { display:inline-block; padding:0.4rem 0.6rem; border:1px solid #e5e7eb; border-radius:6px; background:white; }
+            .remove-btn.restore { 
+                padding: 0.75rem 1.5rem;
+                background: #10b981;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-weight: 500;
+                font-size: 1rem;
+                z-index: 10;
+            }
+            .remove-btn.restore:hover { background: #059669; }
+
+            /* Убрать стрелки в Chrome, Safari, Edge */
+            input[type="number"]::-webkit-inner-spin-button,
+            input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+            }
+
+            /* Убрать стрелки в Firefox */
+            input[type="number"] {
+            -moz-appearance: textfield;
+            }
+
+        </style>
+
+        <div class="space-y-4" id="cart-items">
             {% for item in cart_items %}
-            <div class="flex items-center gap-6 border-b pb-4">
+            <div class="cart-item flex items-center gap-6 border-b py-4" data-product-id="{{ item.product.pk }}" data-unit-price="{{ item.price }}">
                 <!-- Изображение -->
                 <div class="w-24 h-24">
                     {% if item.product.image %}
-                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="w-full h-full object-cover rounded">
+                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="product-image w-full h-full object-cover rounded">
                     {% else %}
                     <div class="w-full h-full bg-gray-200 rounded flex items-center justify-center">
                         <span class="text-gray-400 text-xs">Нет фото</span>
@@ -30,36 +64,30 @@
 
                 <!-- Информация о товаре -->
                 <div class="flex-1">
-                    <h3 class="font-bold text-lg">{{ item.product.name }}</h3>
-                    <p class="text-gray-600">{{ item.price }} ₸ × {{ item.quantity }}</p>
+                    <h3 class="font-bold text-lg product-name">{{ item.product.name }}</h3>
+                    <p class="text-gray-600">{{ item.price|format_price }} ₸ × <span class="quantity-display">{{ item.quantity }}</span></p>
                 </div>
 
                 <!-- Количество -->
-                <form method="POST" action="{% url 'update_cart' item.product.pk %}" class="flex items-center gap-2">
-                    {% csrf_token %}
-                    <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="border rounded px-3 py-1 w-20">
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700">
-                        Обновить
-                    </button>
-                </form>
-
+                <div class="flex items-center gap-2">
+                    <button type="button" class="decrease-qty border rounded px-3 py-1 hover:bg-gray-100">−</button>
+                    <input type="number" value="{{ item.quantity }}" min="1" class="border rounded px-3 py-1 w-20 quantity-input text-center" data-product-id="{{ item.product.pk }}">
+                    <button type="button" class="increase-qty border rounded px-3 py-1 hover:bg-gray-100">+</button>
+                </div>
                 <!-- Сумма -->
                 <div class="text-right">
-                    <p class="text-xl font-bold text-red-600">{{ item.subtotal }} ₸</p>
-                    <form method="POST" action="{% url 'remove_from_cart' item.product.pk %}">
-                        {% csrf_token %}
-                        <button type="submit" class="text-red-600 hover:text-red-800 text-sm">Удалить</button>
-                    </form>
+                    <p class="text-xl font-bold text-red-600 subtotal-display">{{ item.subtotal|format_price }} ₸</p>
+                    <button type="button" class="remove-btn text-red-600 text-sm mt-2" data-product-id="{{ item.product.pk }}">Удалить</button>
                 </div>
             </div>
             {% endfor %}
         </div>
 
         <!-- Итого -->
-        <div class="mt-6 pt-6 border-t">
+        <div class="mt-6 pt-6">
             <div class="flex justify-between items-center mb-6">
                 <span class="text-2xl font-bold">Итого:</span>
-                <span class="text-3xl font-bold text-red-600">{{ total }} ₸</span>
+                <span class="text-3xl font-bold text-red-600" id="total-price">{{ total }} ₸</span>
             </div>
             <a href="{% url 'checkout' %}" class="block w-full bg-red-600 text-white text-center py-4 rounded-lg text-xl font-semibold hover:bg-red-700">
                 Оформить заказ
@@ -75,4 +103,144 @@
     </div>
     {% endif %}
 </main>
+<script>
+    // helper: получить CSRF токен
+    function getCsrfToken() {
+        const el = document.querySelector('#csrf-form [name=csrfmiddlewaretoken]');
+        return el ? el.value : '';
+    }
+
+    // форматирование цены (убирает лишние нули)
+    function formatPrice(value) {
+        const v = parseFloat(value);
+        if (Number.isInteger(v)) return v.toString();
+        return v.toString().replace(/\.?0+$/, '');
+    }
+
+    function recalcItem(item) {
+        const qtyInput = item.querySelector('.quantity-input');
+        const qty = Math.max(1, parseInt(qtyInput.value) || 1);
+        qtyInput.value = qty;
+        const unit = parseFloat(item.dataset.unitPrice || 0);
+        const subtotal = unit * qty;
+        item.querySelector('.subtotal-display').textContent = formatPrice(subtotal) + ' ₸';
+        item.querySelector('.quantity-display').textContent = qty;
+    }
+
+    function recalcTotal() {
+        let total = 0;
+        document.querySelectorAll('.cart-item').forEach(item => {
+            if (item.classList.contains('removed')) return;
+            const unit = parseFloat(item.dataset.unitPrice || 0);
+            const qty = parseInt(item.querySelector('.quantity-input').value) || 0;
+            total += unit * qty;
+        });
+        document.getElementById('total-price').textContent = formatPrice(total) + ' ₸';
+    }
+
+    // Events: +/- buttons
+    document.querySelectorAll('.increase-qty').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const item = this.closest('.cart-item');
+            const input = item.querySelector('.quantity-input');
+            input.value = (parseInt(input.value) || 0) + 1;
+            recalcItem(item);
+            recalcTotal();
+            sendUpdate(item);
+        });
+    });
+    document.querySelectorAll('.decrease-qty').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const item = this.closest('.cart-item');
+            const input = item.querySelector('.quantity-input');
+            const newVal = Math.max(1, (parseInt(input.value) || 1) - 1);
+            input.value = newVal;
+            recalcItem(item);
+            recalcTotal();
+            sendUpdate(item);
+        });
+    });
+
+    // direct input change
+    document.querySelectorAll('.quantity-input').forEach(input => {
+        input.addEventListener('change', function() {
+            const item = this.closest('.cart-item');
+            if (!item) return;
+            recalcItem(item);
+            recalcTotal();
+            sendUpdate(item);
+        });
+    });
+
+    function sendUpdate(item) {
+        const productId = item.dataset.productId;
+        const qty = item.querySelector('.quantity-input').value;
+        const csrf = getCsrfToken();
+        fetch(`/cart/update/${productId}/`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrf,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: `quantity=${encodeURIComponent(qty)}`
+        }).catch(() => {});
+    }
+
+    // remove / restore
+    document.querySelectorAll('.remove-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const item = this.closest('.cart-item');
+            if (!item) return;
+            const productId = item.dataset.productId;
+            const btnEl = this;
+            // if already removed (restore)
+            if (item.classList.contains('removed')) {
+                // restore locally
+                item.classList.remove('removed');
+                btnEl.textContent = 'Удалить';
+                btnEl.classList.remove('restore');
+                btnEl.classList.remove('text-green-600');
+                btnEl.classList.add('text-red-600');
+                item.querySelectorAll('button.increase-qty, button.decrease-qty, input.quantity-input').forEach(el => el.disabled = false);
+                // send add request to server to actually restore into session
+                const qty = item.querySelector('.quantity-input').value || 1;
+                const csrf = getCsrfToken();
+                fetch(`/cart/add/${productId}/`, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': csrf,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                    body: `quantity=${encodeURIComponent(qty)}`
+                }).catch(() => {});
+            } else {
+                // mark removed visually (do not use parent opacity)
+                item.classList.add('removed');
+                btnEl.textContent = 'Восстановить';
+                btnEl.classList.add('restore');
+                btnEl.classList.remove('text-red-600');
+                btnEl.classList.add('text-green-600');
+                item.querySelectorAll('button.increase-qty, button.decrease-qty, input.quantity-input').forEach(el => el.disabled = true);
+                // send remove request to server
+                const csrf = getCsrfToken();
+                fetch(`/cart/remove/${productId}/`, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': csrf,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                }).catch(() => {});
+            }
+            recalcTotal();
+        });
+    });
+
+</script>
+</script>
 {% endblock %}

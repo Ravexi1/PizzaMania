@@ -1,0 +1,80 @@
+{% extends 'webapp/base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<main class="max-w-5xl mx-auto py-10">
+    <h1 class="text-3xl font-bold mb-8">История заказов</h1>
+
+    {% if orders %}
+    <div class="space-y-6">
+        {% for order in orders %}
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <!-- Заголовок заказа -->
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h2 class="text-xl font-bold">Заказ #{order.id}</h2>
+                    <p class="text-gray-600">{{ order.created_at|date:"d.m.Y H:i" }}</p>
+                </div>
+                <div class="text-right">
+                    <span class="inline-block px-3 py-1 rounded-full text-white text-sm font-semibold
+                        {% if order.status == 'new' %}bg-blue-500
+                        {% elif order.status == 'processing' %}bg-yellow-500
+                        {% elif order.status == 'completed' %}bg-green-500
+                        {% else %}bg-red-500
+                        {% endif %}">
+                        {% if order.status == 'new' %}Новый
+                        {% elif order.status == 'processing' %}В обработке
+                        {% elif order.status == 'completed' %}Завершен
+                        {% else %}Отменен
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Товары в заказе (только изображения) -->
+            <div class="border-t border-b py-4 mb-4">
+                <h3 class="font-semibold mb-3">Товары:</h3>
+                <div class="flex flex-wrap gap-4">
+                    {% for item in order.items.all %}
+                    <div class="w-24 h-24">
+                        {% if item.product.image %}
+                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="w-full h-full object-cover rounded" title="{{ item.product.name }}">
+                        {% else %}
+                        <div class="w-full h-full bg-gray-200 rounded flex items-center justify-center">
+                            <span class="text-gray-400 text-xs text-center">Нет фото</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Итого и кнопки действия -->
+            <div class="flex justify-between items-center">
+                <div class="text-xl font-bold">
+                    Итого: <span class="text-red-600">{{ order.total_price }} ₸</span>
+                </div>
+                <div class="flex gap-3">
+                    <a href="{% url 'repeat_order' order.id %}" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">
+                        Повторить заказ
+                    </a>
+                    {% if order.status == 'completed' %}
+                    <a href="{% url 'order_review' order.id %}" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 transition">
+                        Оставить отзыв
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-white rounded-lg shadow-lg p-12 text-center">
+        <p class="text-xl text-gray-500 mb-6">У вас пока нет заказов</p>
+        <a href="{% url 'home' %}" class="inline-block bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700">
+            Перейти к покупкам
+        </a>
+    </div>
+    {% endif %}
+</main>
+{% endblock %}
