@@ -165,7 +165,9 @@ def product_delete(request, pk):
 
 
 def add_to_cart(request, pk):
-    """Добавить товар в корзину"""
+    """Добавить товар в корзину с поддержкой размеров и добавок"""
+    from .models import Size, Addon
+    
     product = get_object_or_404(Product, pk=pk)
     
     try:
@@ -177,44 +179,116 @@ def add_to_cart(request, pk):
         messages.error(request, 'Неверное количество товара!')
         return redirect('product_detail', pk=pk)
     
+    # Получаем выбранный размер и добавки
+    size_id = request.POST.get('size_id')
+    addon_ids = request.POST.getlist('addon_ids')
+    
+    # Рассчитываем цену
+    price = float(product.get_discounted_price())
+    size_name = None
+    addons_info = []
+    
+    if size_id:
+        try:
+            size = Size.objects.get(id=size_id, product=product)
+            price = float(size.price)
+            size_name = size.name
+        except Size.DoesNotExist:
+            pass
+    
+    if addon_ids:
+        addons = Addon.objects.filter(id__in=addon_ids, product=product)
+        for addon in addons:
+            price += float(addon.price)
+            addons_info.append(addon.name)
+    
     cart = get_cart(request)
     product_id = str(pk)
     
-    if product_id in cart:
-        cart[product_id]['quantity'] += quantity
+    # Создаём уникальный ключ товара с размером и добавками
+    cart_key = f"{product_id}"
+    if size_id:
+        cart_key += f"_size_{size_id}"
+    if addon_ids:
+        cart_key += f"_addons_{'_'.join(sorted(addon_ids))}"
+    
+    if cart_key in cart:
+        cart[cart_key]['quantity'] += quantity
     else:
-        cart[product_id] = {
+        cart[cart_key] = {
             'quantity': quantity,
-            'price': float(product.get_discounted_price())
+            'price': price,
+            'product_id': product_id,
+            'size_id': size_id,
+            'size_name': size_name,
+            'addon_ids': addon_ids,
+            'addons_info': addons_info
         }
     
     save_cart(request, cart)
+    
+    # Формируем сообщение с информацией о размере и добавках
+    message = f'{product.name}'
+    if size_name:
+        message += f' ({size_name})'
+    if addons_info:
+        message += f' + {", ".join(addons_info)}'
+    message += ' добавлен в корзину!'
+    
     # Если запрос пришёл через AJAX (fetch с X-Requested-With), вернуть JSON и не добавлять message
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return JsonResponse({'status': 'ok', 'message': f'{product.name} добавлен в корзину!', 'cart': cart})
+        return JsonResponse({'status': 'ok', 'message': message, 'cart': cart})
 
     # показать всплывающее сообщение пользователю при обычном переходе
-    messages.success(request, f'{product.name} добавлен в корзину!', extra_tags='toast frontend')
+    messages.success(request, message, extra_tags='toast frontend')
     return redirect('product_detail', pk=pk)
 
 
 def cart_view(request):
     """Просмотр корзины"""
+    from .models import Size, Addon
+    
     categories = Category.objects.all()
     cart = get_cart(request)
     cart_items = []
     total = 0
     
-    for product_id, item in cart.items():
-        product = get_object_or_404(Product, pk=product_id)
-        subtotal = item['price'] * item['quantity']
-        total += subtotal
-        cart_items.append({
-            'product': product,
-            'quantity': item['quantity'],
-            'price': item['price'],
-            'subtotal': subtotal
-        })
+    for cart_key, item in cart.items():
+        # Если это старая версия корзины (просто числовой ключ), преобразуем
+        if isinstance(item, dict) and 'product_id' not in item:
+            # Старая версия
+            product_id = cart_key
+            product = get_object_or_404(Product, pk=product_id)
+            subtotal = item['price'] * item['quantity']
+            total += subtotal
+            cart_items.append({
+                'product': product,
+                'quantity': item['quantity'],
+                'price': item['price'],
+                'subtotal': subtotal,
+                'size_name': None,
+                'addons_info': [],
+                'cart_key': cart_key
+            })
+        else:
+            # Новая версия с размерами и добавками
+            product_id = item.get('product_id', cart_key.split('_')[0])
+            product = get_object_or_404(Product, pk=product_id)
+            subtotal = item['price'] * item['quantity']
+            total += subtotal
+            
+            size_name = item.get('size_name')
+            addons_info = item.get('addons_info', [])
+            
+            cart_items.append({
+                'product': product,
+                'quantity': item['quantity'],
+                'price': item['price'],
+                'subtotal': subtotal,
+                'size_name': size_name,
+                'addons_info': addons_info,
+                'cart_key': cart_key
+            })
     
     return render(request, 'webapp/cart.html', {
         'categories': categories,
@@ -227,9 +301,22 @@ def remove_from_cart(request, pk):
     """Удалить товар из корзины"""
     cart = get_cart(request)
     product_id = str(pk)
-
+    
+    # Пытаемся найти и удалить товар
+    removed = False
+    
+    # Сначала пробуем прямое удаление по product_id (для обратной совместимости)
     if product_id in cart:
         del cart[product_id]
+        removed = True
+    else:
+        # Пробуем найти по ключу, начинающемуся с product_id (для новой версии с размерами)
+        keys_to_delete = [key for key in cart.keys() if key.startswith(product_id + '_') or key == product_id]
+        for key in keys_to_delete:
+            del cart[key]
+            removed = True
+    
+    if removed:
         save_cart(request, cart)
         # Если AJAX, вернуть JSON и не добавлять сообщение в фреймворк сообщений
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -486,6 +573,7 @@ def repeat_order(request, order_id):
 def order_review(request, order_id):
     """Позволяет оставить отзывы по товарам в заказе (один общий комментарий и фото)."""
     from django.core.files.base import ContentFile
+    from django.db import IntegrityError
     import os
     
     order = get_object_or_404(Order, id=order_id, user=request.user)
@@ -495,6 +583,18 @@ def order_review(request, order_id):
         comment = request.POST.get('comment', '').strip()
         photo = request.FILES.get('photo')
         created = 0
+        rating_count = 0
+
+        # Сначала проверяем, сколько оценок указано
+        for item in order.items.all():
+            rating_raw = request.POST.get(f'rating_{item.product.id}')
+            if rating_raw:
+                rating_count += 1
+
+        # Если нет оценок, показываем ошибку и возвращаемся
+        if rating_count == 0:
+            messages.error(request, 'Пожалуйста, поставьте оценки хотя бы одному товару!', extra_tags='toast frontend')
+            return redirect('order_review', order_id=order_id)
 
         for item in order.items.all():
             # Ожидаем поля рейтинга с именем rating_<product_id>
@@ -529,19 +629,33 @@ def order_review(request, order_id):
                 # Сохраняем как новый файл
                 review.photo.save(new_filename, ContentFile(photo_content), save=False)
             
-            review.save()
-            created += 1
+            try:
+                review.save()
+                created += 1
+            except IntegrityError:
+                # Отзыв уже существует для этого товара и заказа
+                continue
 
         if created:
-            messages.success(request, 'Спасибо за отзыв!')
+            messages.success(request, 'Спасибо за отзыв!', extra_tags='toast frontend')
         else:
-            messages.error(request, 'Пожалуйста, оцените хотя бы один товар.')
+            messages.error(request, 'Отзыв на все товары в этом заказе уже оставлен.', extra_tags='toast frontend')
 
         return redirect('order_history')
 
+    # Подготавливаем информацию о товарах для отображения
+    order_items_with_review_status = []
+    for item in order.items.all():
+        has_review = Review.objects.filter(order=order, product=item.product).exists()
+        order_items_with_review_status.append({
+            'item': item,
+            'has_review': has_review
+        })
+
     return render(request, 'webapp/order_review.html', {
         'categories': categories,
-        'order': order
+        'order': order,
+        'order_items_with_review_status': order_items_with_review_status
     })
 
 

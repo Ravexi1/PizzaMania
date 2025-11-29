@@ -103,6 +103,35 @@ class OrderItem(models.Model):
         return f"{self.product.name} x {self.quantity}"
 
 
+class Size(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='sizes', verbose_name="Продукт")
+    name = models.CharField(max_length=50, verbose_name="Название (25 см, 30 см, 35 см)")
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена")
+    
+    class Meta:
+        verbose_name = "Размер"
+        verbose_name_plural = "Размеры"
+        ordering = ['price']
+    
+    def __str__(self):
+        return f"{self.product.name} - {self.name}"
+
+
+class Addon(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='addons', verbose_name="Продукт")
+    name = models.CharField(max_length=100, verbose_name="Название добавки")
+    image = models.ImageField(upload_to='addons/', blank=True, null=True, verbose_name="Изображение")
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена")
+    
+    class Meta:
+        verbose_name = "Добавка"
+        verbose_name_plural = "Добавки"
+        ordering = ['price']
+    
+    def __str__(self):
+        return f"{self.product.name} - {self.name}"
+
+
 class Review(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews', verbose_name="Продукт")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews', null=True, blank=True, verbose_name="Пользователь")
@@ -118,6 +147,7 @@ class Review(models.Model):
         verbose_name = "Отзыв"
         verbose_name_plural = "Отзывы"
         ordering = ['-created_at']
+        unique_together = ('order', 'product')
     
     def __str__(self):
         return f"{self.name} - {self.product.name} ({self.rating}★)"

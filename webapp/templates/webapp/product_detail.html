@@ -32,14 +32,51 @@
                 <div class="mb-6">
                     {% if product.discount > 0 %}
                     <div class="flex items-center gap-4">
-                        <span class="text-3xl font-bold text-red-600">{{ product.get_discounted_price }} ₸</span>
-                        <span class="text-xl text-gray-400 line-through">{{ product.price }} ₸</span>
-                        <span class="bg-red-600 text-white px-3 py-1 rounded-full text-sm">-{{ product.discount }}%</span>
+                        <span class="text-3xl font-bold text-red-600" id="price-display">{{ product.get_discounted_price|floatformat:0 }}</span>
+                        <span class="text-xl text-gray-400 line-through">{{ product.price|floatformat:0 }}</span>
+                        <span class="bg-red-600 text-white px-3 py-1 rounded-full text-sm">-{{ product.discount|floatformat:0 }}%</span>
                     </div>
                     {% else %}
-                    <span class="text-3xl font-bold text-red-600">{{ product.price }} ₸</span>
+                    <span class="text-3xl font-bold text-red-600" id="price-display">{{ product.price|floatformat:0 }}</span>
                     {% endif %}
+                    <span class="text-gray-500 ml-2">₸</span>
                 </div>
+
+                <!-- Выбор размера (если есть размеры) -->
+                {% if product.sizes.exists %}
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold mb-2">Выберите размер:</label>
+                    <div class="space-y-2" id="sizes-container">
+                        {% for size in product.sizes.all %}
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="size" value="{{ size.id }}" data-price="{{ size.price }}" class="size-input" {% if forloop.first %}checked{% endif %}>
+                            <span>{{ size.name }} - {{ size.price|floatformat:0 }} ₸</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Добавки "По вкусу" (если есть добавки) -->
+                {% if product.addons.exists %}
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold mb-3">Добавить по вкусу 🌶️</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3" id="addons-container">
+                        {% for addon in product.addons.all %}
+                        <label class="flex flex-col items-center gap-2 p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-red-600 transition addon-card" data-addon-id="{{ addon.id }}" data-addon-price="{{ addon.price }}">
+                            <input type="checkbox" name="addon" value="{{ addon.id }}" class="addon-input hidden" data-addon-price="{{ addon.price }}">
+                            {% if addon.image %}
+                            <img src="{{ addon.image.url }}" alt="{{ addon.name }}" class="w-16 h-16 object-cover rounded">
+                            {% else %}
+                            <div class="w-16 h-16 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-2xl">📦</div>
+                            {% endif %}
+                            <span class="text-xs font-semibold text-center">{{ addon.name }}</span>
+                            <span class="text-red-600 font-bold text-sm">+{{ addon.price|floatformat:0 }} ₸</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
 
                 <div class="mb-6">
                     <div class="flex items-center gap-2">
@@ -63,12 +100,13 @@
                 </div>
 
                 <script>
+                    // Базовая цена продукта
+                    const basePrice = {{ product.get_discounted_price }};
+                    const productId = {{ product.pk }};
+                    
                     function getCsrfToken() {
-                        // Try to get from form first
                         var el = document.querySelector('[name=csrfmiddlewaretoken]');
                         var token = el ? el.value : null;
-
-                        // If not found in form, try to get from cookie
                         if (!token) {
                             var cookieRow = (document.cookie || '').split('; ').find(function(row) { return row.indexOf('csrftoken=') === 0; });
                             if (cookieRow) {
@@ -76,18 +114,72 @@
                                 if (parts.length >= 2) token = parts.slice(1).join('=');
                             }
                         }
-
                         return token || '';
                     }
+                    
+                    // Функция пересчёта цены
+                    function updatePrice() {
+                        let totalPrice = basePrice;
+                        
+                        // Добавляем цену выбранного размера (если есть размеры)
+                        const selectedSize = document.querySelector('input[name="size"]:checked');
+                        if (selectedSize) {
+                            totalPrice = parseFloat(selectedSize.dataset.price);
+                        }
+                        
+                        // Добавляем цены выбранных добавок
+                        const selectedAddons = document.querySelectorAll('input[name="addon"]:checked');
+                        selectedAddons.forEach(addon => {
+                            totalPrice += parseFloat(addon.dataset.addonPrice);
+                        });
+                        
+                        // Обновляем отображение цены (без дробных частей)
+                        document.getElementById('price-display').textContent = Math.round(totalPrice);
+                    }
+                    
+                    // Слушатель на размеры
+                    document.querySelectorAll('input[name="size"]').forEach(radio => {
+                        radio.addEventListener('change', updatePrice);
+                    });
+                    
+                    // Слушатель на добавки
+                    document.querySelectorAll('input[name="addon"]').forEach(checkbox => {
+                        checkbox.addEventListener('change', function() {
+                            // Визуальное выделение выбранной добавки
+                            const card = this.closest('.addon-card');
+                            if (this.checked) {
+                                card.classList.add('border-red-600', 'bg-red-50');
+                            } else {
+                                card.classList.remove('border-red-600', 'bg-red-50');
+                            }
+                            updatePrice();
+                        });
+                    });
                     
                     document.getElementById('add-to-cart-btn').addEventListener('click', function() {
                         const quantity = document.getElementById('quantity-input').value;
                         const csrfToken = getCsrfToken();
-                        const productId = {{ product.pk }};
                         
                         if (!csrfToken) {
                             console.error('CSRF token not found');
                             return;
+                        }
+                        
+                        // Сбор информации о размере и добавках
+                        const selectedSize = document.querySelector('input[name="size"]:checked');
+                        const sizeId = selectedSize ? selectedSize.value : null;
+                        
+                        const selectedAddons = Array.from(document.querySelectorAll('input[name="addon"]:checked'))
+                            .map(addon => addon.value);
+                        
+                        let body = `quantity=${encodeURIComponent(quantity)}`;
+                        if (sizeId) {
+                            body += `&size_id=${encodeURIComponent(sizeId)}`;
+                        }
+                        if (selectedAddons.length > 0) {
+                            selectedAddons.forEach(addonId => {
+                                body += `&addon_ids=${encodeURIComponent(addonId)}`;
+                            });
                         }
                         
                         fetch(`/cart/add/${productId}/`, {
@@ -98,11 +190,10 @@
                                 'X-CSRFToken': csrfToken,
                                 'X-Requested-With': 'XMLHttpRequest'
                             },
-                            body: `quantity=${encodeURIComponent(quantity)}`
+                            body: body
                         })
                         .then(response => response.json())
                         .then(data => {
-                            // Show success message as toast
                             const container = document.getElementById('toast-container');
                             if (data.status === 'ok') {
                                 if (!container) {
@@ -120,7 +211,6 @@
                                 </div>`;
                                 document.getElementById('toast-container').appendChild(toast);
                                 
-                                // Auto-hide
                                 setTimeout(() => {
                                     toast.classList.remove('toast-enter');
                                     toast.classList.add('toast-exit');

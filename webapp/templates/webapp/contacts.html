@@ -1,0 +1,90 @@
+{% extends 'webapp/base.html' %}
+
+{% block content %}
+<main class="max-w-4xl mx-auto py-10 px-4">
+    <h1 class="text-4xl font-bold mb-6 text-center">Контакты</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <!-- Информация для связи -->
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            <h2 class="text-2xl font-bold mb-6">Свяжитесь с нами</h2>
+
+            <div class="space-y-6">
+                <!-- Телефон -->
+                <div>
+                    <h3 class="text-lg font-bold mb-2">📞 Телефон</h3>
+                    <p class="text-gray-700">
+                        <a href="tel:+380501234567" class="text-red-600 hover:text-red-700">+38 (050) 123-45-67</a>
+                    </p>
+                    <p class="text-sm text-gray-500 mt-1">Доступна 24/7 для заказов</p>
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <h3 class="text-lg font-bold mb-2">📧 Email</h3>
+                    <p class="text-gray-700">
+                        <a href="mailto:info@pizzamania.ua" class="text-red-600 hover:text-red-700">info@pizzamania.ua</a>
+                    </p>
+                    <p class="text-sm text-gray-500 mt-1">Ответим в течение 1 часа</p>
+                </div>
+
+                <!-- Адрес -->
+                <div>
+                    <h3 class="text-lg font-bold mb-2">📍 Основной офис</h3>
+                    <p class="text-gray-700">
+                        ул. Героев Днепра, 25<br>
+                        Киев, Украина, 02000
+                    </p>
+                </div>
+
+                <!-- Время работы -->
+                <div>
+                    <h3 class="text-lg font-bold mb-2">🕐 Время работы</h3>
+                    <p class="text-gray-700">
+                        Пн-Пт: 10:00 - 23:00<br>
+                        Сб-Вс: 11:00 - 24:00<br>
+                        <span class="text-green-600 font-semibold">Доставка 24/7</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Форма обратной связи -->
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            <h2 class="text-2xl font-bold mb-6">Форма обратной связи</h2>
+            <form class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Имя</label>
+                    <input type="text" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Ваше имя">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Email</label>
+                    <input type="email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Ваш email">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Телефон</label>
+                    <input type="tel" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Ваш телефон">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Сообщение</label>
+                    <textarea required rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Ваше сообщение"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-red-600 text-white py-2 rounded-lg font-bold hover:bg-red-700">
+                    Отправить
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Социальные сети -->
+    <div class="bg-red-50 rounded-lg p-8 text-center">
+        <h2 class="text-2xl font-bold mb-4">Следите за нами в соцсетях</h2>
+        <div class="flex justify-center gap-6 flex-wrap">
+            <a href="https://facebook.com" class="text-2xl hover:scale-110 transition">📘 Facebook</a>
+            <a href="https://instagram.com" class="text-2xl hover:scale-110 transition">📷 Instagram</a>
+            <a href="https://telegram.org" class="text-2xl hover:scale-110 transition">✈️ Telegram</a>
+            <a href="https://viber.com" class="text-2xl hover:scale-110 transition">📱 Viber</a>
+        </div>
+    </div>
+</main>
+{% endblock %}

@@ -12,11 +12,11 @@
         <div class="mb-8">
             <h2 class="text-xl font-bold mb-4">Товары в заказе:</h2>
             <div class="space-y-6 border-b pb-6 mb-6">
-                {% for item in order.items.all %}
+                {% for item_status in order_items_with_review_status %}
                 <div class="flex gap-4 pb-4 border-b last:border-b-0">
                     <!-- Изображение товара -->
-                    {% if item.product.image %}
-                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="w-24 h-24 object-cover rounded">
+                    {% if item_status.item.product.image %}
+                    <img src="{{ item_status.item.product.image.url }}" alt="{{ item_status.item.product.name }}" class="w-24 h-24 object-cover rounded">
                     {% else %}
                     <div class="w-24 h-24 bg-gray-200 rounded flex items-center justify-center">
                         <span class="text-gray-400 text-xs">Нет фото</span>
@@ -25,24 +25,31 @@
 
                     <!-- Информация о товаре и оценка -->
                     <div class="flex-1">
-                        <h3 class="text-lg font-bold mb-2">{{ item.product.name }}</h3>
-                        <p class="text-sm text-gray-600 mb-3">{{ item.quantity }} × {{ item.price }} ₸</p>
+                        <h3 class="text-lg font-bold mb-2">{{ item_status.item.product.name }}</h3>
+                        <p class="text-sm text-gray-600 mb-3">{{ item_status.item.quantity }} × {{ item_status.item.price }} ₸</p>
 
+                        <!-- Если отзыв уже оставлен, показываем сообщение -->
+                        {% if item_status.has_review %}
+                        <div class="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-lg font-semibold">
+                            ✓ Отзыв оставлен
+                        </div>
+                        {% else %}
                         <!-- Оценка товара (1-5 звезд с hover эффектом) -->
                         <div class="flex items-center gap-3">
                             <label class="text-sm font-semibold">Оценка:</label>
-                            <div class="flex gap-2 star-rating" data-product-id="{{ item.product.id }}">
+                            <div class="flex gap-2 star-rating" data-product-id="{{ item_status.item.product.id }}">
                                 {% for star in "12345" %}
                                 <label class="cursor-pointer group relative">
-                                    <input type="radio" name="rating_{{ item.product.id }}" value="{{ star }}" required class="hidden" data-star="{{ star }}">
+                                    <input type="radio" name="rating_{{ item_status.item.product.id }}" value="{{ star }}" class="hidden" data-star="{{ star }}">
                                     <span class="text-3xl text-gray-300 hover:text-yellow-400 transition-colors duration-100 star-icon" data-value="{{ star }}">★</span>
                                 </label>
                                 {% endfor %}
                             </div>
-                            <span class="text-sm text-red-600 error-message" data-product="{{ item.product.id }}" style="display:none;">
+                            <span class="text-sm text-red-600 error-message" data-product="{{ item_status.item.product.id }}" style="display:none;">
                                 Требуется оценка
                             </span>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}

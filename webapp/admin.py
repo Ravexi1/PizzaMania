@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Product, Review, Order, OrderItem, UserProfile
+from .models import Category, Product, Review, Order, OrderItem, UserProfile, Size, Addon
 
 
 @admin.register(Category)
@@ -14,13 +14,25 @@ class ReviewInline(admin.TabularInline):
     readonly_fields = ['name', 'rating', 'comment', 'created_at']
 
 
+class SizeInline(admin.TabularInline):
+    model = Size
+    extra = 1
+    fields = ['name', 'price']
+
+
+class AddonInline(admin.TabularInline):
+    model = Addon
+    extra = 1
+    fields = ['name', 'price', 'image']
+
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = ['name', 'price', 'discount', 'created_at']
     list_filter = ['categories', 'created_at']
     search_fields = ['name', 'description']
     filter_horizontal = ['categories']
-    inlines = [ReviewInline]
+    inlines = [ReviewInline, SizeInline, AddonInline]
     
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
@@ -79,3 +91,17 @@ class OrderAdmin(admin.ModelAdmin):
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ['user', 'phone', 'street']
     search_fields = ['user__username', 'user__first_name', 'user__last_name', 'phone']
+
+
+@admin.register(Size)
+class SizeAdmin(admin.ModelAdmin):
+    list_display = ['product', 'name', 'price']
+    list_filter = ['product']
+    search_fields = ['product__name', 'name']
+
+
+@admin.register(Addon)
+class AddonAdmin(admin.ModelAdmin):
+    list_display = ['product', 'name', 'price']
+    list_filter = ['product']
+    search_fields = ['product__name', 'name']
