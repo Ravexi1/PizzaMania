@@ -1,0 +1,32 @@
+{% extends 'webapp/base.html' %}
+{% load i18n %}
+{% block title %}{% trans "Правовая информация — PizzaMania" %}{% endblock %}
+
+{% block content %}
+<main class="max-w-4xl mx-auto py-10">
+    <div class="bg-white rounded-lg shadow p-8">
+        <h1 class="text-2xl font-bold mb-4">{% trans "Правовая информация" %}</h1>
+        <p class="text-gray-700 mb-4">{% trans "Добро пожаловать в правовой раздел сайта PizzaMania. Ниже вы найдёте основные условия использования сервиса, политику конфиденциальности и информацию о возврате и компенсациях." %}</p>
+
+        <section class="mb-6">
+            <h2 class="font-semibold text-lg mb-2">{% trans "Условия использования" %}</h2>
+            <p class="text-gray-600">{% trans "Используя сайт и сервисы PizzaMania, вы соглашаетесь с тем, что все заказы выполняются на условиях, указанных на сайте. Мы сохраняем за собой право вносить изменения в меню, цены и условия доставки без предварительного уведомления." %}</p>
+        </section>
+
+        <section class="mb-6">
+            <h2 class="font-semibold text-lg mb-2">{% trans "Политика конфиденциальности" %}</h2>
+            <p class="text-gray-600">{% trans "Персональные данные, включая номер телефона и адрес, используются исключительно для обработки заказов и доставки. Мы не передаём персональные данные третьим лицам без вашего согласия, за исключением случаев, предусмотренных законом." %}</p>
+        </section>
+
+        <section class="mb-6">
+            <h2 class="font-semibold text-lg mb-2">{% trans "Возврат и отмена" %}</h2>
+            <p class="text-gray-600">{% trans "Если вы получили некачественный товар или ваш заказ выполнен с нарушением, свяжитесь с нами по телефону в шапке сайта. В зависимости от ситуации мы предложим замену, компенсацию или возврат средств." %}</p>
+        </section>
+
+        <section>
+            <h2 class="font-semibold text-lg mb-2">{% trans "Обратная связь" %}</h2>
+            <p class="text-gray-600">{% trans "По всем юридическим вопросам пишите на" %} <a href="mailto:legal@pizzamania.kz" class="text-red-600">legal@pizzamania.kz</a> {% trans "или используйте форму обратной связи на странице Контакты." %}</p>
+        </section>
+    </div>
+</main>
+{% endblock %}

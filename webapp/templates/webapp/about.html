@@ -1,55 +1,113 @@
 {% extends 'webapp/base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "О нас" %} — PizzaMania{% endblock %}
 
 {% block content %}
-<main class="max-w-4xl mx-auto py-10 px-4">
-    <h1 class="text-4xl font-bold mb-6 text-center">О нас</h1>
-
-    <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
-        <h2 class="text-2xl font-bold mb-4">Добро пожаловать в PizzaMania! 🍕</h2>
-        <p class="text-lg text-gray-700 mb-4">
-            Мы — сеть пиццерий, которая воплощает традиции итальянской кухни с украинским колоритом. 
-            Каждая пицца готовится с любовью, используя только свежие и качественные ингредиенты.
-        </p>
-
-        <h3 class="text-xl font-bold mb-3 mt-6">Наша миссия</h3>
-        <p class="text-gray-700 mb-4">
-            Доставить радость и вкус в каждый дом. Мы верим, что пицца — это не просто еда, 
-            это момент общения с близкими людьми и наслаждение жизнью.
-        </p>
-
-        <h3 class="text-xl font-bold mb-3 mt-6">Почему именно мы?</h3>
-        <ul class="list-disc list-inside space-y-2 text-gray-700 ml-2">
-            <li><strong>Свежесть:</strong> Все ингредиенты закупаются ежедневно от проверенных поставщиков</li>
-            <li><strong>Качество:</strong> Каждая пицца проходит контроль перед доставкой</li>
-            <li><strong>Быстрая доставка:</strong> Обещаем доставку за 30-40 минут в пределах города</li>
-            <li><strong>Персонализация:</strong> Вы можете создавать свои авторские пиццы с любыми добавками</li>
-            <li><strong>Акции и скидки:</strong> Постоянные предложения для наших постоянных клиентов</li>
-        </ul>
-
-        <h3 class="text-xl font-bold mb-3 mt-6">История</h3>
-        <p class="text-gray-700">
-            PizzaMania была основана в 2020 году с мечтой создать уютное место, где каждый может 
-            насладиться вкусной пиццей. Сегодня мы обслуживаем тысячи клиентов и гордимся 
-            репутацией одной из лучших пиццерий в городе.
-        </p>
+<main class="max-w-5xl mx-auto py-10 px-4">
+    <!-- Hero блок -->
+    <div class="bg-gradient-to-r from-red-600 to-orange-500 text-white rounded-2xl p-12 mb-12 text-center">
+        <h1 class="text-5xl font-bold mb-4">{% trans "О нашей компании" %}</h1>
+        <p class="text-xl opacity-90">{% trans "История успеха PizzaMania началась с мечты о настоящей итальянской пиццe" %}</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-red-50 rounded-lg p-6 text-center">
-            <div class="text-4xl mb-2">🍕</div>
-            <h4 class="text-xl font-bold mb-2">Более 50 видов пицц</h4>
-            <p class="text-gray-600">От классических до авторских рецептов</p>
+    <!-- Наша история -->
+    <section class="mb-16">
+        <div class="grid md:grid-cols-2 gap-8 items-center">
+            <div>
+                <h2 class="text-3xl font-bold mb-4">{% trans "Наша история" %}</h2>
+                <p class="text-gray-700 mb-4">
+                    {% trans "PizzaMania была основана в 2015 году группой энтузиастов, влюблённых в итальянскую кухню. Мы начали с маленькой пиццерии в центре Алматы и всего трёх сотрудников." %}
+                </p>
+                <p class="text-gray-700 mb-4">
+                    {% trans "Сегодня мы — одна из ведущих сетей доставки пиццы в Казахстане, с десятками филиалов и командой из более чем 200 профессионалов." %}
+                </p>
+                <p class="text-gray-700">
+                    {% trans "Наш секрет прост: качественные продукты, традиционные рецепты и любовь к своему делу." %}
+                </p>
+            </div>
+            <div class="bg-gray-200 h-80 rounded-2xl flex items-center justify-center">
+                <span class="text-gray-500 text-6xl">🍕</span>
+            </div>
         </div>
-        <div class="bg-red-50 rounded-lg p-6 text-center">
-            <div class="text-4xl mb-2">🚚</div>
-            <h4 class="text-xl font-bold mb-2">Быстрая доставка</h4>
-            <p class="text-gray-600">За 30-40 минут в пределах города</p>
+    </section>
+
+    <!-- Наши ценности -->
+    <section class="mb-16">
+        <h2 class="text-3xl font-bold mb-8 text-center">{% trans "Наши ценности" %}</h2>
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="bg-white p-6 rounded-xl shadow-md text-center">
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-heart text-red-600 text-2xl"></i>
+                </div>
+                <h3 class="font-bold text-xl mb-3">{% trans "Качество" %}</h3>
+                <p class="text-gray-600">{% trans "Используем только свежие ингредиенты от проверенных поставщиков" %}</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-md text-center">
+                <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-clock text-orange-600 text-2xl"></i>
+                </div>
+                <h3 class="font-bold text-xl mb-3">{% trans "Скорость" %}</h3>
+                <p class="text-gray-600">{% trans "Доставляем горячую пиццу в течение 30-40 минут" %}</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-md text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-smile text-green-600 text-2xl"></i>
+                </div>
+                <h3 class="font-bold text-xl mb-3">{% trans "Забота" %}</h3>
+                <p class="text-gray-600">{% trans "Каждый клиент для нас особенный, мы ценим ваш выбор" %}</p>
+            </div>
         </div>
-        <div class="bg-red-50 rounded-lg p-6 text-center">
-            <div class="text-4xl mb-2">⭐</div>
-            <h4 class="text-xl font-bold mb-2">Высокий рейтинг</h4>
-            <p class="text-gray-600">4.8/5 по отзывам клиентов</p>
+    </section>
+
+    <!-- Команда -->
+    <section class="mb-16">
+        <h2 class="text-3xl font-bold mb-8 text-center">{% trans "Наша команда" %}</h2>
+        <div class="grid md:grid-cols-4 gap-6">
+            <div class="bg-white p-6 rounded-xl shadow-md text-center">
+                <div class="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4"></div>
+                <h3 class="font-bold mb-1">{% trans "Александр Иванов" %}</h3>
+                <p class="text-sm text-gray-600">{% trans "Основатель и CEO" %}</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-md text-center">
+                <div class="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4"></div>
+                <h3 class="font-bold mb-1">{% trans "Мария Петрова" %}</h3>
+                <p class="text-sm text-gray-600">{% trans "Шеф-повар" %}</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-md text-center">
+                <div class="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4"></div>
+                <h3 class="font-bold mb-1">{% trans "Дмитрий Сидоров" %}</h3>
+                <p class="text-sm text-gray-600">{% trans "Менеджер по доставке" %}</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-md text-center">
+                <div class="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4"></div>
+                <h3 class="font-bold mb-1">{% trans "Елена Краснова" %}</h3>
+                <p class="text-sm text-gray-600">{% trans "Маркетинг-директор" %}</p>
+            </div>
         </div>
-    </div>
+    </section>
+
+    <!-- Статистика -->
+    <section class="bg-gradient-to-r from-red-600 to-orange-500 text-white rounded-2xl p-12">
+        <h2 class="text-3xl font-bold mb-8 text-center">{% trans "PizzaMania в цифрах" %}</h2>
+        <div class="grid md:grid-cols-4 gap-8 text-center">
+            <div>
+                <div class="text-5xl font-bold mb-2">10+</div>
+                <p class="opacity-90">{% trans "Лет на рынке" %}</p>
+            </div>
+            <div>
+                <div class="text-5xl font-bold mb-2">50+</div>
+                <p class="opacity-90">{% trans "Видов пиццы" %}</p>
+            </div>
+            <div>
+                <div class="text-5xl font-bold mb-2">200+</div>
+                <p class="opacity-90">{% trans "Сотрудников" %}</p>
+            </div>
+            <div>
+                <div class="text-5xl font-bold mb-2">100K+</div>
+                <p class="opacity-90">{% trans "Довольных клиентов" %}</p>
+            </div>
+        </div>
+    </section>
 </main>
 {% endblock %}

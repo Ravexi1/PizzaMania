@@ -1,10 +1,17 @@
 <!DOCTYPE html>
-<html lang="ru">
+{% load static %}
+{% load i18n %}
+<html lang="{{ LANGUAGE_CODE }}">
 <head>
     <meta charset="UTF-8">
     <title>PizzaMania</title>
     <script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+      crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
+        html { scroll-behavior: smooth; }
         @keyframes slideIn {
             from {
                 transform: translateY(-100%);
@@ -135,61 +142,174 @@
         });
     </script>
 
-    <!-- Верхний навбар 1 -->
+    <!-- Верхний навбар -->
     <nav class="bg-white shadow p-4 flex justify-between items-center text-sm">
         <div class="flex space-x-6">
-            <a href="{% url 'about' %}">О нас</a>
-            <a href="{% url 'contacts' %}">Контакты</a>
-            <a href="{% url 'jobs' %}">Вакансии</a>
+            <a href="{% url 'about' %}">{% trans "О нас" %}</a>
+            <a href="{% url 'contacts' %}">{% trans "Контакты" %}</a>
+            <a href="{% url 'jobs' %}">{% trans "Вакансии" %}</a>
         </div>
 
         <div class="flex space-x-4 items-center">
             {% if user.is_authenticated %}
-                <span class="text-gray-700">Привет, {{ user.first_name }}!</span>
-                <a href="{% url 'logout' %}" class="px-3 py-1 border rounded hover:bg-gray-100">Выйти</a>
+                <span class="text-gray-700">{% trans "Привет" %}, {{ user.first_name }}!</span>
+                <a href="{% url 'logout' %}" class="px-3 py-1 border rounded hover:bg-gray-100">{% trans "Выйти" %}</a>
             {% else %}
-                <a href="{% url 'login' %}" class="px-3 py-1 border rounded hover:bg-gray-100">Войти</a>
-                <a href="{% url 'register' %}" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">Регистрация</a>
+                <a href="{% url 'login' %}" class="px-3 py-1 border rounded hover:bg-gray-100">{% trans "Войти" %}</a>
+                <a href="{% url 'register' %}" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">{% trans "Регистрация" %}</a>
             {% endif %}
-            <select class="border rounded px-2 py-1">
-                <option>RU</option>
-                <option>EN</option>
-                <option>KZ</option>
-            </select>
+            <form method="post" action="/i18n/setlang/" class="inline" id="language-form">
+                {% csrf_token %}
+                {% load i18n %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}" id="language-next">
+                <select name="language" class="border rounded px-2 py-1 cursor-pointer" id="language-select">
+                    {% get_current_language as CURRENT_LANG %}
+                    {% get_available_languages as LANGUAGES %}
+                    {% for lang_code, lang_name in LANGUAGES %}
+                        <option value="{{ lang_code }}" {% if lang_code == CURRENT_LANG %}selected{% endif %}>
+                            {% if lang_code == 'ru' %}RU{% elif lang_code == 'en' %}EN{% elif lang_code == 'kk' %}KZ{% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </form>
+            <script>
+            document.getElementById('language-select').addEventListener('change', function() {
+                const form = document.getElementById('language-form');
+                const nextInput = document.getElementById('language-next');
+                const newLang = this.value;
+                const currentPath = window.location.pathname;
+                
+                // Заменяем языковой префикс в URL
+                const newPath = currentPath.replace(/^\/(ru|en|kk)\//, '/' + newLang + '/');
+                nextInput.value = newPath + window.location.search;
+                
+                form.submit();
+            });
+            </script>
         </div>
     </nav>
 
-    <!-- Верхний навбар 2 -->
+    <!-- Нижний навбар -->
     <nav class="bg-red-600 text-white p-4 flex justify-between items-center sticky top-0 z-50">
         <a href="{% url 'home' %}" class="text-xl font-bold hover:text-gray-200">🍕 PizzaMania</a>
         <div class="space-x-4 text-sm">
             {% for category in categories %}
             <a href="{% url 'home' %}#{{ category.slug }}" class="hover:text-gray-200">{{ category.name }}</a>
             {% endfor %}
+            <a href="{% url 'delivery_payment' %}" class="hover:text-gray-200">{% trans "Доставка & оплата" %}</a>
         </div>
-        <a href="{% url 'cart_view' %}" class="text-xl hover:text-gray-200 cursor-pointer">🛒</a>
+        <div class="flex items-center gap-3">
+            <a href="{% url 'order_history' %}" class="bg-white text-red-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100">{% trans "Мои заказы" %} <span class="ml-1">{{ user_orders_count|default:0 }}</span></a>
+            <a href="{% url 'cart_view' %}" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-600 hover:bg-gray-100"><i class="fa-solid fa-cart-shopping"></i></a>
+        </div>
     </nav>
+
+    <script>
+        // Intercept navbar anchor clicks that point to a hash on the same page
+        // and perform smooth scrolling without a full page reload.
+        document.addEventListener('click', function(e) {
+            const a = e.target.closest('a[href*="#"]');
+            if (!a) return;
+            try {
+                const url = new URL(a.href, window.location.origin);
+                const hash = url.hash;
+                if (!hash) return;
+                // Only intercept when the target pathname is the current pathname
+                if (url.pathname === window.location.pathname) {
+                    const target = document.getElementById(hash.slice(1));
+                    if (target) {
+                        e.preventDefault();
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        // update url hash without jumping
+                        history.replaceState(null, '', url.pathname + hash);
+                    }
+                }
+            } catch (err) {
+                // ignore malformed URLs
+            }
+        });
+    </script>
 
     {% block content %}{% endblock %}
 
-    <!-- Футер -->
-    <footer class="bg-gray-800 text-white p-6 mt-10">
-        <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div>
-                <h3 class="font-bold mb-2">Адрес</h3>
-                <p>г. Алматы, ул. Достык 12</p>
+    <!-- Верхний серый футер с информацией о доставке -->
+    <div class="bg-gray-100 text-gray-800 py-4">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex flex-col">
+                <div class="font-semibold">Бесплатная доставка</div>
+                <div class="text-sm text-gray-600">При заказе от 4000 тг. по г. Астана</div>
+            </div>
+            <div class="flex flex-col">
+                <div class="font-semibold">Доставка 40 минут</div>
+                <div class="text-sm text-gray-600">Среднее время доставки</div>
+            </div>
+            <div class="flex flex-col">
+                <div class="font-semibold">4000 тг.</div>
+                <div class="text-sm text-gray-600">минимальная сумма заказа</div>
             </div>
             <div>
-                <h3 class="font-bold mb-2">Контакты</h3>
-                <p>Тел: +7 777 123 4567</p>
-                <p>Email: info@pizzamania.kz</p>
-            </div>
-            <div>
-                <h3 class="font-bold mb-2">Мы в соцсетях</h3>
-                <p>Instagram: @pizzamania_kz</p>
-                <p>Telegram: @pizzamania</p>
+                <a href="{% url 'delivery_payment' %}" class="text-sm text-gray-700 hover:text-red-600">Подробнее о доставке и оплате →</a>
             </div>
         </div>
+    </div>
+
+    <!-- Основной футер -->
+    <footer class="bg-gray-800 text-white p-8 mt-0">
+        <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-6 text-sm">
+            <div>
+                <h3 class="font-bold mb-2 text-lg">PizzaMania</h3>
+                <p class="text-gray-300">Пицца и закуски с доставкой по Астане. Свежие ингредиенты, быстрый сервис и тёплые улыбки.</p>
+                <div class="mt-4 text-gray-400">ПиццаМания © 2025</div>
+                <div class="mt-2 text-sm">
+                <ul class="text-gray-300 space-y-1">
+                    <li><a href="{% url 'legal' %}" class="text-gray-300 hover:text-white">Правовая информация</a></li>
+                    <li><a href="{% url 'about' %}" class="text-gray-300 hover:text-white">О нас</a></li>
+                    <li><a href="{% url 'jobs' %}" class="text-gray-300 hover:text-white">Вакансии</a></li>
+                </ul>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="font-semibold mb-2">Контакты</h4>
+                <p class="text-gray-300">г. Астана, ул. Пушкина 25</p>
+                <p class="text-gray-300">Тел: <a href="tel:+77771234567" class="hover:text-white">+7 (777) 123-45-67</a></p>
+                <p class="text-gray-300">Email: <a href="mailto:info@pizzamania.kz" class="hover:text-white">info@pizzamania.kz</a></p>
+            </div>
+
+            <div>
+                <h4 class="font-semibold mb-2">Меню</h4>
+                <ul class="text-gray-300 space-y-1">
+                    {% for c in categories %}
+                    <li><a href="{% url 'home' %}#{{ c.slug }}" class="hover:text-white">{{ c.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="font-semibold mb-2">Следите за нами</h4>
+                <div class="flex items-center gap-3 mb-3">
+                    <a href="https://instagram.com" aria-label="Instagram" class="w-8 h-8">{% include 'webapp/partials/icon_instagram.html' %}</a>
+                    <a href="https://t.me/pizzamania" aria-label="Telegram" class="w-8 h-8">{% include 'webapp/partials/icon_telegram.html' %}</a>
+                    <a href="https://vk.com" aria-label="VK" class="w-8 h-8">{% include 'webapp/partials/icon_vk.html' %}</a>
+                    <a href="https://facebook.com" aria-label="Facebook" class="w-8 h-8">{% include 'webapp/partials/icon_facebook.html' %}</a>
+                </div>
+
+                <h4 class="font-semibold mb-2">Способы оплаты</h4>
+                <div class="flex items-center gap-4 text-gray-300">
+                    <i class="fa-brands fa-cc-visa text-2xl"></i>
+                    <i class="fa-brands fa-cc-mastercard text-2xl"></i>
+                    <i class="fa-brands fa-cc-paypal text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-5xl mx-auto mt-6 text-center text-gray-500 text-sm">
+            <span>Разработано с любовью для жителей Астаны. Все права защищены.</span>
+        </div>
     </footer>
+
+    {% include 'webapp/partials/chat_widget.html' %}
+
+    {% block extra_scripts %}{% endblock %}
 </body>
 </html>

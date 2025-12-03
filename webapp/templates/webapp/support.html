@@ -1,0 +1,45 @@
+{% extends 'webapp/base.html' %}
+
+{% block content %}
+<main class="max-w-6xl mx-auto py-10 px-4">
+  <div class="flex items-center justify-between mb-8">
+    <h1 class="text-3xl font-bold">Поддержка — чаты</h1>
+    <div>
+      <a href="{% url 'home' %}" class="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200">Главная</a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="md:col-span-2">
+      <div class="space-y-4">
+        {% for item in chats %}
+        {% with chat=item.chat last=item.last operator_connected=item.operator_connected %}
+        <div class="bg-white rounded-lg shadow p-4 flex justify-between items-center">
+          <div>
+            <div class="font-semibold">Чат #{{ chat.id }} — {{ chat.user_name|default:chat.user.username }}</div>
+            <div class="text-sm text-gray-500">Оператор: {% if chat.operator and operator_connected %}{{ chat.operator.get_full_name|default:chat.operator.username }}{% else %}<span class="text-red-500">не подключён</span>{% endif %}</div>
+            <div class="text-sm text-gray-600 mt-2">Последние сообщения: {{ last.text|default:'—' }}</div>
+          </div>
+          <div class="flex flex-col items-end gap-2">
+            <form method="post" action="{% url 'chat_operator_join' chat.id %}">
+              {% csrf_token %}
+              <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Открыть</button>
+            </form>
+          </div>
+        </div>
+        {% endwith %}
+        {% empty %}
+        <div class="bg-white rounded-lg shadow p-6">Пока нет чатов</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <aside class="hidden md:block">
+      <div class="bg-white rounded-lg shadow p-4">
+        <h3 class="font-semibold mb-2">Информация</h3>
+        <p class="text-sm text-gray-600">Здесь показан список открытых чатов. Нажмите «Подключиться», чтобы взять чат на обслуживание.</p>
+      </div>
+    </aside>
+  </div>
+</main>
+{% endblock %}

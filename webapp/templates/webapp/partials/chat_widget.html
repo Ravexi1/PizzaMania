@@ -1,0 +1,150 @@
+<!-- Floating chat widget -->
+<div id="chat-widget" class="fixed right-6 bottom-6 z-50" data-user-id="{% if request.user.is_authenticated %}{{ request.user.id }}{% endif %}" data-user-name="{% if request.user.is_authenticated %}{{ request.user.get_full_name }}{% endif %}">
+  <button id="chat-toggle" class="w-12 h-12 bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-700">
+    <i class="fa-solid fa-comment-dots"></i>
+  </button>
+
+  <div id="chat-panel" class="hidden mt-3 w-80 bg-white rounded-lg shadow-xl overflow-hidden">
+    <div class="px-4 py-3 bg-red-600 text-white flex items-center justify-between">
+      <div class="font-semibold">Поддержка</div>
+      <button id="chat-close" class="text-white opacity-90">✕</button>
+    </div>
+    <div class="p-3 h-64 overflow-auto" id="chat-messages">
+      <div class="text-sm text-gray-500">Здравствуйте! Задайте вопрос — оператор ответит как можно скорее.</div>
+    </div>
+    <form id="chat-form" class="p-3 border-t bg-gray-50">
+      <div class="flex gap-2">
+        <input type="text" id="chat-text" placeholder="Напишите сообщение..." class="flex-1 px-3 py-2 border rounded text-sm">
+        <button type="button" id="chat-send" class="bg-red-600 text-white px-3 py-2 rounded">Отправить</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function(){
+  function qs(sel){return document.querySelector(sel)}
+  const toggle = qs('#chat-toggle');
+  const panel = qs('#chat-panel');
+  const widget = qs('#chat-widget');
+  const closeBtn = qs('#chat-close');
+  const sendBtn = qs('#chat-send');
+  const messagesEl = qs('#chat-messages');
+  const textInput = qs('#chat-text');
+  let currentChatId = localStorage.getItem('pizzamania_chat_id') || null;
+  let socket = null;
+
+  function scrollBottom(){ messagesEl.scrollTop = messagesEl.scrollHeight }
+
+  function getCookie(name){
+    const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return v ? v.pop() : '';
+  }
+
+  async function loadMessages(chatId){
+    try{
+      const res = await fetch(`/chat/${chatId}/messages/`);
+      if(!res.ok) return;
+      const data = await res.json();
+      messagesEl.innerHTML = '';
+      if(data.messages && data.messages.length){
+        data.messages.forEach(m => {
+          const msg = document.createElement('div');
+          msg.className = 'mb-2 text-sm';
+          if(m.is_system) msg.innerHTML = `<div class="text-center text-xs text-green-600">${escapeHtml(m.text)}</div>`;
+          else msg.innerHTML = `<div class="bg-red-50 text-gray-800 px-3 py-2 rounded">${escapeHtml(m.text)}</div>`;
+          messagesEl.appendChild(msg);
+        });
+        scrollBottom();
+      } else {
+        messagesEl.innerHTML = '<div class="text-sm text-gray-500">Здравствуйте! Задайте вопрос — оператор ответит как можно скорее.</div>';
+      }
+    }catch(e){console.error(e)}
+  }
+
+  function connectWS(chatId){
+    try{
+      const proto = (location.protocol === 'https:') ? 'wss' : 'ws';
+      const wsUrl = `${proto}://${location.host}/ws/chat/${chatId}/`;
+      socket = new WebSocket(wsUrl);
+      socket.onopen = function(){ console.debug('ws open', wsUrl); };
+      socket.onmessage = function(e){
+        try{
+          const data = JSON.parse(e.data);
+          const msg = document.createElement('div');
+          msg.className = 'mb-2 text-sm';
+          if(data.is_system) msg.innerHTML = `<div class="text-center text-xs text-green-600">${escapeHtml(data.message)}</div>`;
+          else msg.innerHTML = `<div class="bg-red-50 text-gray-800 px-3 py-2 rounded">${escapeHtml(data.message)}</div>`;
+          messagesEl.appendChild(msg);
+          scrollBottom();
+        }catch(err){ console.error('ws msg parse', err) }
+      };
+      socket.onclose = function(){ console.debug('ws closed'); };
+    }catch(e){ console.error('ws connect error', e) }
+  }
+
+  toggle.addEventListener('click', async function(){
+    panel.classList.toggle('hidden');
+    if(!panel.classList.contains('hidden')){
+      if(currentChatId){
+        await loadMessages(currentChatId);
+        connectWS(currentChatId);
+      } else {
+        // create new chat via AJAX
+        const csrftoken = getCookie('csrftoken');
+        fetch('{% url "chat_create" %}',{
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {'Content-Type':'application/x-www-form-urlencoded','X-CSRFToken':csrftoken,'X-Requested-With':'XMLHttpRequest'},
+          body: `text=`
+        }).then(r=>r.json()).then(data=>{ if(data.status==='ok'){ currentChatId = data.chat_id; localStorage.setItem('pizzamania_chat_id', currentChatId); connectWS(currentChatId); } });
+      }
+    }
+  });
+
+  // Close panel when clicking outside
+  document.addEventListener('click', function(e){
+    if(!widget.contains(e.target)){
+      panel.classList.add('hidden');
+    }
+  });
+
+  closeBtn.addEventListener('click', function(e){ e.stopPropagation(); panel.classList.add('hidden') });
+
+  sendBtn.addEventListener('click', function(){
+    const text = textInput.value.trim();
+    if(!text) return;
+    const csrftoken = getCookie('csrftoken');
+    const url = currentChatId?`/chat/${currentChatId}/send/`:`{% url 'chat_create' %}`;
+    const body = currentChatId ? `text=${encodeURIComponent(text)}` : `text=${encodeURIComponent(text)}`;
+    // If websocket is available, send over WS for real-time
+    if(socket && socket.readyState === WebSocket.OPEN){
+      const userId = widget.dataset.userId || null;
+      const userName = widget.dataset.userName || '';
+      socket.send(JSON.stringify({action: 'send', text: text, user_id: userId, user_name: userName}));
+      textInput.value = '';
+      return;
+    }
+
+    // Fallback to HTTP POST
+    fetch(url,{
+      method:'POST',
+      credentials: 'same-origin',
+      headers:{'Content-Type':'application/x-www-form-urlencoded','X-CSRFToken':csrftoken,'X-Requested-With':'XMLHttpRequest'},
+      body: body
+    }).then(r=>r.json()).then(data=>{
+      if(data.status==='ok'){
+        if(data.chat_id){ currentChatId = data.chat_id; localStorage.setItem('pizzamania_chat_id', currentChatId); }
+        const msg = document.createElement('div');
+        msg.className = 'mb-2 text-sm';
+        msg.innerHTML = `<div class="bg-red-50 text-gray-800 px-3 py-2 rounded">${escapeHtml(text)}</div>`;
+        messagesEl.appendChild(msg);
+        textInput.value = '';
+        scrollBottom();
+      }
+    }).catch(err=>console.error(err));
+  });
+
+  function escapeHtml(s){ return (s||'').replace(/[&<>\\"']/g, function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]}) }
+})();
+</script>

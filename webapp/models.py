@@ -19,9 +19,17 @@ class Product(models.Model):
     name = models.CharField(max_length=200, verbose_name="Название")
     description = models.TextField(verbose_name="Описание")
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена")
-    discount = models.DecimalField(max_digits=5, decimal_places=2, default=0, verbose_name="Скидка (%)")
+    discount = models.DecimalField(max_digits=5, decimal_places=2, default=0, verbose_name="Скидка (%)", validators=[MinValueValidator(0)])
     image = models.ImageField(upload_to='products/', blank=True, null=True, verbose_name="Изображение")
     categories = models.ManyToManyField(Category, related_name='products', verbose_name="Категории")
+    # Специальные поля для пицц и напитков — используются для автоматического создания размеров
+    pizza_price_25 = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Цена 25 см")
+    pizza_price_30 = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Цена 30 см")
+    pizza_price_35 = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Цена 35 см")
+    drinks_price_05 = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Цена 0.5 л")
+    drinks_price_1 = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Цена 1 л")
+    # Добавки привязываются через M2M (модель Addon без FK)
+    addons = models.ManyToManyField('Addon', blank=True, related_name='products', verbose_name="Добавки")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     
     class Meta:
@@ -39,10 +47,50 @@ class Product(models.Model):
         return 0
     
     def get_discounted_price(self):
-        if self.discount > 0:
-            return self.price - (self.price * self.discount / 100)
+        # Для товаров без размеров возвращаем скидочную цену от базовой цены
+        if not self.sizes.exists():
+            if self.discount > 0:
+                return self.price - (self.price * self.discount / 100)
+            return self.price
+        # Если есть размеры — возвращаем минимальную скидочную цену среди размеров
+        prices = [s.get_discounted_price() for s in self.sizes.all()]
+        return min(prices) if prices else self.price
+
+    def get_price_list(self):
+        if self.sizes.exists():
+            return [s.get_discounted_price() for s in self.sizes.all()]
+        if self.price is not None:
+            return [self.get_discounted_price()]
+        return []
+
+    def get_min_price(self):
+        prices = self.get_price_list()
+        return min(prices) if prices else None
+
+    def get_original_min_price(self):
+        # Минимальная цена без учета скидки
+        if self.sizes.exists():
+            prices = [s.price for s in self.sizes.all()]
+            return min(prices) if prices else None
         return self.price
-    
+
+    def get_display_price(self):
+        """Строка для отображения цены: либо 'От {min}', либо просто цена (целая часть)."""
+        p = self.get_min_price()
+        if p is None:
+            return ''
+        if self.sizes.exists() and self.sizes.count() > 1:
+            return f"От {int(p)}"
+        return f"{int(p)}"
+
+    def clean(self):
+        # Больше не требуем обязательные размеры для пиццы и напитков — можно любые
+        pass
+
+    def save(self, *args, **kwargs):
+        # Сохраняем сам объект (логика управления категорией offers находится в ProductAdmin.save_model)
+        super().save(*args, **kwargs)
+
 
 
 class UserProfile(models.Model):
@@ -94,6 +142,8 @@ class OrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name="Продукт")
     quantity = models.PositiveIntegerField(default=1, verbose_name="Количество")
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена")
+    size = models.ForeignKey('Size', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Размер")
+    addons_info = models.JSONField(default=list, blank=True, verbose_name="Добавки (список ID)")
     
     class Meta:
         verbose_name = "Товар в заказе"
@@ -116,20 +166,28 @@ class Size(models.Model):
     def __str__(self):
         return f"{self.product.name} - {self.name}"
 
+    def get_discounted_price(self):
+        # Учитывает скидку родительского продукта
+        try:
+            if self.product.discount and self.product.discount > 0:
+                return self.price - (self.price * self.product.discount / 100)
+        except Exception:
+            pass
+        return self.price
+
 
 class Addon(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='addons', verbose_name="Продукт")
     name = models.CharField(max_length=100, verbose_name="Название добавки")
     image = models.ImageField(upload_to='addons/', blank=True, null=True, verbose_name="Изображение")
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена")
-    
+
     class Meta:
         verbose_name = "Добавка"
         verbose_name_plural = "Добавки"
         ordering = ['price']
-    
+
     def __str__(self):
-        return f"{self.product.name} - {self.name}"
+        return f"{self.name} - {int(self.price) if self.price is not None else ''}"
 
 
 class Review(models.Model):
@@ -151,3 +209,39 @@ class Review(models.Model):
     
     def __str__(self):
         return f"{self.name} - {self.product.name} ({self.rating}★)"
+
+
+class Chat(models.Model):
+    """Чат между пользователем и операторами."""
+    user = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='chats')
+    user_name = models.CharField(max_length=150, blank=True, default='')
+    operator = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='operator_chats')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Чат"
+        verbose_name_plural = "Чаты"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        user_label = self.user.get_username() if self.user else (self.user_name or 'Гость')
+        return f"Чат {user_label} #{self.id}"
+
+
+class Message(models.Model):
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='messages')
+    sender_user = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True)
+    sender_name = models.CharField(max_length=150, blank=True, default='')
+    text = models.TextField()
+    is_system = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Сообщение"
+        verbose_name_plural = "Сообщения"
+        ordering = ['created_at']
+
+    def __str__(self):
+        who = self.sender_name or (self.sender_user.get_username() if self.sender_user else 'Система')
+        return f"[{self.chat.id}] {who}: {self.text[:40]}"

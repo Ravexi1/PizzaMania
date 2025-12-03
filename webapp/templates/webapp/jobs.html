@@ -1,154 +1,154 @@
 {% extends 'webapp/base.html' %}
+{% load i18n %}
 
 {% block content %}
 <main class="max-w-4xl mx-auto py-10 px-4">
-    <h1 class="text-4xl font-bold mb-6 text-center">Вакансии</h1>
+    <h1 class="text-4xl font-bold mb-6 text-center">{% trans "Вакансии" %}</h1>
 
     <div class="mb-8 bg-blue-50 rounded-lg p-6 border-l-4 border-blue-600">
         <p class="text-lg text-gray-700">
-            🔥 Мы активно ищем талантливых людей, готовых присоединиться к нашей команде! 
-            Если вы увлечены своим делом и хотите работать в дружной и динамичной компании — 
-            это место для вас.
+            🔥 {% trans "Мы активно ищем талантливых людей, готовых присоединиться к нашей команде!" %} 
+            {% trans "Если вы увлечены своим делом и хотите работать в дружной и динамичной компании — это место для вас." %}
         </p>
     </div>
 
     <div class="space-y-6 mb-8">
-        <!-- Вакансия 1: Пиццайоло -->
+        <!-- {% trans "Вакансия 1: Пиццайоло" %} -->
         <div class="bg-white rounded-lg shadow-lg p-6 border-t-4 border-red-600">
             <div class="flex justify-between items-start mb-4">
                 <div>
-                    <h2 class="text-2xl font-bold">🍕 Пиццайоло (Повар пиццы)</h2>
-                    <p class="text-gray-500">Пекарня PizzaMania</p>
+                    <h2 class="text-2xl font-bold">🍕 {% trans "Пиццайоло (Повар пиццы)" %}</h2>
+                    <p class="text-gray-500">{% trans "Пекарня PizzaMania" %}</p>
                 </div>
-                <span class="bg-green-100 text-green-800 px-4 py-1 rounded-full font-semibold">Открыто</span>
+                <span class="bg-green-100 text-green-800 px-4 py-1 rounded-full font-semibold">{% trans "Открыто" %}</span>
             </div>
             
             <div class="mb-4">
-                <h3 class="font-bold mb-2">Требования:</h3>
+                <h3 class="font-bold mb-2">{% trans "Требования:" %}</h3>
                 <ul class="list-disc list-inside space-y-1 text-gray-700 ml-2">
-                    <li>Опыт работы пиццайоло минимум 1 год</li>
-                    <li>Знание технологии приготовления пиццы</li>
-                    <li>Аккуратность и внимание к деталям</li>
-                    <li>Способность работать в быстром темпе</li>
+                    <li>{% trans "Опыт работы пиццайоло минимум 1 год" %}</li>
+                    <li>{% trans "Знание технологии приготовления пиццы" %}</li>
+                    <li>{% trans "Аккуратность и внимание к деталям" %}</li>
+                    <li>{% trans "Способность работать в быстром темпе" %}</li>
                 </ul>
             </div>
 
             <div class="mb-4">
-                <h3 class="font-bold mb-2">Мы предлагаем:</h3>
+                <h3 class="font-bold mb-2">{% trans "Мы предлагаем:" %}</h3>
                 <ul class="list-disc list-inside space-y-1 text-gray-700 ml-2">
-                    <li>Зарплата: 15,000 - 20,000 грн/месяц</li>
-                    <li>График работы: 5/2 или 6/3</li>
-                    <li>Бесплатное питание на рабочем месте</li>
-                    <li>Перспективы повышения</li>
-                    <li>Дружная команда</li>
+                    <li>{% trans "Зарплата: 180000 - 200000 тг/месяц" %}</li>
+                    <li>{% trans "График работы: 5/2 или 6/3" %}</li>
+                    <li>{% trans "Бесплатное питание на рабочем месте" %}</li>
+                    <li>{% trans "Перспективы повышения" %}</li>
+                    <li>{% trans "Дружная команда" %}</li>
                 </ul>
             </div>
 
             <button class="bg-red-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-red-700">
-                Подать заявку
+                {% trans "Подать заявку" %}
             </button>
         </div>
 
-        <!-- Вакансия 2: Доставщик -->
+        <!-- {% trans "Вакансия 2: Доставщик" %} -->
         <div class="bg-white rounded-lg shadow-lg p-6 border-t-4 border-red-600">
             <div class="flex justify-between items-start mb-4">
                 <div>
-                    <h2 class="text-2xl font-bold">🚚 Курьер (Доставщик)</h2>
-                    <p class="text-gray-500">Служба доставки</p>
+                    <h2 class="text-2xl font-bold">🚚 {% trans "Курьер (Доставщик)" %}</h2>
+                    <p class="text-gray-500">{% trans "Служба доставки" %}</p>
                 </div>
-                <span class="bg-green-100 text-green-800 px-4 py-1 rounded-full font-semibold">Открыто</span>
+                <span class="bg-green-100 text-green-800 px-4 py-1 rounded-full font-semibold">{% trans "Открыто" %}</span>
             </div>
             
             <div class="mb-4">
-                <h3 class="font-bold mb-2">Требования:</h3>
+                <h3 class="font-bold mb-2">{% trans "Требования:" %}</h3>
                 <ul class="list-disc list-inside space-y-1 text-gray-700 ml-2">
-                    <li>Действующие водительские права (категория A или выше)</li>
-                    <li>Знание карты города</li>
-                    <li>Ответственность и надежность</li>
-                    <li>Умение общаться с клиентами</li>
+                    <li>{% trans "Действующие водительские права (категория A или выше)" %}</li>
+                    <li>{% trans "Знание карты города" %}</li>
+                    <li>{% trans "Ответственность и надежность" %}</li>
+                    <li>{% trans "Умение общаться с клиентами" %}</li>
                 </ul>
             </div>
 
             <div class="mb-4">
-                <h3 class="font-bold mb-2">Мы предлагаем:</h3>
+                <h3 class="font-bold mb-2">{% trans "Мы предлагаем:" %}</h3>
                 <ul class="list-disc list-inside space-y-1 text-gray-700 ml-2">
-                    <li>Зарплата: 12,000 - 18,000 грн/месяц + бонусы за заказы</li>
-                    <li>График: от 20:00 до 24:00 или от 10:00 до 18:00</li>
-                    <li>Фирменная форма</li>
-                    <li>Страховка</li>
+                    <li>{% trans "Зарплата: 140000 - 220000 тг/месяц + бонусы за заказы" %}</li>
+                    <li>{% trans "График: от 20:00 до 24:00 или от 10:00 до 18:00" %}</li>
+                    <li>{% trans "Фирменная форма" %}</li>
+                    <li>{% trans "Страховка" %}</li>
                 </ul>
             </div>
 
             <button class="bg-red-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-red-700">
-                Подать заявку
+                {% trans "Подать заявку" %}
             </button>
         </div>
 
-        <!-- Вакансия 3: Оператор call-центра -->
+        <!-- {% trans "Вакансия 3: Оператор call-центра" %} -->
         <div class="bg-white rounded-lg shadow-lg p-6 border-t-4 border-red-600">
             <div class="flex justify-between items-start mb-4">
                 <div>
-                    <h2 class="text-2xl font-bold">📞 Оператор call-центра</h2>
-                    <p class="text-gray-500">Служба поддержки клиентов</p>
+                    <h2 class="text-2xl font-bold">📞 {% trans "Оператор call-центра" %}</h2>
+                    <p class="text-gray-500">{% trans "Служба поддержки клиентов" %}</p>
                 </div>
-                <span class="bg-green-100 text-green-800 px-4 py-1 rounded-full font-semibold">Открыто</span>
+                <span class="bg-green-100 text-green-800 px-4 py-1 rounded-full font-semibold">{% trans "Открыто" %}</span>
             </div>
             
             <div class="mb-4">
-                <h3 class="font-bold mb-2">Требования:</h3>
+                <h3 class="font-bold mb-2">{% trans "Требования:" %}</h3>
                 <ul class="list-disc list-inside space-y-1 text-gray-700 ml-2">
-                    <li>Приятный голос и хорошая дикция</li>
-                    <li>Коммуникабельность и вежливость</li>
-                    <li>Навыки работы с ПК</li>
-                    <li>Усидчивость и терпение</li>
+                    <li>{% trans "Приятный голос и хорошая дикция" %}</li>
+                    <li>{% trans "Коммуникабельность и вежливость" %}</li>
+                    <li>{% trans "Навыки работы с ПК" %}</li>
+                    <li>{% trans "Усидчивость и терпение" %}</li>
                 </ul>
             </div>
 
             <div class="mb-4">
-                <h3 class="font-bold mb-2">Мы предлагаем:</h3>
+                <h3 class="font-bold mb-2">{% trans "Мы предлагаем:" %}</h3>
                 <ul class="list-disc list-inside space-y-1 text-gray-700 ml-2">
-                    <li>Зарплата: 10,000 - 14,000 грн/месяц</li>
-                    <li>Гибкий график</li>
-                    <li>Работа в офисе с комфортными условиями</li>
-                    <li>Обучение</li>
+                    <li>{% trans "Зарплата: 120000 - 170000 тг/месяц" %}</li>
+                    <li>{% trans "Гибкий график" %}</li>
+                    <li>{% trans "Работа в офисе с комфортными условиями" %}</li>
+                    <li>{% trans "Обучение" %}</li>
                 </ul>
             </div>
 
             <button class="bg-red-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-red-700">
-                Подать заявку
+                {% trans "Подать заявку" %}
             </button>
         </div>
     </div>
 
     <!-- Форма отправки CV -->
     <div class="bg-white rounded-lg shadow-lg p-8">
-        <h2 class="text-2xl font-bold mb-6">Не нашли подходящую позицию?</h2>
+        <h2 class="text-2xl font-bold mb-6">{% trans "Не нашли подходящую позицию?" %}</h2>
         <p class="text-gray-700 mb-6">
-            Отправьте нам ваше CV и резюме. Мы рассмотрим вашу кандидатуру на любые открытые позиции.
+            {% trans "Отправьте нам ваше CV и резюме. Мы рассмотрим вашу кандидатуру на любые открытые позиции." %}
         </p>
         <form class="space-y-4">
             <div>
-                <label class="block text-sm font-semibold mb-2">Имя и Фамилия</label>
+                <label class="block text-sm font-semibold mb-2">{% trans "Имя и Фамилия" %}</label>
                 <input type="text" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500">
             </div>
             <div>
-                <label class="block text-sm font-semibold mb-2">Email</label>
+                <label class="block text-sm font-semibold mb-2">{% trans "Email" %}</label>
                 <input type="email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500">
             </div>
             <div>
-                <label class="block text-sm font-semibold mb-2">Телефон</label>
+                <label class="block text-sm font-semibold mb-2">{% trans "Телефон" %}</label>
                 <input type="tel" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500">
             </div>
             <div>
-                <label class="block text-sm font-semibold mb-2">Загрузить CV (PDF, DOC)</label>
+                <label class="block text-sm font-semibold mb-2">{% trans "Загрузить CV (PDF, DOC)" %}</label>
                 <input type="file" accept=".pdf,.doc,.docx" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500">
             </div>
             <div>
-                <label class="block text-sm font-semibold mb-2">Коротко о себе</label>
-                <textarea rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Расскажите о вашем опыте и навыках"></textarea>
+                <label class="block text-sm font-semibold mb-2">{% trans "Коротко о себе" %}</label>
+                <textarea rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="{% trans 'Расскажите о вашем опыте и навыках' %}"></textarea>
             </div>
             <button type="submit" class="w-full bg-red-600 text-white py-3 rounded-lg font-bold hover:bg-red-700">
-                Отправить
+                {% trans "Отправить" %}
             </button>
         </form>
     </div>

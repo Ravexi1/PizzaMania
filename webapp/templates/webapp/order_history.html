@@ -5,14 +5,15 @@
 <main class="max-w-5xl mx-auto py-10">
     <h1 class="text-3xl font-bold mb-8">История заказов</h1>
 
-    {% if orders %}
+    {% if orders_info %}
     <div class="space-y-6">
-        {% for order in orders %}
+        {% for info in orders_info %}
+        {% with order=info.order all_reviewed=info.all_reviewed %}
         <div class="bg-white rounded-lg shadow-lg p-6">
             <!-- Заголовок заказа -->
             <div class="flex justify-between items-start mb-4">
                 <div>
-                    <h2 class="text-xl font-bold">Заказ #{order.id}</h2>
+                    <h2 class="text-xl font-bold">Заказ #{{ order.id }}</h2>
                     <p class="text-gray-600">{{ order.created_at|date:"d.m.Y H:i" }}</p>
                 </div>
                 <div class="text-right">
@@ -59,13 +60,20 @@
                         Повторить заказ
                     </a>
                     {% if order.status == 'completed' %}
-                    <a href="{% url 'order_review' order.id %}" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 transition">
-                        Оставить отзыв
-                    </a>
+                        {% if all_reviewed %}
+                        <div class="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-lg font-semibold">
+                            ✓ Отзыв оставлен
+                        </div>
+                        {% else %}
+                        <a href="{% url 'order_review' order.id %}" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 transition">
+                            Оставить отзыв
+                        </a>
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>
         </div>
+        {% endwith %}
         {% endfor %}
     </div>
     {% else %}

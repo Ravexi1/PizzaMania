@@ -18,40 +18,46 @@ class SizeInline(admin.TabularInline):
     model = Size
     extra = 1
     fields = ['name', 'price']
+    verbose_name = "Размеры и цены"
 
 
-class AddonInline(admin.TabularInline):
-    model = Addon
-    extra = 1
-    fields = ['name', 'price', 'image']
+# Addon теперь глобальная модель, привязывается через M2M в Product
 
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'price', 'discount', 'created_at']
+    list_display = ['name', 'discount', 'created_at']
     list_filter = ['categories', 'created_at']
     search_fields = ['name', 'description']
-    filter_horizontal = ['categories']
-    inlines = [ReviewInline, SizeInline, AddonInline]
+    filter_horizontal = ['categories', 'addons']
+    inlines = [SizeInline, ReviewInline]
+    # Убираем лишние поля из формы
+    exclude = ['price', 'pizza_price_25', 'pizza_price_30', 'pizza_price_35', 'drinks_price_05', 'drinks_price_1']
     
     def save_model(self, request, obj, form, change):
+        # Если цена не установлена (поле исключено из формы), устанавливаем её на 0
+        # Позже, при наличии размеров, она будет вычислена как минимальная
+        if not obj.price:
+            obj.price = 0
+        
         super().save_model(request, obj, form, change)
-        # Автоматически добавляем категорию "Акции" если есть скидка
-        if obj.discount > 0:
+        
+        # Управляем категорией "Акции" на основе значения скидки
+        try:
             promo_category, created = Category.objects.get_or_create(
-                slug='offers',
+                slug='offers', 
                 defaults={'name': 'Акции'}
             )
-            if promo_category not in obj.categories.all():
-                obj.categories.add(promo_category)
-        else:
-            # Удаляем категорию "Акции" если скидки нет
-            try:
-                promo_category = Category.objects.get(slug='offers')
+            if obj.discount and obj.discount > 0:
+                # Добавляем категорию "Акции" если скидка > 0
+                if promo_category not in obj.categories.all():
+                    obj.categories.add(promo_category)
+            else:
+                # Удаляем категорию "Акции" если скидка = 0
                 if promo_category in obj.categories.all():
                     obj.categories.remove(promo_category)
-            except Category.DoesNotExist:
-                pass
+        except Category.DoesNotExist:
+            pass
 
 
 @admin.register(Review)
@@ -102,6 +108,5 @@ class SizeAdmin(admin.ModelAdmin):
 
 @admin.register(Addon)
 class AddonAdmin(admin.ModelAdmin):
-    list_display = ['product', 'name', 'price']
-    list_filter = ['product']
-    search_fields = ['product__name', 'name']
+    list_display = ['name', 'price']
+    search_fields = ['name']

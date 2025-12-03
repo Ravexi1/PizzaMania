@@ -11,46 +11,22 @@
         <form id="csrf-form" style="display:none">{% csrf_token %}</form>
 
         <style>
-            /* Затемнение карточки без затемнения кнопки */
-            .removed { background-color: #eef2f6; padding: 1rem; position: relative; min-height: 150px; display: flex; align-items: center; justify-content: center; }
-            .removed .product-name,
-            .removed .quantity-display,
-            .removed .subtotal-display,
-            .removed .product-image { opacity: 0.45; filter: grayscale(100%); }
-            .remove-btn { display:inline-block; padding:0.4rem 0.6rem; border:1px solid #e5e7eb; border-radius:6px; background:white; }
-            .remove-btn.restore { 
-                padding: 0.75rem 1.5rem;
-                background: #10b981;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                font-weight: 500;
-                font-size: 1rem;
-                z-index: 10;
-            }
-            .remove-btn.restore:hover { background: #059669; }
-
             /* Убрать стрелки в Chrome, Safari, Edge */
             input[type="number"]::-webkit-inner-spin-button,
             input[type="number"]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
+                -webkit-appearance: none;
+                margin: 0;
             }
 
             /* Убрать стрелки в Firefox */
             input[type="number"] {
-            -moz-appearance: textfield;
+                -moz-appearance: textfield;
             }
-
         </style>
 
         <div class="space-y-4" id="cart-items">
             {% for item in cart_items %}
-            <div class="cart-item flex items-center gap-6 border-b py-4" data-product-id="{{ item.product.pk }}" data-unit-price="{{ item.price }}">
+            <div class="cart-item flex items-center gap-6 border-b py-4" data-product-id="{{ item.product.pk }}" data-cart-key="{{ item.cart_key }}" data-unit-price="{{ item.price }}" data-size-id="{{ item.size_id|default:'' }}" data-addon-ids="{{ item.addon_ids|join:',' }}">
                 <!-- Изображение -->
                 <div class="w-24 h-24">
                     {% if item.product.image %}
@@ -77,7 +53,7 @@
                 <!-- Количество -->
                 <div class="flex items-center gap-2">
                     <button type="button" class="decrease-qty border rounded px-3 py-1 hover:bg-gray-100">−</button>
-                    <input type="number" value="{{ item.quantity }}" min="1" class="border rounded px-3 py-1 w-20 quantity-input text-center" data-product-id="{{ item.product.pk }}">
+                    <input type="number" value="{{ item.quantity }}" min="1" class="border rounded px-3 py-1 w-20 quantity-input text-center">
                     <button type="button" class="increase-qty border rounded px-3 py-1 hover:bg-gray-100">+</button>
                 </div>
                 <!-- Сумма -->
@@ -136,7 +112,9 @@
     function recalcTotal() {
         let total = 0;
         document.querySelectorAll('.cart-item').forEach(item => {
-            if (item.classList.contains('removed')) return;
+            // Пропускаем удалённые товары
+            if (item.dataset.removed === 'true') return;
+            
             const unit = parseFloat(item.dataset.unitPrice || 0);
             const qty = parseInt(item.querySelector('.quantity-input').value) || 0;
             total += unit * qty;
@@ -179,10 +157,11 @@
     });
 
     function sendUpdate(item) {
-        const productId = item.dataset.productId;
+        const cartKey = item.dataset.cartKey;
         const qty = item.querySelector('.quantity-input').value;
         const csrf = getCsrfToken();
-        fetch(`/cart/update/${productId}/`, {
+        const currentLang = window.location.pathname.split('/')[1] || 'ru';
+        fetch(`/${currentLang}/cart/update_item/`, {
             method: 'POST',
             credentials: 'same-origin',
             headers: {
@@ -190,60 +169,110 @@
                 'X-CSRFToken': csrf,
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: `quantity=${encodeURIComponent(qty)}`
+            body: `cart_key=${encodeURIComponent(cartKey)}&quantity=${encodeURIComponent(qty)}`
         }).catch(() => {});
     }
 
-    // remove / restore
+    // remove - удаляем товар сразу с возможностью восстановления
     document.querySelectorAll('.remove-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const item = this.closest('.cart-item');
             if (!item) return;
+            const cartKey = item.dataset.cartKey;
             const productId = item.dataset.productId;
-            const btnEl = this;
-            // if already removed (restore)
-            if (item.classList.contains('removed')) {
-                // restore locally
-                item.classList.remove('removed');
-                btnEl.textContent = 'Удалить';
-                btnEl.classList.remove('restore');
-                btnEl.classList.remove('text-green-600');
-                btnEl.classList.add('text-red-600');
-                item.querySelectorAll('button.increase-qty, button.decrease-qty, input.quantity-input').forEach(el => el.disabled = false);
-                // send add request to server to actually restore into session
-                const qty = item.querySelector('.quantity-input').value || 1;
-                const csrf = getCsrfToken();
-                fetch(`/cart/add/${productId}/`, {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: {
+            const sizeId = item.dataset.sizeId || '';
+            const addonIdsStr = item.dataset.addonIds || '';
+            const addonIds = addonIdsStr ? addonIdsStr.split(',').filter(id => id.trim()) : [];
+            const quantity = item.querySelector('.quantity-input')?.value || 1;
+            
+            // Сохраняем данные для восстановления
+            const itemData = {
+                productId,
+                sizeId,
+                addonIds: addonIds,
+                quantity
+            };
+            
+            // Визуально помечаем как удалённый
+            item.classList.add('opacity-50');
+            item.style.position = 'relative';
+            
+            // Создаём оверлей с кнопкой восстановления
+            const overlay = document.createElement('div');
+            overlay.className = 'absolute inset-0 bg-gray-300 bg-opacity-70 flex items-center justify-center rounded z-10';
+            overlay.style.pointerEvents = 'auto';
+            overlay.innerHTML = `
+                <button type="button" class="restore-btn bg-green-500 text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-green-600 hover:scale-105 transition-all pointer-events-auto shadow-2xl">
+                    Восстановить
+                </button>
+            `;
+            item.appendChild(overlay);
+            
+            // Скрываем из подсчёта итого
+            item.dataset.removed = 'true';
+            recalcTotal();
+            
+            // УДАЛЯЕМ ТОВАР СРАЗУ
+            const csrf = getCsrfToken();
+            const currentLang = window.location.pathname.split('/')[1] || 'ru';
+            fetch(`/${currentLang}/cart/remove_item/`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrf,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: `cart_key=${encodeURIComponent(cartKey)}`
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.status === 'ok') {
+                      // Товар успешно удалён, сохраняем данные для восстановления
+                      item.dataset.itemData = JSON.stringify(itemData);
+                  }
+              })
+              .catch(() => {});
+            
+            // Обработчик восстановления
+            overlay.querySelector('.restore-btn').addEventListener('click', function() {
+                // Восстанавливаем товар через добавление
+                const itemDataStr = item.dataset.itemData;
+                if (itemDataStr) {
+                    const data = JSON.parse(itemDataStr);
+                    const formData = new URLSearchParams();
+                    formData.append('quantity', data.quantity);
+                    if (data.sizeId) formData.append('size_id', data.sizeId);
+                    if (data.addonIds && data.addonIds.length > 0) {
+                        data.addonIds.forEach(addonId => {
+                            formData.append('addon_ids', addonId);
+                        });
+                    }
+                    
+                    fetch(`/${currentLang}/cart/add/${data.productId}/`, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
                             'Content-Type': 'application/x-www-form-urlencoded',
                             'X-CSRFToken': csrf,
                             'X-Requested-With': 'XMLHttpRequest'
                         },
-                    body: `quantity=${encodeURIComponent(qty)}`
-                }).catch(() => {});
-            } else {
-                // mark removed visually (do not use parent opacity)
-                item.classList.add('removed');
-                btnEl.textContent = 'Восстановить';
-                btnEl.classList.add('restore');
-                btnEl.classList.remove('text-red-600');
-                btnEl.classList.add('text-green-600');
-                item.querySelectorAll('button.increase-qty, button.decrease-qty, input.quantity-input').forEach(el => el.disabled = true);
-                // send remove request to server
-                const csrf = getCsrfToken();
-                fetch(`/cart/remove/${productId}/`, {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                            'X-CSRFToken': csrf,
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                }).catch(() => {});
-            }
-            recalcTotal();
+                        body: formData.toString()
+                    }).then(response => response.json())
+                      .then(restoreData => {
+                          if (restoreData.status === 'ok') {
+                              // Обновляем cart_key на новый
+                              item.dataset.cartKey = restoreData.cart_key || cartKey;
+                              overlay.remove();
+                              item.classList.remove('opacity-50');
+                              item.style.position = '';
+                              delete item.dataset.removed;
+                              delete item.dataset.itemData;
+                              recalcTotal();
+                          }
+                      })
+                      .catch(() => {});
+                }
+            });
         });
     });
 

@@ -37,15 +37,15 @@
                         <!-- Оценка товара (1-5 звезд с hover эффектом) -->
                         <div class="flex items-center gap-3">
                             <label class="text-sm font-semibold">Оценка:</label>
-                            <div class="flex gap-2 star-rating" data-product-id="{{ item_status.item.product.id }}">
+                            <div class="flex gap-2 star-rating" data-item-id="{{ item_status.item.id }}">
                                 {% for star in "12345" %}
                                 <label class="cursor-pointer group relative">
-                                    <input type="radio" name="rating_{{ item_status.item.product.id }}" value="{{ star }}" class="hidden" data-star="{{ star }}">
+                                    <input type="radio" name="rating_{{ item_status.item.id }}" value="{{ star }}" class="hidden" data-star="{{ star }}">
                                     <span class="text-3xl text-gray-300 hover:text-yellow-400 transition-colors duration-100 star-icon" data-value="{{ star }}">★</span>
                                 </label>
                                 {% endfor %}
                             </div>
-                            <span class="text-sm text-red-600 error-message" data-product="{{ item_status.item.product.id }}" style="display:none;">
+                            <span class="text-sm text-red-600 error-message" data-item="{{ item_status.item.id }}" style="display:none;">
                                 Требуется оценка
                             </span>
                         </div>
@@ -88,10 +88,10 @@
 <script>
 // Улучшенный UI для звёзд с правильным hover эффектом
 document.querySelectorAll('.star-rating').forEach(container => {
-    const productId = container.dataset.productId;
+    const itemId = container.dataset.itemId;
     const stars = container.querySelectorAll('.star-icon');
     const inputs = container.querySelectorAll('input[type="radio"]');
-    const errorMsg = document.querySelector(`.error-message[data-product="${productId}"]`);
+    const errorMsg = document.querySelector(`.error-message[data-item="${itemId}"]`);
     
     // Функция для обновления отображения звёзд
     function updateStars(count) {
@@ -138,9 +138,9 @@ document.getElementById('reviewForm').addEventListener('submit', function(e) {
     let errorFound = false;
     
     document.querySelectorAll('.star-rating').forEach(container => {
-        const productId = container.dataset.productId;
+        const itemId = container.dataset.itemId;
         const selected = container.querySelector('input[type="radio"]:checked');
-        const errorMsg = document.querySelector(`.error-message[data-product="${productId}"]`);
+        const errorMsg = document.querySelector(`.error-message[data-item="${itemId}"]`);
         
         if (!selected) {
             isValid = false;

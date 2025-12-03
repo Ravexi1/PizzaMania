@@ -21,7 +21,7 @@
 
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-2">Телефон *</label>
-                <input type="tel" name="phone" required placeholder="+7 777 123 4567" class="w-full border rounded px-4 py-2">
+                <input type="tel" name="phone" required placeholder="+7 777 123 4567" pattern="^\+?\d{10,15}$" inputmode="numeric" id="register-phone" class="w-full border rounded px-4 py-2">
             </div>
 
             <div class="mb-4">
@@ -60,4 +60,49 @@
         </p>
     </div>
 </main>
+<!-- Modal for registration errors -->
+{% if messages %}
+<div id="error-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 max-w-lg w-full mx-4">
+        <h3 class="text-xl font-semibold mb-3">Ошибка при регистрации</h3>
+        <div class="mb-4">
+            {% for message in messages %}
+                <p class="text-sm text-gray-700 mb-1">{{ message }}</p>
+            {% endfor %}
+        </div>
+        <div class="flex justify-end gap-3">
+            <button id="modal-close" class="px-4 py-2 rounded border">Закрыть</button>
+            <button id="modal-fix-phone" class="px-4 py-2 rounded bg-red-600 text-white">Исправить номер</button>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function(){
+        const modal = document.getElementById('error-modal');
+        if (!modal) return;
+        const close = document.getElementById('modal-close');
+        const fix = document.getElementById('modal-fix-phone');
+        const phone = document.getElementById('register-phone');
+        close.addEventListener('click', function(){ modal.remove(); if(phone) phone.focus(); });
+        fix.addEventListener('click', function(){ modal.remove(); if(phone){ phone.focus(); phone.scrollIntoView({behavior:'smooth', block:'center'}); } });
+    });
+</script>
+{% endif %}
+
+<script>
+    // Close modal on click outside or Esc
+    document.addEventListener('DOMContentLoaded', function(){
+        const modal = document.getElementById('error-modal');
+        if (!modal) return;
+        function removeModal() {
+            if (modal && modal.parentElement) modal.remove();
+            document.removeEventListener('keydown', escHandler);
+        }
+        function escHandler(e){ if (e.key === 'Escape') removeModal(); }
+        // Click outside
+        modal.addEventListener('click', function(e){ if (e.target === modal) removeModal(); });
+        // Esc key
+        document.addEventListener('keydown', escHandler);
+    });
+</script>
 {% endblock %}

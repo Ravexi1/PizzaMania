@@ -1,89 +1,107 @@
 {% extends 'webapp/base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Контакты" %} — PizzaMania{% endblock %}
 
 {% block content %}
-<main class="max-w-4xl mx-auto py-10 px-4">
-    <h1 class="text-4xl font-bold mb-6 text-center">Контакты</h1>
+<main class="max-w-5xl mx-auto py-10 px-4">
+    <!-- Hero блок -->
+    <div class="bg-gradient-to-r from-red-600 to-orange-500 text-white rounded-2xl p-12 mb-12 text-center">
+        <h1 class="text-5xl font-bold mb-4">{% trans "Свяжитесь с нами" %}</h1>
+        <p class="text-xl opacity-90">{% trans "Мы всегда рады вашим вопросам и предложениям!" %}</p>
+    </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-        <!-- Информация для связи -->
-        <div class="bg-white rounded-lg shadow-lg p-8">
-            <h2 class="text-2xl font-bold mb-6">Свяжитесь с нами</h2>
-
-            <div class="space-y-6">
-                <!-- Телефон -->
-                <div>
-                    <h3 class="text-lg font-bold mb-2">📞 Телефон</h3>
-                    <p class="text-gray-700">
-                        <a href="tel:+380501234567" class="text-red-600 hover:text-red-700">+38 (050) 123-45-67</a>
-                    </p>
-                    <p class="text-sm text-gray-500 mt-1">Доступна 24/7 для заказов</p>
+    <div class="grid md:grid-cols-2 gap-12">
+        <!-- Контактная информация -->
+        <div class="space-y-8">
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-phone text-red-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-2">{% trans "Телефон" %}</h3>
+                        <a href="tel:+77777777777" class="text-red-600 hover:text-red-700 text-lg">+7 (777) 777-77-77</a>
+                        <p class="text-gray-600 text-sm mt-1">{% trans "Звоните с 9:00 до 23:00" %}</p>
+                    </div>
                 </div>
+            </div>
 
-                <!-- Email -->
-                <div>
-                    <h3 class="text-lg font-bold mb-2">📧 Email</h3>
-                    <p class="text-gray-700">
-                        <a href="mailto:info@pizzamania.ua" class="text-red-600 hover:text-red-700">info@pizzamania.ua</a>
-                    </p>
-                    <p class="text-sm text-gray-500 mt-1">Ответим в течение 1 часа</p>
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-envelope text-red-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-2">{% trans "Email" %}</h3>
+                        <a href="mailto:info@pizzamania.kz" class="text-red-600 hover:text-red-700">info@pizzamania.kz</a>
+                        <p class="text-gray-600 text-sm mt-1">{% trans "Ответим в течение 24 часов" %}</p>
+                    </div>
                 </div>
+            </div>
 
-                <!-- Адрес -->
-                <div>
-                    <h3 class="text-lg font-bold mb-2">📍 Основной офис</h3>
-                    <p class="text-gray-700">
-                        ул. Героев Днепра, 25<br>
-                        Киев, Украина, 02000
-                    </p>
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-map-marker-alt text-red-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-2">{% trans "Адрес" %}</h3>
+                        <p class="text-gray-700">{% trans "г. Алматы, ул. Абая 150" %}</p>
+                        <p class="text-gray-600 text-sm mt-1">{% trans "Работаем с 9:00 до 23:00" %}</p>
+                    </div>
                 </div>
+            </div>
 
-                <!-- Время работы -->
-                <div>
-                    <h3 class="text-lg font-bold mb-2">🕐 Время работы</h3>
-                    <p class="text-gray-700">
-                        Пн-Пт: 10:00 - 23:00<br>
-                        Сб-Вс: 11:00 - 24:00<br>
-                        <span class="text-green-600 font-semibold">Доставка 24/7</span>
-                    </p>
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h3 class="font-bold text-lg mb-4">{% trans "Мы в социальных сетях" %}</h3>
+                <div class="flex gap-4">
+                    <a href="#" class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="#" class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition">
+                        <i class="fab fa-telegram"></i>
+                    </a>
+                    <a href="#" class="w-12 h-12 bg-green-600 text-white rounded-full flex items-center justify-center hover:bg-green-700 transition">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
                 </div>
             </div>
         </div>
 
         <!-- Форма обратной связи -->
-        <div class="bg-white rounded-lg shadow-lg p-8">
-            <h2 class="text-2xl font-bold mb-6">Форма обратной связи</h2>
-            <form class="space-y-4">
+        <div class="bg-white p-8 rounded-xl shadow-md">
+            <h2 class="text-2xl font-bold mb-6">{% trans "Напишите нам" %}</h2>
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
                 <div>
-                    <label class="block text-sm font-semibold mb-2">Имя</label>
-                    <input type="text" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Ваше имя">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{% trans "Ваше имя" %}</label>
+                    <input type="text" name="name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="{% trans 'Иван Иванов' %}">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold mb-2">Email</label>
-                    <input type="email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Ваш email">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{% trans "Email" %}</label>
+                    <input type="email" name="email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="example@mail.com">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold mb-2">Телефон</label>
-                    <input type="tel" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Ваш телефон">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{% trans "Тема" %}</label>
+                    <input type="text" name="subject" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="{% trans 'О чём вы хотите написать?' %}">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold mb-2">Сообщение</label>
-                    <textarea required rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Ваше сообщение"></textarea>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{% trans "Сообщение" %}</label>
+                    <textarea name="message" required rows="5" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="{% trans 'Ваше сообщение...' %}"></textarea>
                 </div>
-                <button type="submit" class="w-full bg-red-600 text-white py-2 rounded-lg font-bold hover:bg-red-700">
-                    Отправить
+                <button type="submit" class="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition">
+                    {% trans "Отправить сообщение" %}
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- Социальные сети -->
-    <div class="bg-red-50 rounded-lg p-8 text-center">
-        <h2 class="text-2xl font-bold mb-4">Следите за нами в соцсетях</h2>
-        <div class="flex justify-center gap-6 flex-wrap">
-            <a href="https://facebook.com" class="text-2xl hover:scale-110 transition">📘 Facebook</a>
-            <a href="https://instagram.com" class="text-2xl hover:scale-110 transition">📷 Instagram</a>
-            <a href="https://telegram.org" class="text-2xl hover:scale-110 transition">✈️ Telegram</a>
-            <a href="https://viber.com" class="text-2xl hover:scale-110 transition">📱 Viber</a>
+    <!-- Карта (опционально) -->
+    <div class="mt-12 bg-white p-4 rounded-xl shadow-md">
+        <h2 class="text-2xl font-bold mb-4">{% trans "Как нас найти" %}</h2>
+        <div class="bg-gray-200 h-96 rounded-lg flex items-center justify-center">
+            <p class="text-gray-600">{% trans "Здесь может быть интеграция с картой" %}</p>
         </div>
     </div>
 </main>

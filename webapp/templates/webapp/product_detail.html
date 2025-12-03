@@ -1,4 +1,5 @@
 {% extends 'webapp/base.html' %}
+{% load l10n %}
 
 {% block content %}
 <main class="max-w-5xl mx-auto py-10">
@@ -46,11 +47,14 @@
                 {% if product.sizes.exists %}
                 <div class="mb-6">
                     <label class="block text-sm font-semibold mb-2">Выберите размер:</label>
-                    <div class="space-y-2" id="sizes-container">
+                    <div class="flex gap-3" id="sizes-container">
                         {% for size in product.sizes.all %}
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="size" value="{{ size.id }}" data-price="{{ size.price }}" class="size-input" {% if forloop.first %}checked{% endif %}>
-                            <span>{{ size.name }} - {{ size.price|floatformat:0 }} ₸</span>
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="size" value="{{ size.id }}" data-price="{{ size.price|floatformat:0|cut:' ' }}" class="size-input hidden" {% if forloop.first %}checked{% endif %}>
+                            <div class="size-btn border-2 rounded-lg px-4 py-3 text-center transition hover:border-red-600 {% if forloop.first %}border-red-600 bg-red-50{% else %}border-gray-200{% endif %}">
+                                <div class="font-semibold text-lg">{{ size.name }}</div>
+                                <div class="text-red-600 font-bold">{{ size.price|floatformat:0 }} ₸</div>
+                            </div>
                         </label>
                         {% endfor %}
                     </div>
@@ -63,8 +67,8 @@
                     <h3 class="text-lg font-semibold mb-3">Добавить по вкусу 🌶️</h3>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-3" id="addons-container">
                         {% for addon in product.addons.all %}
-                        <label class="flex flex-col items-center gap-2 p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-red-600 transition addon-card" data-addon-id="{{ addon.id }}" data-addon-price="{{ addon.price }}">
-                            <input type="checkbox" name="addon" value="{{ addon.id }}" class="addon-input hidden" data-addon-price="{{ addon.price }}">
+                        <label class="addon-card flex flex-col items-center gap-2 p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-red-600 transition" data-addon-id="{{ addon.id }}" data-addon-price="{{ addon.price|floatformat:0|cut:' ' }}">
+                            <input type="checkbox" name="addon" value="{{ addon.id }}" class="addon-input hidden" data-addon-price="{{ addon.price|floatformat:0|cut:' ' }}">
                             {% if addon.image %}
                             <img src="{{ addon.image.url }}" alt="{{ addon.name }}" class="w-16 h-16 object-cover rounded">
                             {% else %}
@@ -100,60 +104,90 @@
                 </div>
 
                 <script>
-                    // Базовая цена продукта
-                    const basePrice = {{ product.get_discounted_price }};
-                    const productId = {{ product.pk }};
-                    
-                    function getCsrfToken() {
-                        var el = document.querySelector('[name=csrfmiddlewaretoken]');
-                        var token = el ? el.value : null;
-                        if (!token) {
-                            var cookieRow = (document.cookie || '').split('; ').find(function(row) { return row.indexOf('csrftoken=') === 0; });
-                            if (cookieRow) {
-                                var parts = cookieRow.split('=');
-                                if (parts.length >= 2) token = parts.slice(1).join('=');
+                    document.addEventListener('DOMContentLoaded', function() {
+                        // Базовая цена продукта
+                        const basePrice = {{ product.get_discounted_price|floatformat:0|cut:' ' }};
+                        const productId = {{ product.pk }};
+                        
+                        function getCsrfToken() {
+                            var el = document.querySelector('[name=csrfmiddlewaretoken]');
+                            var token = el ? el.value : null;
+                            if (!token) {
+                                var cookieRow = (document.cookie || '').split('; ').find(function(row) { return row.indexOf('csrftoken=') === 0; });
+                                if (cookieRow) {
+                                    var parts = cookieRow.split('=');
+                                    if (parts.length >= 2) token = parts.slice(1).join('=');
+                                }
                             }
-                        }
-                        return token || '';
-                    }
-                    
-                    // Функция пересчёта цены
-                    function updatePrice() {
-                        let totalPrice = basePrice;
-                        
-                        // Добавляем цену выбранного размера (если есть размеры)
-                        const selectedSize = document.querySelector('input[name="size"]:checked');
-                        if (selectedSize) {
-                            totalPrice = parseFloat(selectedSize.dataset.price);
+                            return token || '';
                         }
                         
-                        // Добавляем цены выбранных добавок
-                        const selectedAddons = document.querySelectorAll('input[name="addon"]:checked');
-                        selectedAddons.forEach(addon => {
-                            totalPrice += parseFloat(addon.dataset.addonPrice);
-                        });
-                        
-                        // Обновляем отображение цены (без дробных частей)
-                        document.getElementById('price-display').textContent = Math.round(totalPrice);
-                    }
+                        // Функция пересчёта цены
+                        function updatePrice() {
+                            let totalPrice = basePrice;
+                            
+                            // Добавляем цену выбранного размера (если есть размеры)
+                            const selectedSize = document.querySelector('input[name="size"]:checked');
+                            if (selectedSize) {
+                                totalPrice = parseFloat(selectedSize.dataset.price);
+                            }
+                            
+                            // Добавляем цены выбранных добавок
+                            const selectedAddons = document.querySelectorAll('input[name="addon"]:checked');
+                            selectedAddons.forEach(addon => {
+                                totalPrice += parseFloat(addon.dataset.addonPrice);
+                            });
+                            
+                            // Обновляем отображение цены (без дробных частей)
+                            document.getElementById('price-display').textContent = Math.round(totalPrice);
+                        }
                     
                     // Слушатель на размеры
                     document.querySelectorAll('input[name="size"]').forEach(radio => {
-                        radio.addEventListener('change', updatePrice);
-                    });
-                    
-                    // Слушатель на добавки
-                    document.querySelectorAll('input[name="addon"]').forEach(checkbox => {
-                        checkbox.addEventListener('change', function() {
-                            // Визуальное выделение выбранной добавки
-                            const card = this.closest('.addon-card');
-                            if (this.checked) {
-                                card.classList.add('border-red-600', 'bg-red-50');
-                            } else {
-                                card.classList.remove('border-red-600', 'bg-red-50');
+                        radio.addEventListener('change', function() {
+                            // Убираем выделение со всех
+                            document.querySelectorAll('.size-btn').forEach(btn => {
+                                btn.classList.remove('border-red-600', 'bg-red-50');
+                                btn.classList.add('border-gray-200');
+                            });
+                            // Добавляем выделение на выбранный
+                            const label = this.closest('label');
+                            const sizeBtn = label ? label.querySelector('.size-btn') : null;
+                            if (sizeBtn) {
+                                sizeBtn.classList.add('border-red-600', 'bg-red-50');
+                                sizeBtn.classList.remove('border-gray-200');
                             }
                             updatePrice();
                         });
+                    });
+                    
+                    // Инициализируем цену при загрузке
+                    updatePrice();
+                    
+                    // Слушатель на добавки
+                    document.querySelectorAll('.addon-card').forEach(card => {
+                        const checkbox = card.querySelector('input[name="addon"]');
+                        if (checkbox) {
+                            // Обработчик изменения checkbox
+                            checkbox.addEventListener('change', function() {
+                                // Обновляем визуальное состояние
+                                if (this.checked) {
+                                    card.classList.add('border-red-600', 'bg-red-50');
+                                } else {
+                                    card.classList.remove('border-red-600', 'bg-red-50');
+                                }
+                                updatePrice();
+                            });
+                            
+                            // Клик по карточке переключает checkbox (кроме клика по самому checkbox)
+                            card.addEventListener('click', function(e) {
+                                if (e.target !== checkbox && !checkbox.contains(e.target)) {
+                                    e.preventDefault();
+                                    checkbox.checked = !checkbox.checked;
+                                    checkbox.dispatchEvent(new Event('change'));
+                                }
+                            });
+                        }
                     });
                     
                     document.getElementById('add-to-cart-btn').addEventListener('click', function() {
@@ -182,7 +216,8 @@
                             });
                         }
                         
-                        fetch(`/cart/add/${productId}/`, {
+                        const currentLang = window.location.pathname.split('/')[1] || 'ru';
+                        fetch(`/${currentLang}/cart/add/${productId}/`, {
                             method: 'POST',
                             credentials: 'same-origin',
                             headers: {
@@ -220,6 +255,7 @@
                         })
                         .catch(err => console.error('Error:', err));
                     });
+                    }); // Закрытие DOMContentLoaded
                 </script>
             </div>
         </div>

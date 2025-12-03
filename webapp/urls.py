@@ -6,6 +6,8 @@ urlpatterns = [
     path('about/', views.about, name='about'),
     path('contacts/', views.contacts, name='contacts'),
     path('jobs/', views.jobs, name='jobs'),
+    path('legal/', views.legal, name='legal'),
+    path('delivery-payment/', views.delivery_payment, name='delivery_payment'),
     
     # Auth
     path('register/', views.register, name='register'),
@@ -24,6 +26,8 @@ urlpatterns = [
     path('cart/add/<int:pk>/', views.add_to_cart, name='add_to_cart'),
     path('cart/remove/<int:pk>/', views.remove_from_cart, name='remove_from_cart'),
     path('cart/update/<int:pk>/', views.update_cart, name='update_cart'),
+    path('cart/update_item/', views.update_cart_item, name='update_cart_item'),
+    path('cart/remove_item/', views.remove_cart_item, name='remove_cart_item'),
     
     # Orders
     path('orders/', views.order_history, name='order_history'),
@@ -33,4 +37,12 @@ urlpatterns = [
     
     # Checkout
     path('checkout/', views.checkout, name='checkout'),
+    
+    # Support / Chat
+    path('support/', views.support, name='support'),
+    path('chat/create/', views.chat_create, name='chat_create'),
+    path('chat/<int:chat_id>/', views.chat_detail, name='chat_detail'),
+    path('chat/<int:chat_id>/messages/', views.chat_messages, name='chat_messages'),
+    path('chat/<int:chat_id>/send/', views.chat_send, name='chat_send'),
+    path('chat/<int:chat_id>/operator-join/', views.chat_operator_join, name='chat_operator_join'),
 ]

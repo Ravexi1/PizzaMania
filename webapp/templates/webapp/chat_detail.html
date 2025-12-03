@@ -1,0 +1,90 @@
+{% extends 'webapp/base.html' %}
+
+{% block content %}
+<main class="max-w-4xl mx-auto py-10 px-4">
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h2 class="text-2xl font-bold">Чат #{{ chat.id }}</h2>
+        <div class="text-sm text-gray-500">Пользователь: {{ chat.user_name|default:chat.user.username }}</div>
+      </div>
+      <div class="text-right">
+        {% if chat.operator %}
+          <div class="text-sm text-gray-600">Оператор: {{ chat.operator.get_full_name|default:chat.operator.username }}</div>
+        {% else %}
+          <form method="post" action="{% url 'chat_operator_join' chat.id %}">{% csrf_token %}<button class="px-3 py-1 bg-green-600 text-white rounded">Подключиться</button></form>
+        {% endif %}
+      </div>
+    </div>
+
+    <div id="messages" class="h-96 overflow-auto border rounded p-4 mb-4 bg-gray-50">
+      {% for msg in messages %}
+        <div class="mb-3">
+          <div class="text-xs text-gray-400">{{ msg.created_at|date:"d.m.Y H:i" }} {% if msg.is_system %}<span class="text-green-600">[система]</span>{% endif %}</div>
+          <div class="mt-1">
+            <strong class="text-sm">{{ msg.sender_name|default:msg.sender_user.username }}</strong>
+            <div class="text-sm text-gray-800">{{ msg.text }}</div>
+          </div>
+        </div>
+      {% empty %}
+        <div class="text-gray-500">Пока нет сообщений</div>
+      {% endfor %}
+    </div>
+
+    <form id="operator-send" method="post" action="{% url 'chat_send' chat.id %}" class="flex gap-2">
+      {% csrf_token %}
+      <input type="text" name="text" class="flex-1 px-3 py-2 border rounded" placeholder="Ваше сообщение">
+      <button class="px-4 py-2 bg-red-600 text-white rounded">Отправить</button>
+    </form>
+  </div>
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function(){
+  const messagesEl = document.getElementById('messages');
+  const form = document.getElementById('operator-send');
+  const input = form.querySelector('input[name=text]');
+  const chatId = '{{ chat.id }}';
+  const proto = (location.protocol === 'https:') ? 'wss' : 'ws';
+  const wsUrl = `${proto}://${location.host}/ws/chat/${chatId}/`;
+  let socket = null;
+  function scrollBottom(){ messagesEl.scrollTop = messagesEl.scrollHeight }
+  try{
+    socket = new WebSocket(wsUrl);
+    socket.onmessage = function(e){
+      try{
+        const d = JSON.parse(e.data);
+        const wrapper = document.createElement('div');
+        wrapper.className = 'mb-3';
+        const meta = document.createElement('div');
+        meta.className = 'text-xs text-gray-400';
+        meta.textContent = new Date().toLocaleString();
+        if(d.is_system) meta.innerHTML += ' <span class="text-green-600">[система]</span>';
+        const body = document.createElement('div');
+        body.className = 'mt-1';
+        body.innerHTML = `<strong class="text-sm">${d.sender_name||''}</strong><div class="text-sm text-gray-800">${d.message}</div>`;
+        wrapper.appendChild(meta);
+        wrapper.appendChild(body);
+        messagesEl.appendChild(wrapper);
+        scrollBottom();
+      }catch(e){ console.error(e) }
+    };
+  }catch(e){ console.error('ws error', e) }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    const text = input.value.trim();
+    if(!text) return;
+    if(socket && socket.readyState===WebSocket.OPEN){
+      socket.send(JSON.stringify({action: 'send', text: text, user_id: '{{ request.user.id|default:"" }}', user_name: '{{ request.user.get_full_name|default:"" }}'}));
+      input.value = '';
+      return;
+    }
+    // fallback to normal POST
+    form.submit();
+  });
+})();
+</script>
+{% endblock %}
