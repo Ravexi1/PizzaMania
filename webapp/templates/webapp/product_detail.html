@@ -22,8 +22,9 @@
                 
                 <div class="mb-4">
                     {% for category in product.categories.all %}
+                    {% load custom_filters %}
                     <span class="inline-block bg-red-100 text-red-600 px-3 py-1 rounded-full text-sm mr-2">
-                        {{ category.name }}
+                        {% category_label category %}
                     </span>
                     {% endfor %}
                 </div>
