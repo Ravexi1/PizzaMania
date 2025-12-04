@@ -1,6 +1,7 @@
 {% extends 'webapp/base.html' %}
 {% load i18n %}
 {% load static %}
+{% load l10n %}
 
 {% block title %}{% trans "Доставка и оплата — PizzaMania" %}{% endblock %}
 
@@ -16,7 +17,7 @@
     <section class="mb-12">
         <div class="w-full rounded-xl overflow-hidden border-2 border-gray-200 shadow-lg" style="height: 450px;">
             {% if yandex_api_key %}
-                <div id="ymap" class="w-full h-full" data-lat="{{ map_center.lat }}" data-lon="{{ map_center.lon }}"></div>
+                <div id="ymap" class="w-full h-full" data-lat="{{ map_center.lat|unlocalize }}" data-lon="{{ map_center.lon|unlocalize }}"></div>
             {% else %}
                 <div class="w-full h-full flex items-center justify-center bg-gray-100 text-gray-500">
                     <div class="text-center">
@@ -172,8 +173,6 @@
                         preset: 'islands#redIcon' 
                     });
                     map.geoObjects.add(placemark);
-                    // Запретим масштабирование колёсиком
-                    map.behaviors.disable('scrollZoom');
                 });
             } catch (e){ 
                 console.error('Yandex map init error', e); 

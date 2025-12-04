@@ -237,19 +237,19 @@
     <div class="bg-gray-100 text-gray-800 py-4">
         <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
             <div class="flex flex-col">
-                <div class="font-semibold">Бесплатная доставка</div>
-                <div class="text-sm text-gray-600">При заказе от 4000 тг. по г. Астана</div>
+                <div class="font-semibold">{% trans "Бесплатная доставка" %}</div>
+                <div class="text-sm text-gray-600">{% trans "При заказе от 4000 тг. по г. Астана" %}</div>
             </div>
             <div class="flex flex-col">
-                <div class="font-semibold">Доставка 40 минут</div>
-                <div class="text-sm text-gray-600">Среднее время доставки</div>
+                <div class="font-semibold">{% trans "Доставка 40 минут" %}</div>
+                <div class="text-sm text-gray-600">{% trans "Среднее время доставки" %}</div>
             </div>
             <div class="flex flex-col">
                 <div class="font-semibold">4000 тг.</div>
-                <div class="text-sm text-gray-600">минимальная сумма заказа</div>
+                <div class="text-sm text-gray-600">{% trans "минимальная сумма заказа" %}</div>
             </div>
             <div>
-                <a href="{% url 'delivery_payment' %}" class="text-sm text-gray-700 hover:text-red-600">Подробнее о доставке и оплате →</a>
+                <a href="{% url 'delivery_payment' %}" class="text-sm text-gray-700 hover:text-red-600">{% trans "Подробнее о доставке и оплате" %} →</a>
             </div>
         </div>
     </div>
@@ -259,35 +259,36 @@
         <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-6 text-sm">
             <div>
                 <h3 class="font-bold mb-2 text-lg">PizzaMania</h3>
-                <p class="text-gray-300">Пицца и закуски с доставкой по Астане. Свежие ингредиенты, быстрый сервис и тёплые улыбки.</p>
-                <div class="mt-4 text-gray-400">ПиццаМания © 2025</div>
+                <p class="text-gray-300">{% trans "Пицца и закуски с доставкой по Астане. Свежие ингредиенты, быстрый сервис и тёплые улыбки." %}</p>
+                <div class="mt-4 text-gray-400">{% trans "ПиццаМания © 2025" %}</div>
                 <div class="mt-2 text-sm">
                 <ul class="text-gray-300 space-y-1">
-                    <li><a href="{% url 'legal' %}" class="text-gray-300 hover:text-white">Правовая информация</a></li>
-                    <li><a href="{% url 'about' %}" class="text-gray-300 hover:text-white">О нас</a></li>
-                    <li><a href="{% url 'jobs' %}" class="text-gray-300 hover:text-white">Вакансии</a></li>
+                    <li><a href="{% url 'legal' %}" class="text-gray-300 hover:text-white">{% trans "Правовая информация" %}</a></li>
+                    <li><a href="{% url 'about' %}" class="text-gray-300 hover:text-white">{% trans "О нас" %}</a></li>
+                    <li><a href="{% url 'jobs' %}" class="text-gray-300 hover:text-white">{% trans "Вакансии" %}</a></li>
                 </ul>
                 </div>
             </div>
 
             <div>
-                <h4 class="font-semibold mb-2">Контакты</h4>
-                <p class="text-gray-300">г. Астана, ул. Пушкина 25</p>
-                <p class="text-gray-300">Тел: <a href="tel:+77771234567" class="hover:text-white">+7 (777) 123-45-67</a></p>
+                <h4 class="font-semibold mb-2">{% trans "Контакты" %}</h4>
+                <p class="text-gray-300">{% trans "г. Астана, ул. Пушкина 25" %}</p>
+                <p class="text-gray-300">{% trans "Тел" %}: <a href="tel:+77771234567" class="hover:text-white">+7 (777) 123-45-67</a></p>
                 <p class="text-gray-300">Email: <a href="mailto:info@pizzamania.kz" class="hover:text-white">info@pizzamania.kz</a></p>
             </div>
 
             <div>
-                <h4 class="font-semibold mb-2">Меню</h4>
+                <h4 class="font-semibold mb-2">{% trans "Меню" %}</h4>
                 <ul class="text-gray-300 space-y-1">
+                    {% load custom_filters %}
                     {% for c in categories %}
-                    <li><a href="{% url 'home' %}#{{ c.slug }}" class="hover:text-white">{{ c.name }}</a></li>
+                    <li><a href="{% url 'home' %}#{{ c.slug }}" class="hover:text-white">{% category_label c %}</a></li>
                     {% endfor %}
                 </ul>
             </div>
 
             <div>
-                <h4 class="font-semibold mb-2">Следите за нами</h4>
+                <h4 class="font-semibold mb-2">{% trans "Следите за нами" %}</h4>
                 <div class="flex items-center gap-3 mb-3">
                     <a href="https://instagram.com" aria-label="Instagram" class="w-8 h-8">{% include 'webapp/partials/icon_instagram.html' %}</a>
                     <a href="https://t.me/pizzamania" aria-label="Telegram" class="w-8 h-8">{% include 'webapp/partials/icon_telegram.html' %}</a>
@@ -295,7 +296,7 @@
                     <a href="https://facebook.com" aria-label="Facebook" class="w-8 h-8">{% include 'webapp/partials/icon_facebook.html' %}</a>
                 </div>
 
-                <h4 class="font-semibold mb-2">Способы оплаты</h4>
+                <h4 class="font-semibold mb-2">{% trans "Способы оплаты" %}</h4>
                 <div class="flex items-center gap-4 text-gray-300">
                     <i class="fa-brands fa-cc-visa text-2xl"></i>
                     <i class="fa-brands fa-cc-mastercard text-2xl"></i>
@@ -305,7 +306,7 @@
         </div>
 
         <div class="max-w-5xl mx-auto mt-6 text-center text-gray-500 text-sm">
-            <span>Разработано с любовью для жителей Астаны. Все права защищены.</span>
+            <span>{% trans "Разработано с любовью для жителей Астаны. Все права защищены." %}</span>
         </div>
     </footer>
 

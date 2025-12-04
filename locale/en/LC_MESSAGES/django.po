@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-02 08:46+0000\n"
+"POT-Creation-Date: 2025-12-03 15:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,15 +17,150 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-#: webapp/templates/webapp/base.html:148
+
+#: PizzaMania/settings.py:132
+msgid "English"
+msgstr "English"
+
+#: PizzaMania/settings.py:133
+msgid "Russian"
+msgstr "Russian"
+
+#: PizzaMania/settings.py:134
+msgid "Kazakh"
+msgstr "Kazakh"
+
+#: webapp/templates/webapp/about.html:4 webapp/templates/webapp/base.html:148
+#: webapp/templates/webapp/base.html:267
 msgid "О нас"
 msgstr "About Us"
 
-#: webapp/templates/webapp/base.html:149
+#: webapp/templates/webapp/about.html:10
+msgid "О нашей компании"
+msgstr "About Our Company"
+
+#: webapp/templates/webapp/about.html:11
+msgid "История успеха PizzaMania началась с мечты о настоящей итальянской пиццe"
+msgstr "The success story of PizzaMania began with a dream of authentic Italian pizza."
+
+#: webapp/templates/webapp/about.html:18
+msgid "Наша история"
+msgstr "Our Story"
+
+#: webapp/templates/webapp/about.html:20
+msgid ""
+"PizzaMania была основана в 2015 году группой энтузиастов, влюблённых в "
+"итальянскую кухню. Мы начали с маленькой пиццерии в центре Алматы и всего "
+"трёх сотрудников."
+msgstr ""
+"PizzaMania was founded in 2015 by a group of enthusiasts passionate about Italian cuisine. We started with a small pizzeria in the center of Almaty and only three employees."
+
+#: webapp/templates/webapp/about.html:23
+msgid ""
+"Сегодня мы — одна из ведущих сетей доставки пиццы в Казахстане, с десятками "
+"филиалов и командой из более чем 200 профессионалов."
+msgstr ""
+"Today we are one of the leading pizza delivery networks in Kazakhstan, with dozens of branches and a team of more than 200 professionals."
+
+#: webapp/templates/webapp/about.html:26
+msgid ""
+"Наш секрет прост: качественные продукты, традиционные рецепты и любовь к "
+"своему делу."
+msgstr ""
+"Our secret is simple: high-quality ingredients, traditional recipes, and a love for what we do."
+
+#: webapp/templates/webapp/about.html:37
+msgid "Наши ценности"
+msgstr "Our Values"
+
+#: webapp/templates/webapp/about.html:43
+msgid "Качество"
+msgstr "Quality"
+
+#: webapp/templates/webapp/about.html:44
+msgid "Используем только свежие ингредиенты от проверенных поставщиков"
+msgstr "We use only fresh ingredients from trusted suppliers."
+
+#: webapp/templates/webapp/about.html:50
+msgid "Скорость"
+msgstr "Speed"
+
+#: webapp/templates/webapp/about.html:51
+msgid "Доставляем горячую пиццу в течение 30-40 минут"
+msgstr "We deliver hot pizza within 30–40 minutes."
+
+#: webapp/templates/webapp/about.html:57
+msgid "Забота"
+msgstr "Care"
+
+#: webapp/templates/webapp/about.html:58
+msgid "Каждый клиент для нас особенный, мы ценим ваш выбор"
+msgstr "Every customer is special to us, and we appreciate your choice."
+
+#: webapp/templates/webapp/about.html:65
+msgid "Наша команда"
+msgstr "Our Team"
+
+#: webapp/templates/webapp/about.html:69
+msgid "Александр Иванов"
+msgstr "Alexander Ivanov"
+
+#: webapp/templates/webapp/about.html:70
+msgid "Основатель и CEO"
+msgstr "Founder and CEO"
+
+#: webapp/templates/webapp/about.html:74
+msgid "Мария Петрова"
+msgstr "Maria Petrova"
+
+#: webapp/templates/webapp/about.html:75
+msgid "Шеф-повар"
+msgstr "Head Chef"
+
+#: webapp/templates/webapp/about.html:79
+msgid "Дмитрий Сидоров"
+msgstr "Dmitry Sidorov"
+
+#: webapp/templates/webapp/about.html:80
+msgid "Менеджер по доставке"
+msgstr "Delivery Manager"
+
+#: webapp/templates/webapp/about.html:84
+msgid "Елена Краснова"
+msgstr "Elena Krasnova"
+
+#: webapp/templates/webapp/about.html:85
+msgid "Маркетинг-директор"
+msgstr "Marketing Director"
+
+#: webapp/templates/webapp/about.html:92
+msgid "PizzaMania в цифрах"
+msgstr "PizzaMania in Numbers"
+
+#: webapp/templates/webapp/about.html:96
+msgid "Лет на рынке"
+msgstr "Years on the Market"
+
+#: webapp/templates/webapp/about.html:100
+msgid "Видов пиццы"
+msgstr "Types of Pizza"
+
+#: webapp/templates/webapp/about.html:104
+msgid "Сотрудников"
+msgstr "Employees"
+
+#: webapp/templates/webapp/about.html:108
+msgid "Довольных клиентов"
+msgstr "Satisfied Customers"
+
+#: webapp/templates/webapp/base.html:149 webapp/templates/webapp/base.html:274
+#: webapp/templates/webapp/contacts.html:4
+#: webapp/templates/webapp/delivery_payment.html:67
 msgid "Контакты"
 msgstr "Contacts"
 
-#: webapp/templates/webapp/base.html:150
+#: webapp/templates/webapp/base.html:150 webapp/templates/webapp/base.html:268
+#: webapp/templates/webapp/jobs.html:6
 msgid "Вакансии"
 msgstr "Jobs"
 
@@ -45,10 +180,570 @@ msgstr "Login"
 msgid "Регистрация"
 msgstr "Register"
 
-#: webapp/templates/webapp/base.html:184
+#: webapp/templates/webapp/base.html:200
 msgid "Доставка & оплата"
 msgstr "Delivery & Payment"
 
-#: webapp/templates/webapp/base.html:187
+#: webapp/templates/webapp/base.html:203
 msgid "Мои заказы"
 msgstr "My Orders"
+
+#: webapp/templates/webapp/base.html:240
+msgid "Бесплатная доставка"
+msgstr "Free Delivery"
+
+#: webapp/templates/webapp/base.html:241
+msgid "При заказе от 4000 тг. по г. Астана"
+msgstr "For orders over 4000 ₸ within Astana"
+
+#: webapp/templates/webapp/base.html:244
+
+msgid "Доставка 40 минут"
+msgstr "40-minute delivery"
+
+#: webapp/templates/webapp/base.html:245
+msgid "Среднее время доставки"
+msgstr "Average delivery time"
+
+#: webapp/templates/webapp/base.html:249
+msgid "минимальная сумма заказа"
+msgstr "minimum order amount"
+
+#: webapp/templates/webapp/base.html:252
+msgid "Подробнее о доставке и оплате"
+msgstr "More about delivery & payment"
+
+#: webapp/templates/webapp/base.html:262
+msgid ""
+"Пицца и закуски с доставкой по Астане. Свежие ингредиенты, быстрый сервис и "
+"тёплые улыбки."
+msgstr ""
+"Pizza and snacks delivered across Astana. Fresh ingredients, fast service, "
+"and warm smiles."
+
+#: webapp/templates/webapp/base.html:263
+msgid "ПиццаМания © 2025"
+msgstr "PizzaMania © 2025"
+
+#: webapp/templates/webapp/base.html:266 webapp/templates/webapp/legal.html:8
+msgid "Правовая информация"
+msgstr "Legal Information"
+
+#: webapp/templates/webapp/base.html:275
+msgid "г. Астана, ул. Пушкина 25"
+msgstr "Astana, Pushkina St. 25"
+
+#: webapp/templates/webapp/base.html:276
+msgid "Тел"
+msgstr "Phone"
+
+#: webapp/templates/webapp/base.html:281
+msgid "Меню"
+msgstr "Menu"
+
+#: webapp/templates/webapp/base.html:291
+msgid "Следите за нами"
+msgstr "Follow us"
+
+#: webapp/templates/webapp/base.html:299
+msgid "Способы оплаты"
+msgstr "Payment Methods"
+
+#: webapp/templates/webapp/base.html:309
+msgid "Разработано с любовью для жителей Астаны. Все права защищены."
+msgstr "Developed with love for the residents of Astana. All rights reserved."
+
+#: webapp/templates/webapp/contacts.html:10
+msgid "Свяжитесь с нами"
+msgstr "Contact Us"
+
+#: webapp/templates/webapp/contacts.html:11
+msgid "Мы всегда рады вашим вопросам и предложениям!"
+msgstr "We are always happy to hear your questions and suggestions!"
+
+#: webapp/templates/webapp/contacts.html:23
+#: webapp/templates/webapp/jobs.html:139
+msgid "Телефон"
+msgstr "Phone"
+
+#: webapp/templates/webapp/contacts.html:25
+msgid "Звоните с 9:00 до 23:00"
+msgstr "Call us from 9:00 to 23:00"
+
+#: webapp/templates/webapp/contacts.html:36
+#: webapp/templates/webapp/contacts.html:82
+#: webapp/templates/webapp/jobs.html:135
+msgid "Email"
+msgstr "Email"
+
+#: webapp/templates/webapp/contacts.html:38
+msgid "Ответим в течение 24 часов"
+msgstr "We will reply within 24 hours"
+
+#: webapp/templates/webapp/contacts.html:49
+msgid "Адрес"
+msgstr "Address"
+
+#: webapp/templates/webapp/contacts.html:50
+msgid "г. Алматы, ул. Абая 150"
+msgstr "Almaty, Abay St. 150"
+
+#: webapp/templates/webapp/contacts.html:51
+msgid "Работаем с 9:00 до 23:00"
+msgstr "Open from 9:00 to 23:00"
+
+#: webapp/templates/webapp/contacts.html:57
+msgid "Мы в социальных сетях"
+msgstr "We are on social media"
+
+#: webapp/templates/webapp/contacts.html:74
+msgid "Напишите нам"
+msgstr "Write to us"
+
+#: webapp/templates/webapp/contacts.html:78
+msgid "Ваше имя"
+msgstr "Your Name"
+
+#: webapp/templates/webapp/contacts.html:79
+msgid "Иван Иванов"
+msgstr "John Doe"
+
+#: webapp/templates/webapp/contacts.html:86
+msgid "Тема"
+msgstr "Subject"
+
+#: webapp/templates/webapp/contacts.html:87
+msgid "О чём вы хотите написать?"
+msgstr "What would you like to write about?"
+
+#: webapp/templates/webapp/contacts.html:90
+msgid "Сообщение"
+msgstr "Message"
+
+#: webapp/templates/webapp/contacts.html:91
+msgid "Ваше сообщение..."
+msgstr "Your message..."
+
+#: webapp/templates/webapp/contacts.html:94
+msgid "Отправить сообщение"
+msgstr "Send message"
+
+#: webapp/templates/webapp/contacts.html:102
+msgid "Как нас найти"
+msgstr "How to find us"
+
+#: webapp/templates/webapp/contacts.html:104
+msgid "Здесь может быть интеграция с картой"
+msgstr "A map integration could be placed here"
+
+#: webapp/templates/webapp/delivery_payment.html:5
+msgid "Доставка и оплата — PizzaMania"
+msgstr "Delivery & Payment — PizzaMania"
+
+#: webapp/templates/webapp/delivery_payment.html:11
+msgid "Доставка и оплата"
+msgstr "Delivery & Payment"
+
+#: webapp/templates/webapp/delivery_payment.html:12
+msgid "Быстро, надежно и удобно доставляем в любую точку Астаны"
+msgstr "Fast, reliable, and convenient delivery to any point in Astana"
+
+#: webapp/templates/webapp/delivery_payment.html:29
+msgid "Зелёная область — примерная зона доставки по городу Астана"
+msgstr "The green area represents the approximate delivery zone within Astana"
+
+#: webapp/templates/webapp/delivery_payment.html:38
+msgid "Доставка"
+msgstr "Delivery"
+
+#: webapp/templates/webapp/delivery_payment.html:40
+msgid "Доставляем ваш заказ в лучшем состоянии прямо до двери."
+msgstr "We deliver your order in the best condition right to your door."
+
+#: webapp/templates/webapp/delivery_payment.html:42
+msgid "Среднее время:"
+msgstr "Average time:"
+
+#: webapp/templates/webapp/delivery_payment.html:42
+msgid "45 минут"
+msgstr "45 minutes"
+
+#: webapp/templates/webapp/delivery_payment.html:43
+msgid "Бесплатно от:"
+msgstr "Free from:"
+
+#: webapp/templates/webapp/delivery_payment.html:43
+msgid "3000 ₸"
+msgstr "3000 ₸"
+
+#: webapp/templates/webapp/delivery_payment.html:44
+msgid "Зона:"
+msgstr "Zone:"
+
+#: webapp/templates/webapp/delivery_payment.html:44
+msgid "По всей Астане"
+msgstr "Across all of Astana"
+
+#: webapp/templates/webapp/delivery_payment.html:52
+msgid "Оплата"
+msgstr "Payment"
+
+#: webapp/templates/webapp/delivery_payment.html:54
+msgid "Выбирайте удобный способ оплаты для вас."
+msgstr "Choose the payment method that is most convenient for you."
+
+#: webapp/templates/webapp/delivery_payment.html:60
+msgid "Картой онлайн или наличными курьеру"
+msgstr "Online card payment or cash to the courier"
+
+#: webapp/templates/webapp/delivery_payment.html:69
+msgid "Есть вопросы? Мы готовы помочь!"
+msgstr "Have questions? We’re ready to help!"
+
+#: webapp/templates/webapp/delivery_payment.html:73
+msgid "Пн-Вс 10:00–23:00"
+msgstr "Mon–Sun 10:00–23:00"
+
+#: webapp/templates/webapp/delivery_payment.html:80
+msgid "Как это работает"
+msgstr "How it works"
+
+#: webapp/templates/webapp/delivery_payment.html:86
+msgid "1. Выберите блюда"
+msgstr "1. Choose your items"
+
+#: webapp/templates/webapp/delivery_payment.html:87
+msgid "Выбирайте из широкого меню наших пицц, напитков и закусок"
+msgstr "Choose from our wide selection of pizzas, drinks, and snacks"
+
+#: webapp/templates/webapp/delivery_payment.html:94
+msgid "2. Оплатите заказ"
+msgstr "2. Pay for your order"
+
+#: webapp/templates/webapp/delivery_payment.html:95
+msgid "Оплатите удобным способом: картой или наличными"
+msgstr "Pay using a convenient method: card or cash"
+
+#: webapp/templates/webapp/delivery_payment.html:102
+msgid "3. Готовим заказ"
+msgstr "3. We prepare your order"
+
+#: webapp/templates/webapp/delivery_payment.html:103
+msgid "Наша команда готовит всё с заботой и свежими ингредиентами"
+msgstr "Our team prepares everything with care and fresh ingredients"
+
+#: webapp/templates/webapp/delivery_payment.html:110
+msgid "4. Доставка"
+msgstr "4. Delivery"
+
+#: webapp/templates/webapp/delivery_payment.html:111
+msgid "Курьер доставит заказ горячим прямо к вашей двери"
+msgstr "The courier will deliver your order hot, right to your door"
+
+#: webapp/templates/webapp/delivery_payment.html:118
+msgid "Часто задаваемые вопросы"
+msgstr "Frequently Asked Questions"
+
+#: webapp/templates/webapp/delivery_payment.html:121
+msgid "Какой минимум заказа?"
+msgstr "What is the minimum order?"
+
+#: webapp/templates/webapp/delivery_payment.html:122
+msgid "Минимум заказа — 1000 ₸. Доставка бесплатна от 3000 ₸."
+msgstr "Minimum order is 1000 ₸. Delivery is free from 3000 ₸."
+
+#: webapp/templates/webapp/delivery_payment.html:125
+msgid "Как долго ждать?"
+msgstr "How long is the wait?"
+
+#: webapp/templates/webapp/delivery_payment.html:126
+msgid "В среднем 45 минут от подтверждения заказа до доставки."
+msgstr "On average, 45 minutes from order confirmation to delivery."
+
+#: webapp/templates/webapp/delivery_payment.html:129
+msgid "Какие способы оплаты?"
+msgstr "What payment methods are available?"
+
+#: webapp/templates/webapp/delivery_payment.html:130
+msgid "Visa, Mastercard, PayPal или наличные курьеру. На выбор!"
+msgstr "Visa, Mastercard, PayPal, or cash to the courier — your choice!"
+
+#: webapp/templates/webapp/delivery_payment.html:133
+msgid "Работаете ли вы по ночам?"
+msgstr "Do you work at night?"
+
+#: webapp/templates/webapp/delivery_payment.html:134
+msgid "Да, работаем ежедневно с 10:00 до 23:00. Выбирайте время доставки!"
+msgstr "Yes, we work daily from 10:00 to 23:00. Choose the delivery time!"
+
+#: webapp/templates/webapp/jobs.html:10
+msgid ""
+"Мы активно ищем талантливых людей, готовых присоединиться к нашей команде!"
+msgstr ""
+"We are actively looking for talented people ready to join our team!"
+
+#: webapp/templates/webapp/jobs.html:11
+msgid ""
+"Если вы увлечены своим делом и хотите работать в дружной и динамичной "
+"компании — это место для вас."
+msgstr ""
+"If you are passionate about your work and want to be part of a friendly and "
+"dynamic company, this is the place for you."
+
+#: webapp/templates/webapp/jobs.html:16
+msgid "Вакансия 1: Пиццайоло"
+msgstr "Position 1: Pizzaiolo"
+
+#: webapp/templates/webapp/jobs.html:20
+msgid "Пиццайоло (Повар пиццы)"
+msgstr "Pizzaiolo (Pizza Chef)"
+
+#: webapp/templates/webapp/jobs.html:21
+msgid "Пекарня PizzaMania"
+msgstr "PizzaMania Bakery"
+
+#: webapp/templates/webapp/jobs.html:23 webapp/templates/webapp/jobs.html:59
+#: webapp/templates/webapp/jobs.html:94
+msgid "Открыто"
+msgstr "Open"
+
+#: webapp/templates/webapp/jobs.html:27 webapp/templates/webapp/jobs.html:63
+#: webapp/templates/webapp/jobs.html:98
+msgid "Требования:"
+msgstr "Requirements:"
+
+#: webapp/templates/webapp/jobs.html:29
+msgid "Опыт работы пиццайоло минимум 1 год"
+msgstr "At least 1 year of experience as a pizzaiolo"
+
+#: webapp/templates/webapp/jobs.html:30
+msgid "Знание технологии приготовления пиццы"
+msgstr "Knowledge of pizza-making techniques"
+
+#: webapp/templates/webapp/jobs.html:31
+msgid "Аккуратность и внимание к деталям"
+msgstr "Accuracy and attention to detail"
+
+#: webapp/templates/webapp/jobs.html:32
+msgid "Способность работать в быстром темпе"
+msgstr "Ability to work in a fast-paced environment"
+
+#: webapp/templates/webapp/jobs.html:37 webapp/templates/webapp/jobs.html:73
+#: webapp/templates/webapp/jobs.html:108
+msgid "Мы предлагаем:"
+msgstr "We offer:"
+
+#: webapp/templates/webapp/jobs.html:39
+msgid "Зарплата: 180000 - 200000 тг/месяц"
+msgstr "Salary: 180,000 – 200,000 ₸/month"
+
+#: webapp/templates/webapp/jobs.html:40
+msgid "График работы: 5/2 или 6/3"
+msgstr "Work schedule: 5/2 or 6/3"
+
+#: webapp/templates/webapp/jobs.html:41
+msgid "Бесплатное питание на рабочем месте"
+msgstr "Free meals at work"
+
+#: webapp/templates/webapp/jobs.html:42
+msgid "Перспективы повышения"
+msgstr "Promotion opportunities"
+
+#: webapp/templates/webapp/jobs.html:43
+msgid "Дружная команда"
+msgstr "Friendly team"
+
+#: webapp/templates/webapp/jobs.html:48 webapp/templates/webapp/jobs.html:83
+#: webapp/templates/webapp/jobs.html:118
+msgid "Подать заявку"
+msgstr "Apply now"
+
+#: webapp/templates/webapp/jobs.html:52
+msgid "Вакансия 2: Доставщик"
+msgstr "Position 2: Delivery Courier"
+
+#: webapp/templates/webapp/jobs.html:56
+msgid "Курьер (Доставщик)"
+msgstr "Courier (Delivery Person)"
+
+#: webapp/templates/webapp/jobs.html:57
+msgid "Служба доставки"
+msgstr "Delivery Service"
+
+#: webapp/templates/webapp/jobs.html:65
+msgid "Действующие водительские права (категория A или выше)"
+msgstr "Valid driver's license (category A or higher)"
+
+#: webapp/templates/webapp/jobs.html:66
+msgid "Знание карты города"
+msgstr "Knowledge of the city map"
+
+#: webapp/templates/webapp/jobs.html:67
+msgid "Ответственность и надежность"
+msgstr "Responsibility and reliability"
+
+#: webapp/templates/webapp/jobs.html:68
+msgid "Умение общаться с клиентами"
+msgstr "Ability to communicate with customers"
+
+#: webapp/templates/webapp/jobs.html:75
+msgid "Зарплата: 140000 - 220000 тг/месяц + бонусы за заказы"
+msgstr "Salary: 140,000 – 220,000 ₸/month + bonuses for deliveries"
+
+#: webapp/templates/webapp/jobs.html:76
+msgid "График: от 20:00 до 24:00 или от 10:00 до 18:00"
+msgstr "Schedule: 20:00–24:00 or 10:00–18:00"
+
+#: webapp/templates/webapp/jobs.html:77
+msgid "Фирменная форма"
+msgstr "Uniform provided"
+
+#: webapp/templates/webapp/jobs.html:78
+msgid "Страховка"
+msgstr "Insurance"
+
+#: webapp/templates/webapp/jobs.html:87
+msgid "Вакансия 3: Оператор call-центра"
+msgstr "Position 3: Call Center Operator"
+
+#: webapp/templates/webapp/jobs.html:91
+msgid "Оператор call-центра"
+msgstr "Call Center Operator"
+
+#: webapp/templates/webapp/jobs.html:92
+msgid "Служба поддержки клиентов"
+msgstr "Customer Support Service"
+
+#: webapp/templates/webapp/jobs.html:100
+msgid "Приятный голос и хорошая дикция"
+msgstr "Pleasant voice and clear diction"
+
+#: webapp/templates/webapp/jobs.html:101
+msgid "Коммуникабельность и вежливость"
+msgstr "Communicative and polite"
+
+#: webapp/templates/webapp/jobs.html:102
+msgid "Навыки работы с ПК"
+msgstr "Computer skills"
+
+#: webapp/templates/webapp/jobs.html:103
+msgid "Усидчивость и терпение"
+msgstr "Perseverance and patience"
+
+#: webapp/templates/webapp/jobs.html:110
+msgid "Зарплата: 120000 - 170000 тг/месяц"
+msgstr "Salary: 120,000 – 170,000 ₸/month"
+
+#: webapp/templates/webapp/jobs.html:111
+msgid "Гибкий график"
+msgstr "Flexible schedule"
+
+#: webapp/templates/webapp/jobs.html:112
+msgid "Работа в офисе с комфортными условиями"
+msgstr "Comfortable office working conditions"
+
+#: webapp/templates/webapp/jobs.html:113
+msgid "Обучение"
+msgstr "Training provided"
+
+#: webapp/templates/webapp/jobs.html:125
+msgid "Не нашли подходящую позицию?"
+msgstr "Didn't find a suitable position?"
+
+#: webapp/templates/webapp/jobs.html:127
+msgid ""
+"Отправьте нам ваше CV и резюме. Мы рассмотрим вашу кандидатуру на любые "
+"открытые позиции."
+msgstr ""
+"Send us your CV and résumé. We will review your application for any open "
+"positions."
+
+#: webapp/templates/webapp/jobs.html:131
+msgid "Имя и Фамилия"
+msgstr "First and Last Name"
+
+#: webapp/templates/webapp/jobs.html:143
+msgid "Загрузить CV (PDF, DOC)"
+msgstr "Upload CV (PDF, DOC)"
+
+#: webapp/templates/webapp/jobs.html:147
+msgid "Коротко о себе"
+msgstr "About yourself"
+
+#: webapp/templates/webapp/jobs.html:148
+msgid "Расскажите о вашем опыте и навыках"
+msgstr "Tell us about your experience and skills"
+
+#: webapp/templates/webapp/jobs.html:151
+msgid "Отправить"
+msgstr "Submit"
+
+#: webapp/templates/webapp/legal.html:3
+msgid "Правовая информация — PizzaMania"
+msgstr "Legal Information — PizzaMania"
+
+#: webapp/templates/webapp/legal.html:9
+msgid ""
+"Добро пожаловать в правовой раздел сайта PizzaMania. Ниже вы найдёте "
+"основные условия использования сервиса, политику конфиденциальности и "
+"информацию о возврате и компенсациях."
+msgstr ""
+"Welcome to the legal section of the PizzaMania website. Here you will find "
+"the main terms of service, privacy policy, and information about returns and "
+"compensations."
+
+#: webapp/templates/webapp/legal.html:12
+msgid "Условия использования"
+msgstr "Terms of Use"
+
+#: webapp/templates/webapp/legal.html:13
+msgid ""
+"Используя сайт и сервисы PizzaMania, вы соглашаетесь с тем, что все заказы "
+"выполняются на условиях, указанных на сайте. Мы сохраняем за собой право "
+"вносить изменения в меню, цены и условия доставки без предварительного "
+"уведомления."
+msgstr ""
+"By using the PizzaMania website and services, you agree that all orders are "
+"fulfilled under the terms listed on the site. We reserve the right to make "
+"changes to the menu, prices, and delivery conditions without prior notice."
+
+#: webapp/templates/webapp/legal.html:17
+msgid "Политика конфиденциальности"
+msgstr "Privacy Policy"
+
+#: webapp/templates/webapp/legal.html:18
+msgid ""
+"Персональные данные, включая номер телефона и адрес, используются "
+"исключительно для обработки заказов и доставки. Мы не передаём персональные "
+"данные третьим лицам без вашего согласия, за исключением случаев, "
+"предусмотренных законом."
+msgstr ""
+"Personal data, including phone number and address, is used exclusively for "
+"order processing and delivery. We do not share personal data with third "
+"parties without your consent, except in cases required by law."
+
+#: webapp/templates/webapp/legal.html:22
+msgid "Возврат и отмена"
+msgstr "Returns and Cancellations"
+
+#: webapp/templates/webapp/legal.html:23
+msgid ""
+"Если вы получили некачественный товар или ваш заказ выполнен с нарушением, "
+"свяжитесь с нами по телефону в шапке сайта. В зависимости от ситуации мы "
+"предложим замену, компенсацию или возврат средств."
+msgstr ""
+"If you receive a defective product or your order is not fulfilled properly, "
+"contact us via the phone number in the site header. Depending on the "
+"situation, we may offer a replacement, compensation, or a refund."
+
+#: webapp/templates/webapp/legal.html:27
+msgid "Обратная связь"
+msgstr "Feedback"
+
+#: webapp/templates/webapp/legal.html:28
+msgid "По всем юридическим вопросам пишите на"
+msgstr "For all legal inquiries, write to"
+
+#: webapp/templates/webapp/legal.html:28
+msgid "или используйте форму обратной связи на странице Контакты."
+msgstr "or use the feedback form on the Contacts page."
