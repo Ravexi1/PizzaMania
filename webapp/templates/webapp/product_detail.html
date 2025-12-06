@@ -11,7 +11,7 @@
                 <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full rounded-lg">
                 {% else %}
                 <div class="w-full h-96 bg-gray-200 rounded-lg flex items-center justify-center">
-                    <span class="text-gray-400 text-xl">Нет изображения</span>
+                    <span class="text-gray-400 text-xl">{% trans "Нет изображения" %}</span>
                 </div>
                 {% endif %}
             </div>
@@ -47,7 +47,7 @@
                 <!-- Выбор размера (если есть размеры) -->
                 {% if product.sizes.exists %}
                 <div class="mb-6">
-                    <label class="block text-sm font-semibold mb-2">Выберите размер:</label>
+                    <label class="block text-sm font-semibold mb-2">{% trans "Выберите размер:" %}</label>
                     <div class="flex gap-3" id="sizes-container">
                         {% for size in product.sizes.all %}
                         <label class="flex-1 cursor-pointer">
@@ -65,7 +65,7 @@
                 <!-- Добавки "По вкусу" (если есть добавки) -->
                 {% if product.addons.exists %}
                 <div class="mb-6">
-                    <h3 class="text-lg font-semibold mb-3">Добавить по вкусу 🌶️</h3>
+                    <h3 class="text-lg font-semibold mb-3">{% trans "Добавить по вкусу" %} 🌶️</h3>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-3" id="addons-container">
                         {% for addon in product.addons.all %}
                         <label class="addon-card flex flex-col items-center gap-2 p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-red-600 transition" data-addon-id="{{ addon.id }}" data-addon-price="{{ addon.price|floatformat:0|cut:' ' }}">
@@ -99,7 +99,7 @@
                     <div class="flex items-center gap-4">
                         <input type="number" id="quantity-input" value="1" min="1" class="border rounded px-4 py-2 w-20">
                         <button type="button" id="add-to-cart-btn" class="bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700 text-lg font-semibold">
-                            Добавить в корзину
+                            {% trans "Добавить в корзину" %}
                         </button>
                     </div>
                 </div>
@@ -263,20 +263,20 @@
 
         <!-- Отзывы -->
         <div class="mt-12">
-            <h2 class="text-2xl font-bold mb-6">Отзывы</h2>
+            <h2 class="text-2xl font-bold mb-6">{% trans "Отзывы" %}</h2>
 
             <!-- Форма добавления отзыва -->
             <div class="bg-gray-50 p-6 rounded-lg mb-8">
-                <h3 class="text-xl font-semibold mb-4">Оставить отзыв</h3>
+                <h3 class="text-xl font-semibold mb-4">{% trans "Оставить отзыв" %}</h3>
                 {% if request.user.is_authenticated %}
                     {% if order_id and user_has_order_with_product %}
                     <form method="POST">
                         {% csrf_token %}
                         <input type="hidden" name="order_id" value="{{ order_id }}">
                         <div class="mb-4">
-                            <label class="block text-sm font-medium mb-2">Оценка</label>
+                            <label class="block text-sm font-medium mb-2">{% trans "Оценка" %}</label>
                             <select name="rating" required class="border rounded px-4 py-2">
-                                <option value="">-- Выберите оценку --</option>
+                                <option value="">-- {% trans "Выберите оценку" %} --</option>
                                 <option value="5">★★★★★ (5)</option>
                                 <option value="4">★★★★☆ (4)</option>
                                 <option value="3">★★★☆☆ (3)</option>
@@ -289,16 +289,16 @@
                             <textarea name="comment" required rows="4" class="w-full border rounded px-4 py-2"></textarea>
                         </div>
                         <button type="submit" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">
-                            Отправить отзыв
+                            {% trans "Отправить отзыв" %}
                         </button>
                     </form>
                     {% else %}
-                    <p class="text-gray-600">Отзыв можно оставить только на заказанный товар. 
-                        <a href="{% url 'order_history' %}" class="text-red-600 hover:text-red-700 font-semibold">Перейти к истории заказов</a>
+                    <p class="text-gray-600">{% trans "Отзыв можно оставить только на заказанный товар." %} 
+                        <a href="{% url 'order_history' %}" class="text-red-600 hover:text-red-700 font-semibold">{% trans "Перейти к истории заказов" %}</a>
                     </p>
                     {% endif %}
                 {% else %}
-                <p class="text-gray-600">Пожалуйста, <a href="{% url 'login' %}" class="text-red-600 hover:text-red-700 font-semibold">авторизуйтесь</a> для оставления отзыва.</p>
+                <p class="text-gray-600">{% trans "Пожалуйста," %} <a href="{% url 'login' %}" class="text-red-600 hover:text-red-700 font-semibold">{% trans "авторизуйтесь" %}</a> {% trans "для оставления отзыва." %}</p>
                 {% endif %}
 
             <!-- Список отзывов -->
@@ -323,7 +323,7 @@
                     <!-- Админ комментарий (если есть) -->
                     {% if review.admin_comment %}
                     <div class="bg-white border-l-4 border-blue-500 p-3 mt-3">
-                        <p class="text-xs font-semibold text-blue-600 mb-1">💬 Ответ администратора:</p>
+                        <p class="text-xs font-semibold text-blue-600 mb-1">💬 {% trans "Ответ администратора:" %}</p>
                         <p class="text-sm text-gray-700">{{ review.admin_comment }}</p>
                     </div>
                     {% endif %}
@@ -333,14 +333,14 @@
                     <form method="POST" action="{% url 'add_admin_comment' review.id %}" class="mt-4 pt-4 border-t">
                         {% csrf_token %}
                         <div class="flex gap-2">
-                            <input type="text" name="admin_comment" placeholder="Ответить на отзыв..." class="flex-1 px-3 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                            <button type="submit" class="bg-blue-600 text-white px-4 py-1 rounded text-sm hover:bg-blue-700">Ответить</button>
+                            <input type="text" name="admin_comment" placeholder="{% trans "Ответить на отзыв..." %}" class="flex-1 px-3 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            <button type="submit" class="bg-blue-600 text-white px-4 py-1 rounded text-sm hover:bg-blue-700">{% trans "Ответить" %}</button>
                         </div>
                     </form>
                     {% endif %}
                 </div>
                 {% empty %}
-                <p class="text-gray-500">Пока нет отзывов. Будьте первым!</p>
+                <p class="text-gray-500">{% trans "Пока нет отзывов. Будьте первым!" %}</p>
                 {% endfor %}
             </div>
         </div>

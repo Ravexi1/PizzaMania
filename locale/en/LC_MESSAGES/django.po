@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-03 15:56+0000\n"
+"POT-Creation-Date: 2025-12-06 08:12+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -40,8 +40,11 @@ msgid "О нашей компании"
 msgstr "About Our Company"
 
 #: webapp/templates/webapp/about.html:11
-msgid "История успеха PizzaMania началась с мечты о настоящей итальянской пиццe"
-msgstr "The success story of PizzaMania began with a dream of authentic Italian pizza."
+msgid ""
+"История успеха PizzaMania началась с мечты о настоящей итальянской пиццe"
+msgstr ""
+"The success story of PizzaMania began with a dream of authentic Italian "
+"pizza."
 
 #: webapp/templates/webapp/about.html:18
 msgid "Наша история"
@@ -53,21 +56,25 @@ msgid ""
 "итальянскую кухню. Мы начали с маленькой пиццерии в центре Алматы и всего "
 "трёх сотрудников."
 msgstr ""
-"PizzaMania was founded in 2015 by a group of enthusiasts passionate about Italian cuisine. We started with a small pizzeria in the center of Almaty and only three employees."
+"PizzaMania was founded in 2015 by a group of enthusiasts passionate about "
+"Italian cuisine. We started with a small pizzeria in the center of Almaty "
+"and only three employees."
 
 #: webapp/templates/webapp/about.html:23
 msgid ""
 "Сегодня мы — одна из ведущих сетей доставки пиццы в Казахстане, с десятками "
 "филиалов и командой из более чем 200 профессионалов."
 msgstr ""
-"Today we are one of the leading pizza delivery networks in Kazakhstan, with dozens of branches and a team of more than 200 professionals."
+"Today we are one of the leading pizza delivery networks in Kazakhstan, with "
+"dozens of branches and a team of more than 200 professionals."
 
 #: webapp/templates/webapp/about.html:26
 msgid ""
 "Наш секрет прост: качественные продукты, традиционные рецепты и любовь к "
 "своему делу."
 msgstr ""
-"Our secret is simple: high-quality ingredients, traditional recipes, and a love for what we do."
+"Our secret is simple: high-quality ingredients, traditional recipes, and a "
+"love for what we do."
 
 #: webapp/templates/webapp/about.html:37
 msgid "Наши ценности"
@@ -155,7 +162,7 @@ msgstr "Satisfied Customers"
 
 #: webapp/templates/webapp/base.html:149 webapp/templates/webapp/base.html:274
 #: webapp/templates/webapp/contacts.html:4
-#: webapp/templates/webapp/delivery_payment.html:67
+#: webapp/templates/webapp/delivery_payment.html:68
 msgid "Контакты"
 msgstr "Contacts"
 
@@ -172,11 +179,13 @@ msgstr "Hello"
 msgid "Выйти"
 msgstr "Logout"
 
-#: webapp/templates/webapp/base.html:158
+#: webapp/templates/webapp/base.html:158 webapp/templates/webapp/login.html:22
+#: webapp/templates/webapp/register.html:59
 msgid "Войти"
 msgstr "Login"
 
 #: webapp/templates/webapp/base.html:159
+#: webapp/templates/webapp/register.html:7
 msgid "Регистрация"
 msgstr "Register"
 
@@ -197,7 +206,6 @@ msgid "При заказе от 4000 тг. по г. Астана"
 msgstr "For orders over 4000 ₸ within Astana"
 
 #: webapp/templates/webapp/base.html:244
-
 msgid "Доставка 40 минут"
 msgstr "40-minute delivery"
 
@@ -253,6 +261,108 @@ msgstr "Payment Methods"
 msgid "Разработано с любовью для жителей Астаны. Все права защищены."
 msgstr "Developed with love for the residents of Astana. All rights reserved."
 
+#: webapp/templates/webapp/cart.html:37 webapp/templates/webapp/home.html:20
+#: webapp/templates/webapp/order_history.html:45
+#: webapp/templates/webapp/order_review.html:22
+msgid "Нет фото"
+msgstr "No photo"
+
+#: webapp/templates/webapp/cart.html:46
+msgid "Размер"
+msgstr "Size"
+
+#: webapp/templates/webapp/cart.html:49
+msgid "Добавки"
+msgstr "Add-ons"
+
+#: webapp/templates/webapp/cart.html:63
+msgid "Удалить"
+msgstr "Delete"
+
+#: webapp/templates/webapp/cart.html:72
+msgid "Итого:"
+msgstr "Total:"
+
+#: webapp/templates/webapp/cart.html:76
+msgid "Оформить заказ"
+msgstr "Place order"
+
+#: webapp/templates/webapp/cart.html:82
+msgid "Корзина пуста"
+msgstr "Cart is empty"
+
+#: webapp/templates/webapp/cart.html:84
+#: webapp/templates/webapp/order_history.html:83
+msgid "Перейти к покупкам"
+msgstr "Continue shopping"
+
+#: webapp/templates/webapp/checkout.html:7
+msgid "Оформление заказа"
+msgstr "Checkout"
+
+#: webapp/templates/webapp/checkout.html:12
+msgid "На этот адрес доставить?"
+msgstr "Deliver to this address?"
+
+#: webapp/templates/webapp/checkout.html:13
+msgid "подъезд"
+msgstr "entrance"
+
+#: webapp/templates/webapp/checkout.html:13
+msgid "кв."
+msgstr "apt."
+
+#: webapp/templates/webapp/checkout.html:16
+msgid "Изменить адрес"
+msgstr "Change address"
+
+#: webapp/templates/webapp/checkout.html:23
+#: webapp/templates/webapp/checkout.html:60
+#: webapp/templates/webapp/register.html:28
+msgid "Улица"
+msgstr "Street"
+
+#: webapp/templates/webapp/checkout.html:28
+#: webapp/templates/webapp/checkout.html:66
+#: webapp/templates/webapp/register.html:34
+msgid "Подъезд"
+msgstr "Entrance"
+
+#: webapp/templates/webapp/checkout.html:32
+#: webapp/templates/webapp/checkout.html:70
+#: webapp/templates/webapp/register.html:38
+msgid "Квартира"
+msgstr "Apartment"
+
+#: webapp/templates/webapp/checkout.html:45
+#: webapp/templates/webapp/register.html:13
+msgid "Имя"
+msgstr "First name"
+
+#: webapp/templates/webapp/checkout.html:49
+#: webapp/templates/webapp/register.html:17
+msgid "Фамилия"
+msgstr "Last name"
+
+#: webapp/templates/webapp/checkout.html:55
+#: webapp/templates/webapp/contacts.html:23
+#: webapp/templates/webapp/jobs.html:139
+#: webapp/templates/webapp/register.html:23
+msgid "Телефон"
+msgstr "Phone"
+
+#: webapp/templates/webapp/checkout.html:77
+msgid "Комментарий курьеру"
+msgstr "Comment for the courier"
+
+#: webapp/templates/webapp/checkout.html:78
+msgid "Дополнительные пожелания или инструкции для курьера"
+msgstr "Additional notes or instructions for the courier"
+
+#: webapp/templates/webapp/checkout.html:82
+msgid "Подтвердить заказ"
+msgstr "Confirm order"
+
 #: webapp/templates/webapp/contacts.html:10
 msgid "Свяжитесь с нами"
 msgstr "Contact Us"
@@ -260,11 +370,6 @@ msgstr "Contact Us"
 #: webapp/templates/webapp/contacts.html:11
 msgid "Мы всегда рады вашим вопросам и предложениям!"
 msgstr "We are always happy to hear your questions and suggestions!"
-
-#: webapp/templates/webapp/contacts.html:23
-#: webapp/templates/webapp/jobs.html:139
-msgid "Телефон"
-msgstr "Phone"
 
 #: webapp/templates/webapp/contacts.html:25
 msgid "Звоните с 9:00 до 23:00"
@@ -336,151 +441,162 @@ msgstr "How to find us"
 msgid "Здесь может быть интеграция с картой"
 msgstr "A map integration could be placed here"
 
-#: webapp/templates/webapp/delivery_payment.html:5
+#: webapp/templates/webapp/delivery_payment.html:6
 msgid "Доставка и оплата — PizzaMania"
 msgstr "Delivery & Payment — PizzaMania"
 
-#: webapp/templates/webapp/delivery_payment.html:11
+#: webapp/templates/webapp/delivery_payment.html:12
 msgid "Доставка и оплата"
 msgstr "Delivery & Payment"
 
-#: webapp/templates/webapp/delivery_payment.html:12
+#: webapp/templates/webapp/delivery_payment.html:13
 msgid "Быстро, надежно и удобно доставляем в любую точку Астаны"
 msgstr "Fast, reliable, and convenient delivery to any point in Astana"
 
-#: webapp/templates/webapp/delivery_payment.html:29
+#: webapp/templates/webapp/delivery_payment.html:30
 msgid "Зелёная область — примерная зона доставки по городу Астана"
 msgstr "The green area represents the approximate delivery zone within Astana"
 
-#: webapp/templates/webapp/delivery_payment.html:38
+#: webapp/templates/webapp/delivery_payment.html:39
 msgid "Доставка"
 msgstr "Delivery"
 
-#: webapp/templates/webapp/delivery_payment.html:40
+#: webapp/templates/webapp/delivery_payment.html:41
 msgid "Доставляем ваш заказ в лучшем состоянии прямо до двери."
 msgstr "We deliver your order in the best condition right to your door."
 
-#: webapp/templates/webapp/delivery_payment.html:42
+#: webapp/templates/webapp/delivery_payment.html:43
 msgid "Среднее время:"
 msgstr "Average time:"
 
-#: webapp/templates/webapp/delivery_payment.html:42
+#: webapp/templates/webapp/delivery_payment.html:43
 msgid "45 минут"
 msgstr "45 minutes"
 
-#: webapp/templates/webapp/delivery_payment.html:43
+#: webapp/templates/webapp/delivery_payment.html:44
 msgid "Бесплатно от:"
 msgstr "Free from:"
 
-#: webapp/templates/webapp/delivery_payment.html:43
+#: webapp/templates/webapp/delivery_payment.html:44
 msgid "3000 ₸"
 msgstr "3000 ₸"
 
-#: webapp/templates/webapp/delivery_payment.html:44
+#: webapp/templates/webapp/delivery_payment.html:45
 msgid "Зона:"
 msgstr "Zone:"
 
-#: webapp/templates/webapp/delivery_payment.html:44
+#: webapp/templates/webapp/delivery_payment.html:45
 msgid "По всей Астане"
 msgstr "Across all of Astana"
 
-#: webapp/templates/webapp/delivery_payment.html:52
+#: webapp/templates/webapp/delivery_payment.html:53
 msgid "Оплата"
 msgstr "Payment"
 
-#: webapp/templates/webapp/delivery_payment.html:54
+#: webapp/templates/webapp/delivery_payment.html:55
 msgid "Выбирайте удобный способ оплаты для вас."
 msgstr "Choose the payment method that is most convenient for you."
 
-#: webapp/templates/webapp/delivery_payment.html:60
+#: webapp/templates/webapp/delivery_payment.html:61
 msgid "Картой онлайн или наличными курьеру"
 msgstr "Online card payment or cash to the courier"
 
-#: webapp/templates/webapp/delivery_payment.html:69
+#: webapp/templates/webapp/delivery_payment.html:70
 msgid "Есть вопросы? Мы готовы помочь!"
 msgstr "Have questions? We’re ready to help!"
 
-#: webapp/templates/webapp/delivery_payment.html:73
+#: webapp/templates/webapp/delivery_payment.html:74
 msgid "Пн-Вс 10:00–23:00"
 msgstr "Mon–Sun 10:00–23:00"
 
-#: webapp/templates/webapp/delivery_payment.html:80
+#: webapp/templates/webapp/delivery_payment.html:81
 msgid "Как это работает"
 msgstr "How it works"
 
-#: webapp/templates/webapp/delivery_payment.html:86
+#: webapp/templates/webapp/delivery_payment.html:87
 msgid "1. Выберите блюда"
 msgstr "1. Choose your items"
 
-#: webapp/templates/webapp/delivery_payment.html:87
+#: webapp/templates/webapp/delivery_payment.html:88
 msgid "Выбирайте из широкого меню наших пицц, напитков и закусок"
 msgstr "Choose from our wide selection of pizzas, drinks, and snacks"
 
-#: webapp/templates/webapp/delivery_payment.html:94
+#: webapp/templates/webapp/delivery_payment.html:95
 msgid "2. Оплатите заказ"
 msgstr "2. Pay for your order"
 
-#: webapp/templates/webapp/delivery_payment.html:95
+#: webapp/templates/webapp/delivery_payment.html:96
 msgid "Оплатите удобным способом: картой или наличными"
 msgstr "Pay using a convenient method: card or cash"
 
-#: webapp/templates/webapp/delivery_payment.html:102
+#: webapp/templates/webapp/delivery_payment.html:103
 msgid "3. Готовим заказ"
 msgstr "3. We prepare your order"
 
-#: webapp/templates/webapp/delivery_payment.html:103
+#: webapp/templates/webapp/delivery_payment.html:104
 msgid "Наша команда готовит всё с заботой и свежими ингредиентами"
 msgstr "Our team prepares everything with care and fresh ingredients"
 
-#: webapp/templates/webapp/delivery_payment.html:110
+#: webapp/templates/webapp/delivery_payment.html:111
 msgid "4. Доставка"
 msgstr "4. Delivery"
 
-#: webapp/templates/webapp/delivery_payment.html:111
+#: webapp/templates/webapp/delivery_payment.html:112
 msgid "Курьер доставит заказ горячим прямо к вашей двери"
 msgstr "The courier will deliver your order hot, right to your door"
 
-#: webapp/templates/webapp/delivery_payment.html:118
+#: webapp/templates/webapp/delivery_payment.html:119
 msgid "Часто задаваемые вопросы"
 msgstr "Frequently Asked Questions"
 
-#: webapp/templates/webapp/delivery_payment.html:121
+#: webapp/templates/webapp/delivery_payment.html:122
 msgid "Какой минимум заказа?"
 msgstr "What is the minimum order?"
 
-#: webapp/templates/webapp/delivery_payment.html:122
+#: webapp/templates/webapp/delivery_payment.html:123
 msgid "Минимум заказа — 1000 ₸. Доставка бесплатна от 3000 ₸."
 msgstr "Minimum order is 1000 ₸. Delivery is free from 3000 ₸."
 
-#: webapp/templates/webapp/delivery_payment.html:125
+#: webapp/templates/webapp/delivery_payment.html:126
 msgid "Как долго ждать?"
 msgstr "How long is the wait?"
 
-#: webapp/templates/webapp/delivery_payment.html:126
+#: webapp/templates/webapp/delivery_payment.html:127
 msgid "В среднем 45 минут от подтверждения заказа до доставки."
 msgstr "On average, 45 minutes from order confirmation to delivery."
 
-#: webapp/templates/webapp/delivery_payment.html:129
+#: webapp/templates/webapp/delivery_payment.html:130
 msgid "Какие способы оплаты?"
 msgstr "What payment methods are available?"
 
-#: webapp/templates/webapp/delivery_payment.html:130
+#: webapp/templates/webapp/delivery_payment.html:131
 msgid "Visa, Mastercard, PayPal или наличные курьеру. На выбор!"
 msgstr "Visa, Mastercard, PayPal, or cash to the courier — your choice!"
 
-#: webapp/templates/webapp/delivery_payment.html:133
+#: webapp/templates/webapp/delivery_payment.html:134
 msgid "Работаете ли вы по ночам?"
 msgstr "Do you work at night?"
 
-#: webapp/templates/webapp/delivery_payment.html:134
+#: webapp/templates/webapp/delivery_payment.html:135
 msgid "Да, работаем ежедневно с 10:00 до 23:00. Выбирайте время доставки!"
 msgstr "Yes, we work daily from 10:00 to 23:00. Choose the delivery time!"
+
+#: webapp/templates/webapp/home.html:37
+msgid "Подробнее"
+msgstr ""
+
+#: webapp/templates/webapp/home.html:42
+msgid "Товары скоро появятся"
+msgstr ""
+
+#: webapp/templates/webapp/home.html:47
+msgid "Категории пока не добавлены"
+msgstr ""
 
 #: webapp/templates/webapp/jobs.html:10
 msgid ""
 "Мы активно ищем талантливых людей, готовых присоединиться к нашей команде!"
-msgstr ""
-"We are actively looking for talented people ready to join our team!"
+msgstr "We are actively looking for talented people ready to join our team!"
 
 #: webapp/templates/webapp/jobs.html:11
 msgid ""
@@ -747,3 +863,198 @@ msgstr "For all legal inquiries, write to"
 #: webapp/templates/webapp/legal.html:28
 msgid "или используйте форму обратной связи на странице Контакты."
 msgstr "or use the feedback form on the Contacts page."
+
+#: webapp/templates/webapp/login.html:7
+msgid "Вход"
+msgstr "Login"
+
+#: webapp/templates/webapp/login.html:12
+msgid "Ваш номер телефона"
+msgstr "Your phone number"
+
+#: webapp/templates/webapp/login.html:17
+#: webapp/templates/webapp/register.html:44
+msgid "Пароль"
+msgstr "Password"
+
+#: webapp/templates/webapp/login.html:27
+msgid "Нет аккаунта?"
+msgstr "Don't have an account?"
+
+#: webapp/templates/webapp/login.html:27
+#: webapp/templates/webapp/register.html:54
+msgid "Зарегистрироваться"
+msgstr "Sign up"
+
+#: webapp/templates/webapp/order_history.html:7
+msgid "История заказов"
+msgstr "Order history"
+
+#: webapp/templates/webapp/order_history.html:16
+msgid "Заказ"
+msgstr "Order"
+
+#: webapp/templates/webapp/order_history.html:26
+msgid "Новый"
+msgstr "New"
+
+#: webapp/templates/webapp/order_history.html:27
+msgid "В обработке"
+msgstr "Processing"
+
+#: webapp/templates/webapp/order_history.html:28
+msgid "Завершен"
+msgstr "Completed"
+
+#: webapp/templates/webapp/order_history.html:29
+msgid "Отменен"
+msgstr "Cancelled"
+
+#: webapp/templates/webapp/order_history.html:37
+msgid "Товары"
+msgstr "Items"
+
+#: webapp/templates/webapp/order_history.html:56
+msgid "Итого"
+msgstr "Total"
+
+#: webapp/templates/webapp/order_history.html:60
+msgid "Повторить заказ"
+msgstr "Repeat order"
+
+#: webapp/templates/webapp/order_history.html:65
+#: webapp/templates/webapp/order_review.html:34
+msgid "Отзыв оставлен"
+msgstr "Review submitted"
+
+#: webapp/templates/webapp/order_history.html:69
+#: webapp/templates/webapp/product_detail.html:270
+msgid "Оставить отзыв"
+msgstr "Leave a review"
+
+#: webapp/templates/webapp/order_history.html:81
+msgid "У вас пока нет заказов"
+msgstr "You have no orders yet"
+
+#: webapp/templates/webapp/order_review.html:7
+msgid "Оставить отзыв на заказ"
+msgstr "Leave a review for the order"
+
+#: webapp/templates/webapp/order_review.html:13
+msgid "Товары в заказе"
+msgstr "Items in the order"
+
+#: webapp/templates/webapp/order_review.html:39
+#: webapp/templates/webapp/product_detail.html:277
+msgid "Оценка"
+msgstr "Rating"
+
+#: webapp/templates/webapp/order_review.html:49
+msgid "Требуется оценка"
+msgstr "Rating required"
+
+#: webapp/templates/webapp/order_review.html:61
+msgid "Отзыв на заказ"
+msgstr "Order review"
+
+#: webapp/templates/webapp/order_review.html:65
+msgid "Комментарий (необязательно):"
+msgstr "Comment (optional):"
+
+#: webapp/templates/webapp/order_review.html:66
+msgid "Поделитесь впечатлением о заказе..."
+msgstr "Share your impression of the order..."
+
+#: webapp/templates/webapp/order_review.html:71
+msgid "Фото (необязательно):"
+msgstr "Photo (optional):"
+
+#: webapp/templates/webapp/order_review.html:79
+#: webapp/templates/webapp/product_detail.html:292
+msgid "Отправить отзыв"
+msgstr "Submit review"
+
+#: webapp/templates/webapp/order_review.html:82
+msgid "Отменить"
+msgstr "Cancel"
+
+#: webapp/templates/webapp/product_detail.html:14
+msgid "Нет изображения"
+msgstr "No image"
+
+#: webapp/templates/webapp/product_detail.html:50
+msgid "Выберите размер:"
+msgstr "Choose a size:"
+
+#: webapp/templates/webapp/product_detail.html:68
+msgid "Добавить по вкусу"
+msgstr "Add to taste"
+
+#: webapp/templates/webapp/product_detail.html:102
+msgid "Добавить в корзину"
+msgstr "Add to cart"
+
+#: webapp/templates/webapp/product_detail.html:266
+msgid "Отзывы"
+msgstr "Reviews"
+
+#: webapp/templates/webapp/product_detail.html:279
+msgid "Выберите оценку"
+msgstr "Choose a rating"
+
+#: webapp/templates/webapp/product_detail.html:296
+msgid "Отзыв можно оставить только на заказанный товар."
+msgstr "You can leave a review only for an ordered item."
+
+#: webapp/templates/webapp/product_detail.html:297
+msgid "Перейти к истории заказов"
+msgstr "Go to order history"
+
+#: webapp/templates/webapp/product_detail.html:301
+msgid "Пожалуйста,"
+msgstr "Please,"
+
+#: webapp/templates/webapp/product_detail.html:301
+msgid "авторизуйтесь"
+msgstr "log in"
+
+#: webapp/templates/webapp/product_detail.html:301
+msgid "для оставления отзыва."
+msgstr "to leave a review."
+
+#: webapp/templates/webapp/product_detail.html:326
+msgid "Ответ администратора:"
+msgstr "Administrator's reply:"
+
+#: webapp/templates/webapp/product_detail.html:336
+msgid "Ответить на отзыв..."
+msgstr "Reply to review..."
+
+#: webapp/templates/webapp/product_detail.html:337
+msgid "Ответить"
+msgstr "Reply"
+
+#: webapp/templates/webapp/product_detail.html:343
+msgid "Пока нет отзывов. Будьте первым!"
+msgstr "No reviews yet. Be the first!"
+
+#: webapp/templates/webapp/register.html:35
+#: webapp/templates/webapp/register.html:39
+msgid "Опционально"
+msgstr "Optional"
+
+#: webapp/templates/webapp/register.html:49
+msgid "Подтверждение пароля"
+msgstr "Confirm password"
+
+#: webapp/templates/webapp/register.html:67
+msgid "Ошибка при регистрации"
+msgstr "Registration error"
+
+#: webapp/templates/webapp/register.html:74
+msgid "Закрыть"
+msgstr "Close"
+
+#: webapp/templates/webapp/register.html:75
+msgid "Исправить номер"
+msgstr "Fix the number"

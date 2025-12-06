@@ -1,5 +1,6 @@
 {% extends 'webapp/base.html' %}
 {% load custom_filters %}
+{% load i18n %}
 
 {% block content %}
 <main class="max-w-5xl mx-auto py-10">
@@ -33,7 +34,7 @@
                     <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="product-image w-full h-full object-cover rounded">
                     {% else %}
                     <div class="w-full h-full bg-gray-200 rounded flex items-center justify-center">
-                        <span class="text-gray-400 text-xs">Нет фото</span>
+                        <span class="text-gray-400 text-xs">{% trans "Нет фото" %}</span>
                     </div>
                     {% endif %}
                 </div>
@@ -42,10 +43,10 @@
                 <div class="flex-1">
                     <h3 class="font-bold text-lg product-name">{{ item.product.name }}</h3>
                     {% if item.size_name %}
-                    <p class="text-sm text-gray-500">Размер: {{ item.size_name }}</p>
+                    <p class="text-sm text-gray-500">{% trans "Размер" %}: {{ item.size_name }}</p>
                     {% endif %}
                     {% if item.addons_info %}
-                    <p class="text-sm text-gray-500">Добавки: {{ item.addons_info|join:', ' }}</p>
+                    <p class="text-sm text-gray-500">{% trans "Добавки" %}: {{ item.addons_info|join:', ' }}</p>
                     {% endif %}
                     <p class="text-gray-600">{{ item.price|floatformat:0 }} ₸ × <span class="quantity-display">{{ item.quantity }}</span></p>
                 </div>
@@ -59,7 +60,7 @@
                 <!-- Сумма -->
                 <div class="text-right">
                     <p class="text-xl font-bold text-red-600 subtotal-display">{{ item.subtotal|floatformat:0 }} ₸</p>
-                    <button type="button" class="remove-btn text-red-600 text-sm mt-2" data-cart-key="{{ item.cart_key }}">Удалить</button>
+                    <button type="button" class="remove-btn text-red-600 text-sm mt-2" data-cart-key="{{ item.cart_key }}">{% trans "Удалить" %}</button>
                 </div>
             </div>
             {% endfor %}
@@ -68,19 +69,19 @@
         <!-- Итого -->
         <div class="mt-6 pt-6">
             <div class="flex justify-between items-center mb-6">
-                <span class="text-2xl font-bold">Итого:</span>
+                <span class="text-2xl font-bold">{% trans "Итого:" %}</span>
                 <span class="text-3xl font-bold text-red-600" id="total-price">{{ total|floatformat:0 }} ₸</span>
             </div>
             <a href="{% url 'checkout' %}" class="block w-full bg-red-600 text-white text-center py-4 rounded-lg text-xl font-semibold hover:bg-red-700">
-                Оформить заказ
+                {% trans "Оформить заказ" %}
             </a>
         </div>
     </div>
     {% else %}
     <div class="bg-white rounded-lg shadow-lg p-12 text-center">
-        <p class="text-xl text-gray-500 mb-6">Корзина пуста</p>
+        <p class="text-xl text-gray-500 mb-6">{% trans "Корзина пуста" %}</p>
         <a href="{% url 'home' %}" class="inline-block bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700">
-            Перейти к покупкам
+            {% trans "Перейти к покупкам" %}
         </a>
     </div>
     {% endif %}

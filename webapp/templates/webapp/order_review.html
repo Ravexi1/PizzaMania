@@ -1,16 +1,16 @@
 {% extends 'webapp/base.html' %}
 {% load custom_filters %}
+{% load i18n %}
 
 {% block content %}
 <main class="max-w-2xl mx-auto py-10">
-    <h1 class="text-3xl font-bold mb-6">Оставить отзыв на заказ #{{ order.id }}</h1>
-
+    <h1 class="text-3xl font-bold mb-6">{% trans "Оставить отзыв на заказ" %} #{{ order.id }}</h1>
     <form method="POST" enctype="multipart/form-data" class="bg-white rounded-lg shadow-lg p-8" id="reviewForm">
         {% csrf_token %}
 
         <!-- Товары в заказе -->
         <div class="mb-8">
-            <h2 class="text-xl font-bold mb-4">Товары в заказе:</h2>
+            <h2 class="text-xl font-bold mb-4">{% trans "Товары в заказе" %}:</h2>
             <div class="space-y-6 border-b pb-6 mb-6">
                 {% for item_status in order_items_with_review_status %}
                 <div class="flex gap-4 pb-4 border-b last:border-b-0">
@@ -19,7 +19,7 @@
                     <img src="{{ item_status.item.product.image.url }}" alt="{{ item_status.item.product.name }}" class="w-24 h-24 object-cover rounded">
                     {% else %}
                     <div class="w-24 h-24 bg-gray-200 rounded flex items-center justify-center">
-                        <span class="text-gray-400 text-xs">Нет фото</span>
+                        <span class="text-gray-400 text-xs">{% trans "Нет фото" %}</span>
                     </div>
                     {% endif %}
 
@@ -31,12 +31,12 @@
                         <!-- Если отзыв уже оставлен, показываем сообщение -->
                         {% if item_status.has_review %}
                         <div class="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-lg font-semibold">
-                            ✓ Отзыв оставлен
+                            ✓ {% trans "Отзыв оставлен" %}
                         </div>
                         {% else %}
                         <!-- Оценка товара (1-5 звезд с hover эффектом) -->
                         <div class="flex items-center gap-3">
-                            <label class="text-sm font-semibold">Оценка:</label>
+                            <label class="text-sm font-semibold">{% trans "Оценка" %}:</label>
                             <div class="flex gap-2 star-rating" data-item-id="{{ item_status.item.id }}">
                                 {% for star in "12345" %}
                                 <label class="cursor-pointer group relative">
@@ -46,7 +46,7 @@
                                 {% endfor %}
                             </div>
                             <span class="text-sm text-red-600 error-message" data-item="{{ item_status.item.id }}" style="display:none;">
-                                Требуется оценка
+                                {% trans "Требуется оценка" %}
                             </span>
                         </div>
                         {% endif %}
@@ -58,17 +58,17 @@
 
         <!-- Общие комментарий и фото для всех товаров -->
         <div class="mb-8">
-            <h2 class="text-xl font-bold mb-4">Отзыв на заказ</h2>
+            <h2 class="text-xl font-bold mb-4">{% trans "Отзыв на заказ" %}</h2>
 
             <!-- Комментарий -->
             <div class="mb-6">
-                <label class="block text-sm font-semibold mb-2">Комментарий (необязательно):</label>
-                <textarea name="comment" rows="5" placeholder="Поделитесь впечатлением о заказе..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"></textarea>
+                <label class="block text-sm font-semibold mb-2">{% trans "Комментарий (необязательно):" %}</label>
+                <textarea name="comment" rows="5" placeholder="{% trans "Поделитесь впечатлением о заказе..." %}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"></textarea>
             </div>
 
             <!-- Фото -->
             <div class="mb-6">
-                <label class="block text-sm font-semibold mb-2">Фото (необязательно):</label>
+                <label class="block text-sm font-semibold mb-2">{% trans "Фото (необязательно):" %}</label>
                 <input type="file" name="photo" accept="image/*" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500">
             </div>
         </div>
@@ -76,10 +76,10 @@
         <!-- Кнопки действия -->
         <div class="flex gap-4">
             <button type="submit" class="flex-1 bg-red-600 text-white py-3 rounded-lg font-bold hover:bg-red-700 transition">
-                Отправить отзыв
+                {% trans "Отправить отзыв" %}
             </button>
             <a href="{% url 'order_history' %}" class="flex-1 bg-gray-300 text-gray-800 py-3 rounded-lg font-bold hover:bg-gray-400 transition text-center">
-                Отменить
+                {% trans "Отменить" %}
             </a>
         </div>
     </form>
