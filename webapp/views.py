@@ -44,7 +44,13 @@ def save_cart(request, cart):
 def home(request):
     categories = Category.objects.all()
     products = Product.objects.all()
-    return render(request, 'webapp/home.html', {'categories': categories, 'products': products})
+    # Товары со скидкой
+    discounted_products = Product.objects.filter(discount__gt=0)
+    return render(request, 'webapp/home.html', {
+        'categories': categories, 
+        'products': products,
+        'discounted_products': discounted_products
+    })
 
 
 def about(request):

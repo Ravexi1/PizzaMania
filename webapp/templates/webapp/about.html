@@ -4,108 +4,108 @@
 {% block title %}{% trans "О нас" %} — PizzaMania{% endblock %}
 
 {% block content %}
-<main class="max-w-5xl mx-auto py-10 px-4">
+<main class="max-w-5xl mx-auto py-6 md:py-10 px-4">
     <!-- Hero блок -->
-    <div class="bg-gradient-to-r from-red-600 to-orange-500 text-white rounded-2xl p-12 mb-12 text-center">
-        <h1 class="text-5xl font-bold mb-4">{% trans "О нашей компании" %}</h1>
-        <p class="text-xl opacity-90">{% trans "История успеха PizzaMania началась с мечты о настоящей итальянской пиццe" %}</p>
+    <div class="bg-gradient-to-r from-red-600 to-orange-500 text-white rounded-2xl p-6 md:p-12 mb-8 md:mb-12 text-center">
+        <h1 class="text-3xl md:text-5xl font-bold mb-3 md:mb-4">{% trans "О нашей компании" %}</h1>
+        <p class="text-base md:text-xl opacity-90">{% trans "История успеха PizzaMania началась с мечты о настоящей итальянской пиццe" %}</p>
     </div>
 
     <!-- Наша история -->
-    <section class="mb-16">
-        <div class="grid md:grid-cols-2 gap-8 items-center">
+    <section class="mb-12 md:mb-16">
+        <div class="grid md:grid-cols-2 gap-6 md:gap-8 items-center">
             <div>
-                <h2 class="text-3xl font-bold mb-4">{% trans "Наша история" %}</h2>
-                <p class="text-gray-700 mb-4">
+                <h2 class="text-2xl md:text-3xl font-bold mb-3 md:mb-4">{% trans "Наша история" %}</h2>
+                <p class="text-gray-700 mb-3 md:mb-4 text-sm md:text-base">
                     {% trans "PizzaMania была основана в 2015 году группой энтузиастов, влюблённых в итальянскую кухню. Мы начали с маленькой пиццерии в центре Алматы и всего трёх сотрудников." %}
                 </p>
-                <p class="text-gray-700 mb-4">
+                <p class="text-gray-700 mb-3 md:mb-4 text-sm md:text-base">
                     {% trans "Сегодня мы — одна из ведущих сетей доставки пиццы в Казахстане, с десятками филиалов и командой из более чем 200 профессионалов." %}
                 </p>
-                <p class="text-gray-700">
+                <p class="text-gray-700 text-sm md:text-base">
                     {% trans "Наш секрет прост: качественные продукты, традиционные рецепты и любовь к своему делу." %}
                 </p>
             </div>
-            <div class="bg-gray-200 h-80 rounded-2xl flex items-center justify-center">
-                <span class="text-gray-500 text-6xl">🍕</span>
+            <div class="bg-gray-200 h-48 md:h-80 rounded-2xl flex items-center justify-center">
+                <span class="text-gray-500 text-4xl md:text-6xl">🍕</span>
             </div>
         </div>
     </section>
 
     <!-- Наши ценности -->
-    <section class="mb-16">
-        <h2 class="text-3xl font-bold mb-8 text-center">{% trans "Наши ценности" %}</h2>
-        <div class="grid md:grid-cols-3 gap-8">
-            <div class="bg-white p-6 rounded-xl shadow-md text-center">
-                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-heart text-red-600 text-2xl"></i>
+    <section class="mb-12 md:mb-16">
+        <h2 class="text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-center">{% trans "Наши ценности" %}</h2>
+        <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
+            <div class="bg-white p-5 md:p-6 rounded-xl shadow-md text-center">
+                <div class="w-14 h-14 md:w-16 md:h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
+                    <i class="fas fa-heart text-red-600 text-xl md:text-2xl"></i>
                 </div>
-                <h3 class="font-bold text-xl mb-3">{% trans "Качество" %}</h3>
-                <p class="text-gray-600">{% trans "Используем только свежие ингредиенты от проверенных поставщиков" %}</p>
+                <h3 class="font-bold text-lg md:text-xl mb-2 md:mb-3">{% trans "Качество" %}</h3>
+                <p class="text-gray-600 text-sm md:text-base">{% trans "Используем только свежие ингредиенты от проверенных поставщиков" %}</p>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-md text-center">
-                <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-clock text-orange-600 text-2xl"></i>
+            <div class="bg-white p-5 md:p-6 rounded-xl shadow-md text-center">
+                <div class="w-14 h-14 md:w-16 md:h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
+                    <i class="fas fa-clock text-orange-600 text-xl md:text-2xl"></i>
                 </div>
-                <h3 class="font-bold text-xl mb-3">{% trans "Скорость" %}</h3>
-                <p class="text-gray-600">{% trans "Доставляем горячую пиццу в течение 30-40 минут" %}</p>
+                <h3 class="font-bold text-lg md:text-xl mb-2 md:mb-3">{% trans "Скорость" %}</h3>
+                <p class="text-gray-600 text-sm md:text-base">{% trans "Доставляем горячую пиццу в течение 30-40 минут" %}</p>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-md text-center">
-                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-smile text-green-600 text-2xl"></i>
+            <div class="bg-white p-5 md:p-6 rounded-xl shadow-md text-center sm:col-span-2 md:col-span-1">
+                <div class="w-14 h-14 md:w-16 md:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
+                    <i class="fas fa-smile text-green-600 text-xl md:text-2xl"></i>
                 </div>
-                <h3 class="font-bold text-xl mb-3">{% trans "Забота" %}</h3>
-                <p class="text-gray-600">{% trans "Каждый клиент для нас особенный, мы ценим ваш выбор" %}</p>
+                <h3 class="font-bold text-lg md:text-xl mb-2 md:mb-3">{% trans "Забота" %}</h3>
+                <p class="text-gray-600 text-sm md:text-base">{% trans "Каждый клиент для нас особенный, мы ценим ваш выбор" %}</p>
             </div>
         </div>
     </section>
 
     <!-- Команда -->
-    <section class="mb-16">
-        <h2 class="text-3xl font-bold mb-8 text-center">{% trans "Наша команда" %}</h2>
-        <div class="grid md:grid-cols-4 gap-6">
-            <div class="bg-white p-6 rounded-xl shadow-md text-center">
-                <div class="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4"></div>
-                <h3 class="font-bold mb-1">{% trans "Александр Иванов" %}</h3>
-                <p class="text-sm text-gray-600">{% trans "Основатель и CEO" %}</p>
+    <section class="mb-12 md:mb-16">
+        <h2 class="text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-center">{% trans "Наша команда" %}</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md text-center">
+                <div class="w-20 h-20 md:w-24 md:h-24 bg-gray-300 rounded-full mx-auto mb-3 md:mb-4"></div>
+                <h3 class="font-bold mb-1 text-sm md:text-base">{% trans "Александр Иванов" %}</h3>
+                <p class="text-xs md:text-sm text-gray-600">{% trans "Основатель и CEO" %}</p>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-md text-center">
-                <div class="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4"></div>
-                <h3 class="font-bold mb-1">{% trans "Мария Петрова" %}</h3>
-                <p class="text-sm text-gray-600">{% trans "Шеф-повар" %}</p>
+            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md text-center">
+                <div class="w-20 h-20 md:w-24 md:h-24 bg-gray-300 rounded-full mx-auto mb-3 md:mb-4"></div>
+                <h3 class="font-bold mb-1 text-sm md:text-base">{% trans "Мария Петрова" %}</h3>
+                <p class="text-xs md:text-sm text-gray-600">{% trans "Шеф-повар" %}</p>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-md text-center">
-                <div class="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4"></div>
-                <h3 class="font-bold mb-1">{% trans "Дмитрий Сидоров" %}</h3>
-                <p class="text-sm text-gray-600">{% trans "Менеджер по доставке" %}</p>
+            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md text-center">
+                <div class="w-20 h-20 md:w-24 md:h-24 bg-gray-300 rounded-full mx-auto mb-3 md:mb-4"></div>
+                <h3 class="font-bold mb-1 text-sm md:text-base">{% trans "Дмитрий Сидоров" %}</h3>
+                <p class="text-xs md:text-sm text-gray-600">{% trans "Менеджер по доставке" %}</p>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-md text-center">
-                <div class="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4"></div>
-                <h3 class="font-bold mb-1">{% trans "Елена Краснова" %}</h3>
-                <p class="text-sm text-gray-600">{% trans "Маркетинг-директор" %}</p>
+            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md text-center">
+                <div class="w-20 h-20 md:w-24 md:h-24 bg-gray-300 rounded-full mx-auto mb-3 md:mb-4"></div>
+                <h3 class="font-bold mb-1 text-sm md:text-base">{% trans "Елена Краснова" %}</h3>
+                <p class="text-xs md:text-sm text-gray-600">{% trans "Маркетинг-директор" %}</p>
             </div>
         </div>
     </section>
 
     <!-- Статистика -->
-    <section class="bg-gradient-to-r from-red-600 to-orange-500 text-white rounded-2xl p-12">
-        <h2 class="text-3xl font-bold mb-8 text-center">{% trans "PizzaMania в цифрах" %}</h2>
-        <div class="grid md:grid-cols-4 gap-8 text-center">
+    <section class="bg-gradient-to-r from-red-600 to-orange-500 text-white rounded-2xl p-6 md:p-12">
+        <h2 class="text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-center">{% trans "PizzaMania в цифрах" %}</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 text-center">
             <div>
-                <div class="text-5xl font-bold mb-2">10+</div>
-                <p class="opacity-90">{% trans "Лет на рынке" %}</p>
+                <div class="text-3xl md:text-5xl font-bold mb-2">10+</div>
+                <p class="opacity-90 text-sm md:text-base">{% trans "Лет на рынке" %}</p>
             </div>
             <div>
-                <div class="text-5xl font-bold mb-2">50+</div>
-                <p class="opacity-90">{% trans "Видов пиццы" %}</p>
+                <div class="text-3xl md:text-5xl font-bold mb-2">50+</div>
+                <p class="opacity-90 text-sm md:text-base">{% trans "Видов пиццы" %}</p>
             </div>
             <div>
-                <div class="text-5xl font-bold mb-2">200+</div>
-                <p class="opacity-90">{% trans "Сотрудников" %}</p>
+                <div class="text-3xl md:text-5xl font-bold mb-2">200+</div>
+                <p class="opacity-90 text-sm md:text-base">{% trans "Сотрудников" %}</p>
             </div>
             <div>
-                <div class="text-5xl font-bold mb-2">100K+</div>
-                <p class="opacity-90">{% trans "Довольных клиентов" %}</p>
+                <div class="text-3xl md:text-5xl font-bold mb-2">100K+</div>
+                <p class="opacity-90 text-sm md:text-base">{% trans "Довольных клиентов" %}</p>
             </div>
         </div>
     </section>

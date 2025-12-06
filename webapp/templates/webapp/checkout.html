@@ -2,35 +2,35 @@
 {% load i18n %}
 
 {% block content %}
-<main class="max-w-2xl mx-auto py-10">
-    <div class="bg-white rounded-lg shadow-lg p-8">
-        <h1 class="text-3xl font-bold mb-6">{% trans "Оформление заказа" %}</h1>
+<main class="max-w-2xl mx-auto py-6 md:py-10 px-4">
+    <div class="bg-white rounded-lg shadow-lg p-5 md:p-8">
+        <h1 class="text-2xl md:text-3xl font-bold mb-4 md:mb-6">{% trans "Оформление заказа" %}</h1>
         <form method="POST">
             {% csrf_token %}
             {% if user.is_authenticated %}
-                <div class="bg-gray-50 p-4 rounded mb-4">
-                    <p class="text-sm text-gray-700">{% trans "На этот адрес доставить?" %}</p>
-                    <p class="font-medium">{{ user_data.street }}{% if user_data.entrance %}, {% trans "подъезд" %} {{ user_data.entrance }}{% endif %}{% if user_data.apartment %}, {% trans "кв." %} {{ user_data.apartment }}{% endif %}</p>
-                    <label class="inline-flex items-center mt-3">
+                <div class="bg-gray-50 p-3 md:p-4 rounded mb-3 md:mb-4">
+                    <p class="text-xs md:text-sm text-gray-700">{% trans "На этот адрес доставить?" %}</p>
+                    <p class="font-medium text-sm md:text-base">{{ user_data.street }}{% if user_data.entrance %}, {% trans "подъезд" %} {{ user_data.entrance }}{% endif %}{% if user_data.apartment %}, {% trans "кв." %} {{ user_data.apartment }}{% endif %}</p>
+                    <label class="inline-flex items-center mt-2 md:mt-3">
                         <input id="edit-address-toggle" type="checkbox" class="mr-2">
-                        <span class="text-sm text-gray-600">{% trans "Изменить адрес" %}</span>
+                        <span class="text-xs md:text-sm text-gray-600">{% trans "Изменить адрес" %}</span>
                     </label>
                     <input type="hidden" id="edit-address-input" name="edit_address" value="0">
                 </div>
 
-                <div id="edit-address" class="hidden mb-4">
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium mb-2">{% trans "Улица" %}</label>
-                        <input type="text" name="street" value="{{ user_data.street }}" class="w-full border rounded px-4 py-2">
+                <div id="edit-address" class="hidden mb-3 md:mb-4">
+                    <div class="mb-3 md:mb-4">
+                        <label class="block text-xs md:text-sm font-medium mb-1 md:mb-2">{% trans "Улица" %}</label>
+                        <input type="text" name="street" value="{{ user_data.street }}" class="w-full border rounded px-3 md:px-4 py-2 text-sm md:text-base">
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-3 md:mb-4">
                         <div>
-                            <label class="block text-sm font-medium mb-2">{% trans "Подъезд" %}</label>
-                            <input type="text" name="entrance" value="{{ user_data.entrance }}" class="w-full border rounded px-4 py-2">
+                            <label class="block text-xs md:text-sm font-medium mb-1 md:mb-2">{% trans "Подъезд" %}</label>
+                            <input type="text" name="entrance" value="{{ user_data.entrance }}" class="w-full border rounded px-3 md:px-4 py-2 text-sm md:text-base">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-2">{% trans "Квартира" %}</label>
-                            <input type="text" name="apartment" value="{{ user_data.apartment }}" class="w-full border rounded px-4 py-2">
+                            <label class="block text-xs md:text-sm font-medium mb-1 md:mb-2">{% trans "Квартира" %}</label>
+                            <input type="text" name="apartment" value="{{ user_data.apartment }}" class="w-full border rounded px-3 md:px-4 py-2 text-sm md:text-base">
                         </div>
                     </div>
                 </div>
@@ -40,45 +40,45 @@
                 <input type="hidden" name="phone" value="{{ user_data.phone }}">
 
             {% else %}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-3 md:mb-4">
                     <div>
-                        <label class="block text-sm font-medium mb-2">{% trans "Имя" %} *</label>
-                        <input type="text" name="first_name" value="{{ user_data.first_name }}" required class="w-full border rounded px-4 py-2">
+                        <label class="block text-xs md:text-sm font-medium mb-1 md:mb-2">{% trans "Имя" %} *</label>
+                        <input type="text" name="first_name" value="{{ user_data.first_name }}" required class="w-full border rounded px-3 md:px-4 py-2 text-sm md:text-base">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">{% trans "Фамилия" %} *</label>
-                        <input type="text" name="last_name" value="{{ user_data.last_name }}" required class="w-full border rounded px-4 py-2">
+                        <label class="block text-xs md:text-sm font-medium mb-1 md:mb-2">{% trans "Фамилия" %} *</label>
+                        <input type="text" name="last_name" value="{{ user_data.last_name }}" required class="w-full border rounded px-3 md:px-4 py-2 text-sm md:text-base">
                     </div>
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium mb-2">{% trans "Телефон" %} *</label>
-                    <input type="tel" name="phone" value="{{ user_data.phone }}" required placeholder="+7 777 123 4567" class="w-full border rounded px-4 py-2">
+                <div class="mb-3 md:mb-4">
+                    <label class="block text-xs md:text-sm font-medium mb-1 md:mb-2">{% trans "Телефон" %} *</label>
+                    <input type="tel" name="phone" value="{{ user_data.phone }}" required placeholder="+7 777 123 4567" class="w-full border rounded px-3 md:px-4 py-2 text-sm md:text-base">
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium mb-2">{% trans "Улица" %} *</label>
-                    <input type="text" name="street" value="{{ user_data.street }}" required placeholder="ул. Достык 12" class="w-full border rounded px-4 py-2">
+                <div class="mb-3 md:mb-4">
+                    <label class="block text-xs md:text-sm font-medium mb-1 md:mb-2">{% trans "Улица" %} *</label>
+                    <input type="text" name="street" value="{{ user_data.street }}" required placeholder="ул. Достык 12" class="w-full border rounded px-3 md:px-4 py-2 text-sm md:text-base">
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-3 md:mb-4">
                     <div>
-                        <label class="block text-sm font-medium mb-2">{% trans "Подъезд" %}</label>
-                        <input type="text" name="entrance" value="{{ user_data.entrance }}" placeholder="Опционально" class="w-full border rounded px-4 py-2">
+                        <label class="block text-xs md:text-sm font-medium mb-1 md:mb-2">{% trans "Подъезд" %}</label>
+                        <input type="text" name="entrance" value="{{ user_data.entrance }}" placeholder="Опционально" class="w-full border rounded px-3 md:px-4 py-2 text-sm md:text-base">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">{% trans "Квартира" %}</label>
-                        <input type="text" name="apartment" value="{{ user_data.apartment }}" placeholder="Опционально" class="w-full border rounded px-4 py-2">
+                        <label class="block text-xs md:text-sm font-medium mb-1 md:mb-2">{% trans "Квартира" %}</label>
+                        <input type="text" name="apartment" value="{{ user_data.apartment }}" placeholder="Опционально" class="w-full border rounded px-3 md:px-4 py-2 text-sm md:text-base">
                     </div>
                 </div>
             {% endif %}
 
-            <div class="mb-6">
-                <label class="block text-sm font-medium mb-2">{% trans "Комментарий курьеру" %}</label>
-                <textarea name="courier_comment" rows="3" placeholder="{% trans "Дополнительные пожелания или инструкции для курьера" %}" class="w-full border rounded px-4 py-2"></textarea>
+            <div class="mb-4 md:mb-6">
+                <label class="block text-xs md:text-sm font-medium mb-1 md:mb-2">{% trans "Комментарий курьеру" %}</label>
+                <textarea name="courier_comment" rows="3" placeholder="{% trans "Дополнительные пожелания или инструкции для курьера" %}" class="w-full border rounded px-3 md:px-4 py-2 text-sm md:text-base"></textarea>
             </div>
 
-            <button type="submit" class="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 font-semibold text-lg">
+            <button type="submit" class="w-full bg-red-600 text-white py-2.5 md:py-3 rounded-lg hover:bg-red-700 font-semibold text-base md:text-lg">
                 {% trans "Подтвердить заказ" %}
             </button>
         </form>

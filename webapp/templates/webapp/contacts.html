@@ -4,57 +4,57 @@
 {% block title %}{% trans "Контакты" %} — PizzaMania{% endblock %}
 
 {% block content %}
-<main class="max-w-5xl mx-auto py-10 px-4">
+<main class="max-w-5xl mx-auto py-6 md:py-10 px-4">
     <!-- Hero блок -->
-    <div class="bg-gradient-to-r from-red-600 to-orange-500 text-white rounded-2xl p-12 mb-12 text-center">
-        <h1 class="text-5xl font-bold mb-4">{% trans "Свяжитесь с нами" %}</h1>
-        <p class="text-xl opacity-90">{% trans "Мы всегда рады вашим вопросам и предложениям!" %}</p>
+    <div class="bg-gradient-to-r from-red-600 to-orange-500 text-white rounded-2xl p-6 md:p-12 mb-8 md:mb-12 text-center">
+        <h1 class="text-3xl md:text-5xl font-bold mb-3 md:mb-4">{% trans "Свяжитесь с нами" %}</h1>
+        <p class="text-base md:text-xl opacity-90">{% trans "Мы всегда рады вашим вопросам и предложениям!" %}</p>
     </div>
 
-    <div class="grid md:grid-cols-2 gap-12">
+    <div class="grid md:grid-cols-2 gap-8 md:gap-12">
         <!-- Контактная информация -->
-        <div class="space-y-8">
-            <div class="bg-white p-6 rounded-xl shadow-md">
-                <div class="flex items-start gap-4">
-                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <i class="fas fa-phone text-red-600 text-xl"></i>
+        <div class="space-y-4 md:space-y-8">
+            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md">
+                <div class="flex items-start gap-3 md:gap-4">
+                    <div class="w-10 h-10 md:w-12 md:h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-phone text-red-600 text-lg md:text-xl"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-lg mb-2">{% trans "Телефон" %}</h3>
-                        <a href="tel:+77777777777" class="text-red-600 hover:text-red-700 text-lg">+7 (777) 777-77-77</a>
-                        <p class="text-gray-600 text-sm mt-1">{% trans "Звоните с 9:00 до 23:00" %}</p>
+                        <h3 class="font-bold text-base md:text-lg mb-1 md:mb-2">{% trans "Телефон" %}</h3>
+                        <a href="tel:+77777777777" class="text-red-600 hover:text-red-700 text-base md:text-lg">+7 (777) 777-77-77</a>
+                        <p class="text-gray-600 text-xs md:text-sm mt-1">{% trans "Звоните с 9:00 до 23:00" %}</p>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white p-6 rounded-xl shadow-md">
-                <div class="flex items-start gap-4">
-                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <i class="fas fa-envelope text-red-600 text-xl"></i>
+            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md">
+                <div class="flex items-start gap-3 md:gap-4">
+                    <div class="w-10 h-10 md:w-12 md:h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-envelope text-red-600 text-lg md:text-xl"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-lg mb-2">{% trans "Email" %}</h3>
-                        <a href="mailto:info@pizzamania.kz" class="text-red-600 hover:text-red-700">info@pizzamania.kz</a>
-                        <p class="text-gray-600 text-sm mt-1">{% trans "Ответим в течение 24 часов" %}</p>
+                        <h3 class="font-bold text-base md:text-lg mb-1 md:mb-2">{% trans "Email" %}</h3>
+                        <a href="mailto:info@pizzamania.kz" class="text-red-600 hover:text-red-700 text-sm md:text-base break-all">info@pizzamania.kz</a>
+                        <p class="text-gray-600 text-xs md:text-sm mt-1">{% trans "Ответим в течение 24 часов" %}</p>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white p-6 rounded-xl shadow-md">
-                <div class="flex items-start gap-4">
-                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <i class="fas fa-map-marker-alt text-red-600 text-xl"></i>
+            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md">
+                <div class="flex items-start gap-3 md:gap-4">
+                    <div class="w-10 h-10 md:w-12 md:h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-map-marker-alt text-red-600 text-lg md:text-xl"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-lg mb-2">{% trans "Адрес" %}</h3>
-                        <p class="text-gray-700">{% trans "г. Алматы, ул. Абая 150" %}</p>
-                        <p class="text-gray-600 text-sm mt-1">{% trans "Работаем с 9:00 до 23:00" %}</p>
+                        <h3 class="font-bold text-base md:text-lg mb-1 md:mb-2">{% trans "Адрес" %}</h3>
+                        <p class="text-gray-700 text-sm md:text-base">{% trans "г. Алматы, ул. Абая 150" %}</p>
+                        <p class="text-gray-600 text-xs md:text-sm mt-1">{% trans "Работаем с 9:00 до 23:00" %}</p>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white p-6 rounded-xl shadow-md">
-                <h3 class="font-bold text-lg mb-4">{% trans "Мы в социальных сетях" %}</h3>
+            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md">
+                <h3 class="font-bold text-base md:text-lg mb-3 md:mb-4">{% trans "Мы в социальных сетях" %}</h3>
                     <div class="flex items-center gap-3 mb-3">
                         <a href="https://instagram.com" aria-label="Instagram" class="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-tr from-pink-500 to-yellow-500 hover:scale-110 transition">{% include 'webapp/partials/icon_instagram.html' %}</a>
                         <a href="https://t.me/" aria-label="Telegram" class="w-10 h-10 rounded-full flex items-center justify-center bg-blue-400 hover:scale-110 transition">{% include 'webapp/partials/icon_telegram.html' %}</a>
@@ -65,27 +65,27 @@
         </div>
 
         <!-- Форма обратной связи -->
-        <div class="bg-white p-8 rounded-xl shadow-md">
-            <h2 class="text-2xl font-bold mb-6">{% trans "Напишите нам" %}</h2>
-            <form method="post" class="space-y-4">
+        <div class="bg-white p-5 md:p-8 rounded-xl shadow-md">
+            <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6">{% trans "Напишите нам" %}</h2>
+            <form method="post" class="space-y-3 md:space-y-4">
                 {% csrf_token %}
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">{% trans "Ваше имя" %}</label>
-                    <input type="text" name="name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="{% trans 'Иван Иванов' %}">
+                    <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1 md:mb-2">{% trans "Ваше имя" %}</label>
+                    <input type="text" name="name" required class="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm md:text-base" placeholder="{% trans 'Иван Иванов' %}">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">{% trans "Email" %}</label>
-                    <input type="email" name="email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="example@mail.com">
+                    <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1 md:mb-2">{% trans "Email" %}</label>
+                    <input type="email" name="email" required class="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm md:text-base" placeholder="example@mail.com">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">{% trans "Тема" %}</label>
-                    <input type="text" name="subject" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="{% trans 'О чём вы хотите написать?' %}">
+                    <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1 md:mb-2">{% trans "Тема" %}</label>
+                    <input type="text" name="subject" required class="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm md:text-base" placeholder="{% trans 'О чём вы хотите написать?' %}">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">{% trans "Сообщение" %}</label>
-                    <textarea name="message" required rows="5" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="{% trans 'Ваше сообщение...' %}"></textarea>
+                    <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1 md:mb-2">{% trans "Сообщение" %}</label>
+                    <textarea name="message" required rows="4" class="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm md:text-base" placeholder="{% trans 'Ваше сообщение...' %}"></textarea>
                 </div>
-                <button type="submit" class="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition">
+                <button type="submit" class="w-full bg-red-600 text-white py-2.5 md:py-3 rounded-lg font-semibold hover:bg-red-700 transition text-sm md:text-base">
                     {% trans "Отправить сообщение" %}
                 </button>
             </form>
@@ -93,12 +93,12 @@
     </div>
 
     <!-- Альтернативный блок вместо карты -->
-    <div class="mt-12 bg-white p-8 rounded-xl shadow-md">
-        <h2 class="text-2xl font-bold mb-4">{% trans "Остались вопросы?" %}</h2>
-        <p class="text-gray-700 mb-4">{% trans "Свяжитесь с нами любым удобным способом или воспользуйтесь формой выше. Мы всегда рады помочь!" %}</p>
-        <ul class="text-gray-600 space-y-2">
+    <div class="mt-8 md:mt-12 bg-white p-5 md:p-8 rounded-xl shadow-md">
+        <h2 class="text-xl md:text-2xl font-bold mb-3 md:mb-4">{% trans "Остались вопросы?" %}</h2>
+        <p class="text-gray-700 mb-3 md:mb-4 text-sm md:text-base">{% trans "Свяжитесь с нами любым удобным способом или воспользуйтесь формой выше. Мы всегда рады помочь!" %}</p>
+        <ul class="text-gray-600 space-y-2 text-sm md:text-base">
             <li><span class="font-semibold">{% trans "Телефон:" %}</span> <a href="tel:+77777777777" class="text-red-600 hover:text-red-700">+7 (777) 777-77-77</a></li>
-            <li><span class="font-semibold">Email:</span> <a href="mailto:info@pizzamania.kz" class="text-red-600 hover:text-red-700">info@pizzamania.kz</a></li>
+            <li><span class="font-semibold">Email:</span> <a href="mailto:info@pizzamania.kz" class="text-red-600 hover:text-red-700 break-all">info@pizzamania.kz</a></li>
             <li><span class="font-semibold">{% trans "Адрес:" %}</span> {% trans "г. Астана, ул. Абая 150" %}</li>
         </ul>
     </div>

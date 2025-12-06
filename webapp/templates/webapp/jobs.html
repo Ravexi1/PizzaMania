@@ -2,30 +2,30 @@
 {% load i18n %}
 
 {% block content %}
-<main class="max-w-4xl mx-auto py-10 px-4">
-    <h1 class="text-4xl font-bold mb-6 text-center">{% trans "Вакансии" %}</h1>
+<main class="max-w-4xl mx-auto py-6 md:py-10 px-4">
+    <h1 class="text-3xl md:text-4xl font-bold mb-4 md:mb-6 text-center">{% trans "Вакансии" %}</h1>
 
-    <div class="mb-8 bg-blue-50 rounded-lg p-6 border-l-4 border-blue-600">
-        <p class="text-lg text-gray-700">
+    <div class="mb-6 md:mb-8 bg-blue-50 rounded-lg p-4 md:p-6 border-l-4 border-blue-600">
+        <p class="text-sm md:text-lg text-gray-700">
             🔥 {% trans "Мы активно ищем талантливых людей, готовых присоединиться к нашей команде!" %} 
             {% trans "Если вы увлечены своим делом и хотите работать в дружной и динамичной компании — это место для вас." %}
         </p>
     </div>
 
-    <div class="space-y-6 mb-8">
+    <div class="space-y-4 md:space-y-6 mb-6 md:mb-8">
         <!-- {% trans "Вакансия 1: Пиццайоло" %} -->
-        <div class="bg-white rounded-lg shadow-lg p-6 border-t-4 border-red-600">
-            <div class="flex justify-between items-start mb-4">
+        <div class="bg-white rounded-lg shadow-lg p-4 md:p-6 border-t-4 border-red-600">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4 gap-2">
                 <div>
-                    <h2 class="text-2xl font-bold">🍕 {% trans "Пиццайоло (Повар пиццы)" %}</h2>
-                    <p class="text-gray-500">{% trans "Пекарня PizzaMania" %}</p>
+                    <h2 class="text-xl md:text-2xl font-bold">🍕 {% trans "Пиццайоло (Повар пиццы)" %}</h2>
+                    <p class="text-gray-500 text-sm md:text-base">{% trans "Пекарня PizzaMania" %}</p>
                 </div>
-                <span class="bg-green-100 text-green-800 px-4 py-1 rounded-full font-semibold">{% trans "Открыто" %}</span>
+                <span class="bg-green-100 text-green-800 px-3 md:px-4 py-1 rounded-full font-semibold text-xs md:text-sm inline-block self-start">{% trans "Открыто" %}</span>
             </div>
             
             <div class="mb-4">
-                <h3 class="font-bold mb-2">{% trans "Требования:" %}</h3>
-                <ul class="list-disc list-inside space-y-1 text-gray-700 ml-2">
+                <h3 class="font-bold mb-2 text-sm md:text-base">{% trans "Требования:" %}</h3>
+                <ul class="list-disc list-inside space-y-1 text-gray-700 ml-2 text-xs md:text-sm">
                     <li>{% trans "Опыт работы пиццайоло минимум 1 год" %}</li>
                     <li>{% trans "Знание технологии приготовления пиццы" %}</li>
                     <li>{% trans "Аккуратность и внимание к деталям" %}</li>
@@ -34,8 +34,8 @@
             </div>
 
             <div class="mb-4">
-                <h3 class="font-bold mb-2">{% trans "Мы предлагаем:" %}</h3>
-                <ul class="list-disc list-inside space-y-1 text-gray-700 ml-2">
+                <h3 class="font-bold mb-2 text-sm md:text-base">{% trans "Мы предлагаем:" %}</h3>
+                <ul class="list-disc list-inside space-y-1 text-gray-700 ml-2 text-xs md:text-sm">
                     <li>{% trans "Зарплата: 180000 - 200000 тг/месяц" %}</li>
                     <li>{% trans "График работы: 5/2 или 6/3" %}</li>
                     <li>{% trans "Бесплатное питание на рабочем месте" %}</li>
@@ -44,24 +44,24 @@
                 </ul>
             </div>
 
-            <button class="bg-red-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-red-700">
+            <button class="bg-red-600 text-white px-4 md:px-6 py-2 rounded-lg font-bold hover:bg-red-700 text-sm md:text-base w-full sm:w-auto">
                 {% trans "Подать заявку" %}
             </button>
         </div>
 
         <!-- {% trans "Вакансия 2: Доставщик" %} -->
-        <div class="bg-white rounded-lg shadow-lg p-6 border-t-4 border-red-600">
-            <div class="flex justify-between items-start mb-4">
+        <div class="bg-white rounded-lg shadow-lg p-4 md:p-6 border-t-4 border-red-600">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4 gap-2">
                 <div>
-                    <h2 class="text-2xl font-bold">🚚 {% trans "Курьер (Доставщик)" %}</h2>
-                    <p class="text-gray-500">{% trans "Служба доставки" %}</p>
+                    <h2 class="text-xl md:text-2xl font-bold">🚚 {% trans "Курьер (Доставщик)" %}</h2>
+                    <p class="text-gray-500 text-sm md:text-base">{% trans "Служба доставки" %}</p>
                 </div>
-                <span class="bg-green-100 text-green-800 px-4 py-1 rounded-full font-semibold">{% trans "Открыто" %}</span>
+                <span class="bg-green-100 text-green-800 px-3 md:px-4 py-1 rounded-full font-semibold text-xs md:text-sm inline-block self-start">{% trans "Открыто" %}</span>
             </div>
             
             <div class="mb-4">
-                <h3 class="font-bold mb-2">{% trans "Требования:" %}</h3>
-                <ul class="list-disc list-inside space-y-1 text-gray-700 ml-2">
+                <h3 class="font-bold mb-2 text-sm md:text-base">{% trans "Требования:" %}</h3>
+                <ul class="list-disc list-inside space-y-1 text-gray-700 ml-2 text-xs md:text-sm">
                     <li>{% trans "Действующие водительские права (категория A или выше)" %}</li>
                     <li>{% trans "Знание карты города" %}</li>
                     <li>{% trans "Ответственность и надежность" %}</li>
@@ -70,8 +70,8 @@
             </div>
 
             <div class="mb-4">
-                <h3 class="font-bold mb-2">{% trans "Мы предлагаем:" %}</h3>
-                <ul class="list-disc list-inside space-y-1 text-gray-700 ml-2">
+                <h3 class="font-bold mb-2 text-sm md:text-base">{% trans "Мы предлагаем:" %}</h3>
+                <ul class="list-disc list-inside space-y-1 text-gray-700 ml-2 text-xs md:text-sm">
                     <li>{% trans "Зарплата: 140000 - 220000 тг/месяц + бонусы за заказы" %}</li>
                     <li>{% trans "График: от 20:00 до 24:00 или от 10:00 до 18:00" %}</li>
                     <li>{% trans "Фирменная форма" %}</li>
@@ -79,24 +79,24 @@
                 </ul>
             </div>
 
-            <button class="bg-red-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-red-700">
+            <button class="bg-red-600 text-white px-4 md:px-6 py-2 rounded-lg font-bold hover:bg-red-700 text-sm md:text-base w-full sm:w-auto">
                 {% trans "Подать заявку" %}
             </button>
         </div>
 
         <!-- {% trans "Вакансия 3: Оператор call-центра" %} -->
-        <div class="bg-white rounded-lg shadow-lg p-6 border-t-4 border-red-600">
-            <div class="flex justify-between items-start mb-4">
+        <div class="bg-white rounded-lg shadow-lg p-4 md:p-6 border-t-4 border-red-600">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4 gap-2">
                 <div>
-                    <h2 class="text-2xl font-bold">📞 {% trans "Оператор call-центра" %}</h2>
-                    <p class="text-gray-500">{% trans "Служба поддержки клиентов" %}</p>
+                    <h2 class="text-xl md:text-2xl font-bold">📞 {% trans "Оператор call-центра" %}</h2>
+                    <p class="text-gray-500 text-sm md:text-base">{% trans "Служба поддержки клиентов" %}</p>
                 </div>
-                <span class="bg-green-100 text-green-800 px-4 py-1 rounded-full font-semibold">{% trans "Открыто" %}</span>
+                <span class="bg-green-100 text-green-800 px-3 md:px-4 py-1 rounded-full font-semibold text-xs md:text-sm inline-block self-start">{% trans "Открыто" %}</span>
             </div>
             
             <div class="mb-4">
-                <h3 class="font-bold mb-2">{% trans "Требования:" %}</h3>
-                <ul class="list-disc list-inside space-y-1 text-gray-700 ml-2">
+                <h3 class="font-bold mb-2 text-sm md:text-base">{% trans "Требования:" %}</h3>
+                <ul class="list-disc list-inside space-y-1 text-gray-700 ml-2 text-xs md:text-sm">
                     <li>{% trans "Приятный голос и хорошая дикция" %}</li>
                     <li>{% trans "Коммуникабельность и вежливость" %}</li>
                     <li>{% trans "Навыки работы с ПК" %}</li>
@@ -105,8 +105,8 @@
             </div>
 
             <div class="mb-4">
-                <h3 class="font-bold mb-2">{% trans "Мы предлагаем:" %}</h3>
-                <ul class="list-disc list-inside space-y-1 text-gray-700 ml-2">
+                <h3 class="font-bold mb-2 text-sm md:text-base">{% trans "Мы предлагаем:" %}</h3>
+                <ul class="list-disc list-inside space-y-1 text-gray-700 ml-2 text-xs md:text-sm">
                     <li>{% trans "Зарплата: 120000 - 170000 тг/месяц" %}</li>
                     <li>{% trans "Гибкий график" %}</li>
                     <li>{% trans "Работа в офисе с комфортными условиями" %}</li>
@@ -114,40 +114,40 @@
                 </ul>
             </div>
 
-            <button class="bg-red-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-red-700">
+            <button class="bg-red-600 text-white px-4 md:px-6 py-2 rounded-lg font-bold hover:bg-red-700 text-sm md:text-base w-full sm:w-auto">
                 {% trans "Подать заявку" %}
             </button>
         </div>
     </div>
 
     <!-- Форма отправки CV -->
-    <div class="bg-white rounded-lg shadow-lg p-8">
-        <h2 class="text-2xl font-bold mb-6">{% trans "Не нашли подходящую позицию?" %}</h2>
-        <p class="text-gray-700 mb-6">
+    <div class="bg-white rounded-lg shadow-lg p-4 md:p-8">
+        <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6">{% trans "Не нашли подходящую позицию?" %}</h2>
+        <p class="text-gray-700 mb-4 md:mb-6 text-sm md:text-base">
             {% trans "Отправьте нам ваше CV и резюме. Мы рассмотрим вашу кандидатуру на любые открытые позиции." %}
         </p>
-        <form class="space-y-4">
+        <form class="space-y-3 md:space-y-4">
             <div>
-                <label class="block text-sm font-semibold mb-2">{% trans "Имя и Фамилия" %}</label>
-                <input type="text" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500">
+                <label class="block text-xs md:text-sm font-semibold mb-1 md:mb-2">{% trans "Имя и Фамилия" %}</label>
+                <input type="text" required class="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm md:text-base">
             </div>
             <div>
-                <label class="block text-sm font-semibold mb-2">{% trans "Email" %}</label>
-                <input type="email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500">
+                <label class="block text-xs md:text-sm font-semibold mb-1 md:mb-2">{% trans "Email" %}</label>
+                <input type="email" required class="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm md:text-base">
             </div>
             <div>
-                <label class="block text-sm font-semibold mb-2">{% trans "Телефон" %}</label>
-                <input type="tel" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500">
+                <label class="block text-xs md:text-sm font-semibold mb-1 md:mb-2">{% trans "Телефон" %}</label>
+                <input type="tel" required class="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm md:text-base">
             </div>
             <div>
-                <label class="block text-sm font-semibold mb-2">{% trans "Загрузить CV (PDF, DOC)" %}</label>
-                <input type="file" accept=".pdf,.doc,.docx" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500">
+                <label class="block text-xs md:text-sm font-semibold mb-1 md:mb-2">{% trans "Загрузить CV (PDF, DOC)" %}</label>
+                <input type="file" accept=".pdf,.doc,.docx" class="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs md:text-sm">
             </div>
             <div>
-                <label class="block text-sm font-semibold mb-2">{% trans "Коротко о себе" %}</label>
-                <textarea rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="{% trans 'Расскажите о вашем опыте и навыках' %}"></textarea>
+                <label class="block text-xs md:text-sm font-semibold mb-1 md:mb-2">{% trans "Коротко о себе" %}</label>
+                <textarea rows="3" class="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm md:text-base" placeholder="{% trans 'Расскажите о вашем опыте и навыках' %}"></textarea>
             </div>
-            <button type="submit" class="w-full bg-red-600 text-white py-3 rounded-lg font-bold hover:bg-red-700">
+            <button type="submit" class="w-full bg-red-600 text-white py-2.5 md:py-3 rounded-lg font-bold hover:bg-red-700 text-sm md:text-base">
                 {% trans "Отправить" %}
             </button>
         </form>

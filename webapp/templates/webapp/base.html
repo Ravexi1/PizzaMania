@@ -4,6 +4,7 @@
 <html lang="{{ LANGUAGE_CODE }}">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PizzaMania</title>
     <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet"
@@ -12,6 +13,14 @@
       crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         html { scroll-behavior: smooth; }
+        /* SVG Flags */
+        .flag-icon {
+            width: 20px;
+            height: 14px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 4px;
+        }
         @keyframes slideIn {
             from {
                 transform: translateY(-100%);
@@ -37,6 +46,53 @@
         }
         .toast-exit {
             animation: slideOut 0.3s ease-in;
+        }
+
+        /* Burger Menu Animation */
+        .burger-line {
+            transition: all 0.3s ease-in-out;
+        }
+        .burger-open .burger-line:nth-child(1) {
+            transform: rotate(45deg) translateY(7px) translateX(2px);
+        }
+        .burger-open .burger-line:nth-child(2) {
+            opacity: 0;
+        }
+        .burger-open .burger-line:nth-child(3) {
+            transform: rotate(-45deg) translateY(-7px) translateX(2px);
+        }
+
+        /* Mobile Menu Animation */
+        .mobile-menu {
+            transition: all 0.3s ease-in-out;
+            max-height: 0;
+            overflow: hidden;
+        }
+        .mobile-menu.active {
+            max-height: 100vh;
+        }
+
+        /* Prevent body scroll when menu is open */
+        body.menu-open {
+            overflow: hidden;
+        }
+        /* Language dropdown animation */
+        .lang-menu {
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            opacity: 0;
+            transform: scale(0.97);
+        }
+        .lang-menu-open {
+            opacity: 1;
+            transform: scale(1);
+        }
+        /* Hide scrollbar for mobile categories */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
     </style>
 </head>
@@ -143,67 +199,267 @@
     </script>
 
     <!-- Верхний навбар -->
-    <nav class="bg-white shadow p-4 flex justify-between items-center text-sm">
-        <div class="flex space-x-6">
-            <a href="{% url 'about' %}">{% trans "О нас" %}</a>
-            <a href="{% url 'contacts' %}">{% trans "Контакты" %}</a>
-            <a href="{% url 'jobs' %}">{% trans "Вакансии" %}</a>
-        </div>
+    <nav class="bg-white shadow p-4 text-sm">
+        <!-- Desktop Navigation -->
+        <div class="hidden md:flex justify-between items-center">
+            <div class="flex space-x-6">
+                <a href="{% url 'about' %}">{% trans "О нас" %}</a>
+                <a href="{% url 'contacts' %}">{% trans "Контакты" %}</a>
+                <a href="{% url 'jobs' %}">{% trans "Вакансии" %}</a>
+            </div>
 
-        <div class="flex space-x-4 items-center">
-            {% if user.is_authenticated %}
-                <span class="text-gray-700">{% trans "Привет" %}, {{ user.first_name }}!</span>
-                <a href="{% url 'logout' %}" class="px-3 py-1 border rounded hover:bg-gray-100">{% trans "Выйти" %}</a>
-            {% else %}
-                <a href="{% url 'login' %}" class="px-3 py-1 border rounded hover:bg-gray-100">{% trans "Войти" %}</a>
-                <a href="{% url 'register' %}" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">{% trans "Регистрация" %}</a>
-            {% endif %}
-            <form method="post" action="/i18n/setlang/" class="inline" id="language-form">
-                {% csrf_token %}
-                {% load i18n %}
-                <input type="hidden" name="next" value="{{ request.get_full_path }}" id="language-next">
-                <select name="language" class="border rounded px-2 py-1 cursor-pointer" id="language-select">
+            <div class="flex space-x-4 items-center">
+                {% if user.is_authenticated %}
+                    <span class="text-gray-700">{% trans "Привет" %}, {{ user.first_name }}!</span>
+                    <a href="{% url 'logout' %}" class="px-3 py-1 border rounded hover:bg-gray-100">{% trans "Выйти" %}</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="px-3 py-1 border rounded hover:bg-gray-100">{% trans "Войти" %}</a>
+                    <a href="{% url 'register' %}" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">{% trans "Регистрация" %}</a>
+                {% endif %}
+                <form method="post" action="/i18n/setlang/" class="inline" id="language-form">
+                    {% csrf_token %}
+                    {% load i18n %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}" id="language-next">
+                    <input type="hidden" name="language" id="language-input">
                     {% get_current_language as CURRENT_LANG %}
                     {% get_available_languages as LANGUAGES %}
-                    {% for lang_code, lang_name in LANGUAGES %}
-                        <option value="{{ lang_code }}" {% if lang_code == CURRENT_LANG %}selected{% endif %}>
-                            {% if lang_code == 'ru' %}RU{% elif lang_code == 'en' %}EN{% elif lang_code == 'kk' %}KZ{% endif %}
-                        </option>
-                    {% endfor %}
-                </select>
-            </form>
-            <script>
-            document.getElementById('language-select').addEventListener('change', function() {
-                const form = document.getElementById('language-form');
-                const nextInput = document.getElementById('language-next');
-                const newLang = this.value;
-                const currentPath = window.location.pathname;
-                
-                // Заменяем языковой префикс в URL
-                const newPath = currentPath.replace(/^\/(ru|en|kk)\//, '/' + newLang + '/');
-                nextInput.value = newPath + window.location.search;
-                
-                form.submit();
-            });
-            </script>
+                    <div class="relative inline-block text-left">
+                        <button type="button" id="language-btn" class="inline-flex items-center gap-2 bg-gradient-to-r from-red-50 to-red-100 border-2 border-red-300 rounded-lg px-3 py-2 cursor-pointer hover:border-red-600 focus:outline-none font-semibold text-sm text-gray-800 shadow-sm">
+                            {% if CURRENT_LANG == 'ru' %}
+                                <img src="{% static 'img/flags/ru.svg' %}" alt="RU" class="flag-icon">
+                                <span id="language-label">Русский</span>
+                            {% elif CURRENT_LANG == 'en' %}
+                                <img src="{% static 'img/flags/en.svg' %}" alt="EN" class="flag-icon">
+                                <span id="language-label">English</span>
+                            {% else %}
+                                <img src="{% static 'img/flags/kz.svg' %}" alt="KZ" class="flag-icon">
+                                <span id="language-label">Қазақ</span>
+                            {% endif %}
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd"/></svg>
+                        </button>
+                        <ul id="language-menu" class="lang-menu hidden absolute right-0 mt-2 w-44 bg-white rounded-md shadow-lg z-[70] py-1">
+                            {% for lang_code, lang_name in LANGUAGES %}
+                            <li>
+                                <button type="button" data-lang="{{ lang_code }}" class="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-gray-100">
+                                    {% if lang_code == 'ru' %}
+                                        <img src="{% static 'img/flags/ru.svg' %}" alt="RU" class="flag-icon">
+                                        Русский
+                                    {% elif lang_code == 'en' %}
+                                        <img src="{% static 'img/flags/en.svg' %}" alt="EN" class="flag-icon">
+                                        English
+                                    {% else %}
+                                        <img src="{% static 'img/flags/kz.svg' %}" alt="KZ" class="flag-icon">
+                                        Қазақ
+                                    {% endif %}
+                                </button>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </form>
+                <script>
+                (function(){
+                    const btn = document.getElementById('language-btn');
+                    const menu = document.getElementById('language-menu');
+                    const input = document.getElementById('language-input');
+                    const nextInput = document.getElementById('language-next');
+                    const label = document.getElementById('language-label');
+                    if(btn && menu){
+                        btn.addEventListener('click', function(e){
+                            e.stopPropagation();
+                            const willShow = menu.classList.contains('hidden');
+                            menu.classList.toggle('hidden');
+                            if (willShow) menu.classList.add('lang-menu-open');
+                            else menu.classList.remove('lang-menu-open');
+                        });
+                        document.addEventListener('click', function(){ menu.classList.add('hidden'); menu.classList.remove('lang-menu-open'); });
+                        menu.querySelectorAll('button[data-lang]').forEach(function(item){
+                            item.addEventListener('click', function(){
+                                const lang = this.getAttribute('data-lang');
+                                input.value = lang;
+                                // update label text
+                                const txt = this.textContent.trim();
+                                if(label) label.textContent = txt;
+                                // compute next path
+                                const currentPath = window.location.pathname;
+                                const newPath = currentPath.replace(/^\/(ru|en|kk)\//, '/' + lang + '/');
+                                nextInput.value = newPath + window.location.search;
+                                // submit form
+                                document.getElementById('language-form').submit();
+                                menu.classList.add('hidden');
+                                menu.classList.remove('lang-menu-open');
+                            });
+                        });
+                    }
+                })();
+                </script>
+            </div>
         </div>
+
+        <!-- Mobile Navigation - Баннер и выбор языка -->
+        <div class="md:hidden flex justify-between items-center">
+            <a href="{% url 'home' %}" class="text-lg font-bold text-red-600 flex items-center">
+                🍕 PizzaMania
+            </a>
+            <form method="post" action="/i18n/setlang/" class="inline" id="language-form-mobile-top-nav">
+                {% csrf_token %}
+                {% load i18n %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}" id="language-next-mobile-top-nav">
+                <input type="hidden" name="language" id="language-input-mobile-top-nav">
+                {% get_current_language as CURRENT_LANG %}
+                {% get_available_languages as LANGUAGES %}
+                <div class="relative inline-block text-right">
+                    <button type="button" id="language-btn-mobile" class="inline-flex items-center gap-2 bg-gradient-to-r from-red-50 to-red-100 border-2 border-red-300 rounded-lg px-2 py-1.5 cursor-pointer font-semibold text-xs text-gray-800">
+                        {% if CURRENT_LANG == 'ru' %}
+                            <img src="{% static 'img/flags/ru.svg' %}" alt="RU" class="flag-icon">
+                            <span class="text-xs">Русский</span>
+                        {% elif CURRENT_LANG == 'en' %}
+                            <img src="{% static 'img/flags/en.svg' %}" alt="EN" class="flag-icon">
+                            <span class="text-xs">EN</span>
+                        {% else %}
+                            <img src="{% static 'img/flags/kz.svg' %}" alt="KZ" class="flag-icon">
+                            <span class="text-xs">KZ</span>
+                        {% endif %}
+                    </button>
+                    <ul id="language-menu-mobile" class="lang-menu hidden absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-[70] py-1">
+                        {% for lang_code, lang_name in LANGUAGES %}
+                        <li>
+                            <button type="button" data-lang="{{ lang_code }}" class="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-gray-100 text-xs">
+                                {% if lang_code == 'ru' %}
+                                    <img src="{% static 'img/flags/ru.svg' %}" alt="RU" class="flag-icon">
+                                    Русский
+                                {% elif lang_code == 'en' %}
+                                    <img src="{% static 'img/flags/en.svg' %}" alt="EN" class="flag-icon">
+                                    English
+                                {% else %}
+                                    <img src="{% static 'img/flags/kz.svg' %}" alt="KZ" class="flag-icon">
+                                    Қазақ
+                                {% endif %}
+                            </button>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </form>
+        </div>
+        <script>
+        (function(){
+            const btn = document.getElementById('language-btn-mobile');
+            const menu = document.getElementById('language-menu-mobile');
+            const input = document.getElementById('language-input-mobile-top-nav');
+            const nextInput = document.getElementById('language-next-mobile-top-nav');
+            if(btn && menu){
+                btn.addEventListener('click', function(e){
+                    e.stopPropagation();
+                    const willShow = menu.classList.contains('hidden');
+                    menu.classList.toggle('hidden');
+                    if (willShow) menu.classList.add('lang-menu-open');
+                    else menu.classList.remove('lang-menu-open');
+                });
+                document.addEventListener('click', function(){ menu.classList.add('hidden'); menu.classList.remove('lang-menu-open'); });
+                menu.querySelectorAll('button[data-lang]').forEach(function(item){
+                    item.addEventListener('click', function(){
+                        const lang = this.getAttribute('data-lang');
+                        input.value = lang;
+                        const currentPath = window.location.pathname;
+                        const newPath = currentPath.replace(/^\/(ru|en|kk)\//, '/' + lang + '/');
+                        nextInput.value = newPath + window.location.search;
+                        document.getElementById('language-form-mobile-top-nav').submit();
+                        menu.classList.add('hidden');
+                        menu.classList.remove('lang-menu-open');
+                    });
+                });
+            }
+        })();
+        </script>
     </nav>
 
     <!-- Нижний навбар -->
-    <nav class="bg-red-600 text-white p-4 flex justify-between items-center sticky top-0 z-50">
-        <a href="{% url 'home' %}" class="text-xl font-bold hover:text-gray-200">🍕 PizzaMania</a>
-        <div class="space-x-4 text-sm">
-            {% load custom_filters %}
-            {% for category in categories %}
-            <a href="{% url 'home' %}#{{ category.slug }}" class="hover:text-gray-200">{% category_label category %}</a>
-            {% endfor %}
-            <a href="{% url 'delivery_payment' %}" class="hover:text-gray-200">{% trans "Доставка & оплата" %}</a>
+    <nav class="bg-red-600 text-white p-4 sticky top-0 z-50">
+        <!-- Desktop Navigation -->
+        <div class="hidden md:flex justify-between items-center">
+            <a href="{% url 'home' %}" class="text-xl font-bold hover:text-gray-200">🍕 PizzaMania</a>
+            <div class="space-x-4 text-sm">
+                {% load custom_filters %}
+                {% for category in categories %}
+                <a href="{% url 'home' %}#{{ category.slug }}" class="hover:text-gray-200">{% category_label category %}</a>
+                {% endfor %}
+                <a href="{% url 'delivery_payment' %}" class="hover:text-gray-200">{% trans "Доставка & оплата" %}</a>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="{% url 'order_history' %}" class="bg-white text-red-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100">{% trans "Мои заказы" %} <span class="ml-1">{{ user_orders_count|default:0 }}</span></a>
+                <a href="{% url 'cart_view' %}" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-600 hover:bg-gray-100"><i class="fa-solid fa-cart-shopping"></i></a>
+            </div>
         </div>
-        <div class="flex items-center gap-3">
-            <a href="{% url 'order_history' %}" class="bg-white text-red-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100">{% trans "Мои заказы" %} <span class="ml-1">{{ user_orders_count|default:0 }}</span></a>
-            <a href="{% url 'cart_view' %}" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-600 hover:bg-gray-100"><i class="fa-solid fa-cart-shopping"></i></a>
+
+        <!-- Mobile Navigation - Категории, Корзина, Бургер -->
+        <div class="md:hidden flex justify-between items-center gap-3">
+            <!-- Категории с прокруткой -->
+            <div class="flex-1 overflow-x-auto scrollbar-hide">
+                <div class="flex space-x-3 text-xs whitespace-nowrap">
+                    {% load custom_filters %}
+                    {% for category in categories %}
+                    <a href="{% url 'home' %}#{{ category.slug }}" class="hover:text-gray-200">{% category_label category %}</a>
+                    {% endfor %}
+                </div>
+            </div>
+            <!-- Корзина -->
+            <a href="{% url 'cart_view' %}" class="w-9 h-9 bg-white rounded-full flex items-center justify-center text-red-600 hover:bg-gray-100 flex-shrink-0">
+                <i class="fa-solid fa-cart-shopping text-sm"></i>
+            </a>
+            <!-- Бургер меню -->
+            <button id="mobile-menu-btn" class="flex flex-col gap-1.5 p-2 flex-shrink-0">
+                <span class="burger-line w-6 h-0.5 bg-white block"></span>
+                <span class="burger-line w-6 h-0.5 bg-white block"></span>
+                <span class="burger-line w-6 h-0.5 bg-white block"></span>
+            </button>
+        </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobile-menu" class="mobile-menu md:hidden bg-red-700 mt-4 rounded-lg overflow-hidden">
+            <div class="flex flex-col space-y-1 p-4">
+                <a href="{% url 'about' %}" class="py-2 px-3 hover:bg-red-800 rounded">{% trans "О нас" %}</a>
+                <a href="{% url 'contacts' %}" class="py-2 px-3 hover:bg-red-800 rounded">{% trans "Контакты" %}</a>
+                <a href="{% url 'jobs' %}" class="py-2 px-3 hover:bg-red-800 rounded">{% trans "Вакансии" %}</a>
+                <a href="{% url 'delivery_payment' %}" class="py-2 px-3 hover:bg-red-800 rounded">{% trans "Доставка & оплата" %}</a>
+                <hr class="border-red-600 my-2">
+                {% if user.is_authenticated %}
+                    <span class="py-2 px-3 text-gray-200">{% trans "Привет" %}, {{ user.first_name }}!</span>
+                    <a href="{% url 'order_history' %}" class="py-2 px-3 hover:bg-red-800 rounded">{% trans "Мои заказы" %} ({{ user_orders_count|default:0 }})</a>
+                    <a href="{% url 'logout' %}" class="py-2 px-3 hover:bg-red-800 rounded">{% trans "Выйти" %}</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="py-2 px-3 hover:bg-red-800 rounded">{% trans "Войти" %}</a>
+                    <a href="{% url 'register' %}" class="py-2 px-3 bg-white text-red-600 hover:bg-gray-100 rounded font-semibold">{% trans "Регистрация" %}</a>
+                {% endif %}
+                <hr class="border-red-600 my-2">
+            </div>
         </div>
     </nav>
+
+    <script>
+        // Mobile menu toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (menuBtn && mobileMenu) {
+                menuBtn.addEventListener('click', function() {
+                    menuBtn.classList.toggle('burger-open');
+                    mobileMenu.classList.toggle('active');
+                    document.body.classList.toggle('menu-open');
+                });
+
+                // Close menu when clicking a link
+                mobileMenu.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', function() {
+                        menuBtn.classList.remove('burger-open');
+                        mobileMenu.classList.remove('active');
+                        document.body.classList.remove('menu-open');
+                    });
+                });
+            }
+        });
+    </script>
 
     <script>
         // Intercept navbar anchor clicks that point to a hash on the same page
@@ -234,8 +490,8 @@
     {% block content %}{% endblock %}
 
     <!-- Верхний серый футер с информацией о доставке -->
-    <div class="bg-gray-100 text-gray-800 py-4">
-        <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+    <div class="bg-gray-100 text-gray-800 py-4 px-4">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
             <div class="flex flex-col">
                 <div class="font-semibold">{% trans "Бесплатная доставка" %}</div>
                 <div class="text-sm text-gray-600">{% trans "При заказе от 5000 ₸ по г. Астана" %}</div>
@@ -255,8 +511,8 @@
     </div>
 
     <!-- Основной футер -->
-    <footer class="bg-gray-800 text-white p-8 mt-0">
-        <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-6 text-sm">
+    <footer class="bg-gray-800 text-white p-6 md:p-8 mt-0">
+        <div class="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 text-sm">
             <div>
                 <h3 class="font-bold mb-2 text-lg">PizzaMania</h3>
                 <p class="text-gray-300">{% trans "Пицца и закуски с доставкой по Астане. Свежие ингредиенты, быстрый сервис и тёплые улыбки." %}</p>
