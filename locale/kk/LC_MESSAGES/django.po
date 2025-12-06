@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-06 08:12+0000\n"
+"POT-Creation-Date: 2025-12-06 14:29+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -203,8 +203,8 @@ msgid "Бесплатная доставка"
 msgstr "Тегін жеткізу"
 
 #: webapp/templates/webapp/base.html:241
-msgid "При заказе от 4000 тг. по г. Астана"
-msgstr "Астана қаласы бойынша 4000 тг-ден жоғары тапсырыстарға"
+msgid "При заказе от 5000 ₸ по г. Астана"
+msgstr "Астана қаласы бойынша 5000 тг-ден жоғары тапсырыстарға"
 
 #: webapp/templates/webapp/base.html:244
 msgid "Доставка 40 минут"
@@ -260,7 +260,8 @@ msgstr "Төлем тәсілдері"
 
 #: webapp/templates/webapp/base.html:309
 msgid "Разработано с любовью для жителей Астаны. Все права защищены."
-msgstr "Астана тұрғындары үшін сүйіспеншілікпен жасалған. Барлық құқықтар қорғалған."
+msgstr ""
+"Астана тұрғындары үшін сүйіспеншілікпен жасалған. Барлық құқықтар қорғалған."
 
 #: webapp/templates/webapp/cart.html:37 webapp/templates/webapp/home.html:20
 #: webapp/templates/webapp/order_history.html:45
@@ -309,6 +310,7 @@ msgstr "Осы мекенжайға жеткізilsin бе?"
 msgid "подъезд"
 msgstr "подъезд"
 
+#: webapp/templates/webapp/checkout.html:13
 msgid "кв."
 msgstr "пәт."
 
@@ -555,9 +557,9 @@ msgid "Какой минимум заказа?"
 msgstr "Ең төменгі тапсырыс қандай?"
 
 #: webapp/templates/webapp/delivery_payment.html:123
-msgid "Минимум заказа — 1000 ₸. Доставка бесплатна от 3000 ₸."
+msgid "Минимум заказа — 3000 ₸. Доставка бесплатна от 5000 ₸."
 msgstr ""
-"Ең төменгі тапсырыс — 1000 ₸. 3000 ₸ және одан жоғары тапсырыстарға жеткізу "
+"Ең төменгі тапсырыс — 3000 ₸. 5000 ₸ және одан жоғары тапсырыстарға жеткізу "
 "тегін."
 
 #: webapp/templates/webapp/delivery_payment.html:126
@@ -934,7 +936,7 @@ msgid "Отзыв оставлен"
 msgstr "Пікір қалдырылды"
 
 #: webapp/templates/webapp/order_history.html:69
-#: webapp/templates/webapp/product_detail.html:270
+#: webapp/templates/webapp/product_detail.html:272
 msgid "Оставить отзыв"
 msgstr "Пікір қалдыру"
 
@@ -951,7 +953,7 @@ msgid "Товары в заказе"
 msgstr "Тапсырыстағы тауарлар"
 
 #: webapp/templates/webapp/order_review.html:39
-#: webapp/templates/webapp/product_detail.html:277
+#: webapp/templates/webapp/product_detail.html:279
 msgid "Оценка"
 msgstr "Баға"
 
@@ -976,7 +978,7 @@ msgid "Фото (необязательно):"
 msgstr "Фото (міндетті емес):"
 
 #: webapp/templates/webapp/order_review.html:79
-#: webapp/templates/webapp/product_detail.html:292
+#: webapp/templates/webapp/product_detail.html:294
 msgid "Отправить отзыв"
 msgstr "Пікір жіберу"
 
@@ -984,63 +986,63 @@ msgstr "Пікір жіберу"
 msgid "Отменить"
 msgstr "Бас тарту"
 
-#: webapp/templates/webapp/product_detail.html:14
+#: webapp/templates/webapp/product_detail.html:16
 msgid "Нет изображения"
 msgstr "Сурет жоқ"
 
-#: webapp/templates/webapp/product_detail.html:50
+#: webapp/templates/webapp/product_detail.html:52
 msgid "Выберите размер:"
 msgstr "Өлшемін таңдаңыз:"
 
-#: webapp/templates/webapp/product_detail.html:68
+#: webapp/templates/webapp/product_detail.html:70
 msgid "Добавить по вкусу"
 msgstr "Дәміне қарай қосу"
 
-#: webapp/templates/webapp/product_detail.html:102
+#: webapp/templates/webapp/product_detail.html:104
 msgid "Добавить в корзину"
 msgstr "Себетке қосу"
 
-#: webapp/templates/webapp/product_detail.html:266
+#: webapp/templates/webapp/product_detail.html:268
 msgid "Отзывы"
 msgstr "Пікірлер"
 
-#: webapp/templates/webapp/product_detail.html:279
+#: webapp/templates/webapp/product_detail.html:281
 msgid "Выберите оценку"
 msgstr "Баға таңдаңыз"
 
-#: webapp/templates/webapp/product_detail.html:296
+#: webapp/templates/webapp/product_detail.html:298
 msgid "Отзыв можно оставить только на заказанный товар."
 msgstr "Пікірді тек тапсырыс берген тауарға қалдыруға болады."
 
-#: webapp/templates/webapp/product_detail.html:297
+#: webapp/templates/webapp/product_detail.html:299
 msgid "Перейти к истории заказов"
 msgstr "Тапсырыстар тарихына өту"
 
-#: webapp/templates/webapp/product_detail.html:301
+#: webapp/templates/webapp/product_detail.html:303
 msgid "Пожалуйста,"
 msgstr "Өтінеміз,"
 
-#: webapp/templates/webapp/product_detail.html:301
+#: webapp/templates/webapp/product_detail.html:303
 msgid "авторизуйтесь"
 msgstr "жүйеге кіріңіз"
 
-#: webapp/templates/webapp/product_detail.html:301
+#: webapp/templates/webapp/product_detail.html:303
 msgid "для оставления отзыва."
 msgstr "пікір қалдыру үшін."
 
-#: webapp/templates/webapp/product_detail.html:326
+#: webapp/templates/webapp/product_detail.html:328
 msgid "Ответ администратора:"
 msgstr "Әкімші жауабы:"
 
-#: webapp/templates/webapp/product_detail.html:336
+#: webapp/templates/webapp/product_detail.html:338
 msgid "Ответить на отзыв..."
 msgstr "Пікірге жауап жазу..."
 
-#: webapp/templates/webapp/product_detail.html:337
+#: webapp/templates/webapp/product_detail.html:339
 msgid "Ответить"
 msgstr "Жауап беру"
 
-#: webapp/templates/webapp/product_detail.html:343
+#: webapp/templates/webapp/product_detail.html:345
 msgid "Пока нет отзывов. Будьте первым!"
 msgstr "Әзірге пікірлер жоқ. Бірінші болып қалдырыңыз!"
 
