@@ -52,8 +52,10 @@
 
             <!-- Итого и кнопки действия -->
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-                <div class="text-lg md:text-xl font-bold">
-                    {% trans "Итого" %}: <span class="text-red-600">{{ order.total_price }} ₸</span>
+                <div class="text-lg md:text-xl font-semibold space-y-1">
+                    <div>{% trans "Товары" %}: <span class="text-gray-800 font-medium">{{ info.items_total|floatformat:0 }} ₸</span></div>
+                    <div>{% trans "Доставка" %}: <span class="text-gray-800 font-medium">{% if info.delivery_price > 0 %}{{ info.delivery_price|floatformat:0 }} ₸{% else %}{% trans "Бесплатно" %}{% endif %}</span></div>
+                    <div class="font-bold mt-1">{% trans "Итого" %}: <span class="text-red-600">{{ info.grand_total|floatformat:0 }} ₸</span></div>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-2 md:gap-3">
                     <a href="{% url 'repeat_order' order.id %}" class="bg-blue-600 text-white px-4 md:px-6 py-2 rounded hover:bg-blue-700 transition text-center text-sm md:text-base">

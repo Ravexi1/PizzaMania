@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
-from .models import Product, Category, Review, Order, OrderItem, UserProfile, Chat, Message
+from .models import Product, Category, Review, Order, OrderItem, UserProfile, Chat, Message, Size, Addon
 import re
 import os
 
@@ -39,6 +39,55 @@ def save_cart(request, cart):
     """Сохранить корзину в сессию"""
     request.session['cart'] = cart
     request.session.modified = True
+
+
+def build_cart_items(cart):
+    """Сформировать список товаров корзины и сумму для отображения/чекаута."""
+    cart_items = []
+    total = 0
+
+    for cart_key, item in cart.items():
+        # Совместимость со старой структурой корзины
+        if isinstance(item, dict) and 'product_id' not in item:
+            product_id = cart_key
+            product = get_object_or_404(Product, pk=product_id)
+            subtotal = item['price'] * item['quantity']
+            total += subtotal
+            cart_items.append({
+                'product': product,
+                'quantity': item['quantity'],
+                'price': item['price'],
+                'subtotal': subtotal,
+                'size_name': None,
+                'size_id': None,
+                'addons_info': [],
+                'addon_ids': [],
+                'cart_key': cart_key
+            })
+        else:
+            product_id = item.get('product_id', cart_key.split('_')[0])
+            product = get_object_or_404(Product, pk=product_id)
+            subtotal = item['price'] * item['quantity']
+            total += subtotal
+
+            size_name = item.get('size_name')
+            size_id = item.get('size_id')
+            addons_info = item.get('addons_info', [])
+            addon_ids = item.get('addon_ids', [])
+
+            cart_items.append({
+                'product': product,
+                'quantity': item['quantity'],
+                'price': item['price'],
+                'subtotal': subtotal,
+                'size_name': size_name,
+                'size_id': size_id,
+                'addons_info': addons_info,
+                'addon_ids': addon_ids,
+                'cart_key': cart_key
+            })
+
+    return cart_items, total
 
 
 def home(request):
@@ -274,54 +323,10 @@ def add_to_cart(request, pk):
 
 def cart_view(request):
     """Просмотр корзины"""
-    from .models import Size, Addon
-    
     categories = Category.objects.all()
     cart = get_cart(request)
-    cart_items = []
-    total = 0
-    
-    for cart_key, item in cart.items():
-        # Если это старая версия корзины (просто числовой ключ), преобразуем
-        if isinstance(item, dict) and 'product_id' not in item:
-            # Старая версия
-            product_id = cart_key
-            product = get_object_or_404(Product, pk=product_id)
-            subtotal = item['price'] * item['quantity']
-            total += subtotal
-            cart_items.append({
-                'product': product,
-                'quantity': item['quantity'],
-                'price': item['price'],
-                'subtotal': subtotal,
-                'size_name': None,
-                'addons_info': [],
-                'cart_key': cart_key
-            })
-        else:
-            # Новая версия с размерами и добавками
-            product_id = item.get('product_id', cart_key.split('_')[0])
-            product = get_object_or_404(Product, pk=product_id)
-            subtotal = item['price'] * item['quantity']
-            total += subtotal
-            
-            size_name = item.get('size_name')
-            size_id = item.get('size_id')
-            addons_info = item.get('addons_info', [])
-            addon_ids = item.get('addon_ids', [])
-            
-            cart_items.append({
-                'product': product,
-                'quantity': item['quantity'],
-                'price': item['price'],
-                'subtotal': subtotal,
-                'size_name': size_name,
-                'size_id': size_id,
-                'addons_info': addons_info,
-                'addon_ids': addon_ids,
-                'cart_key': cart_key
-            })
-    
+    cart_items, total = build_cart_items(cart)
+
     return render(request, 'webapp/cart.html', {
         'categories': categories,
         'cart_items': cart_items,
@@ -510,8 +515,20 @@ def user_logout(request):
 def checkout(request):
     categories = Category.objects.all()
     cart = get_cart(request)
+    cart_items, total_price = build_cart_items(cart)
+
+    # Расчет стоимости доставки
+    delivery_price = 0
+    if total_price < 1000:
+        delivery_price = 1700
+    elif total_price < 2500:
+        delivery_price = 1400
+    elif total_price < 4000:
+        delivery_price = 1000
+    else:
+        delivery_price = 0
     
-    if not cart:
+    if not cart_items:
         messages.error(request, 'Корзина пуста!')
         return redirect('cart_view')
     
@@ -556,11 +573,6 @@ def checkout(request):
                 if not apartment:
                     apartment = profile.apartment
         
-        # Расчет общей суммы
-        total_price = 0
-        for cart_key, item in cart.items():
-            total_price += item['price'] * item['quantity']
-        
         # Создание заказа
         order = Order.objects.create(
             user=request.user,
@@ -575,19 +587,14 @@ def checkout(request):
         )
         
         # Добавление товаров в заказ
-        for cart_key, item in cart.items():
-            # Извлекаем настоящий product_id из составного ключа (может быть просто число или "id_size_..._addons_...")
-            product_id = item.get('product_id', cart_key.split('_')[0])
-            product = get_object_or_404(Product, pk=product_id)
-            # Извлекаем size_id и addon_ids если они есть
+        for item in cart_items:
+            product = item['product']
             size_id = item.get('size_id')
             addon_ids = item.get('addon_ids', [])
             size_obj = None
             if size_id:
-                try:
-                    size_obj = Size.objects.get(id=size_id, product=product)
-                except Size.DoesNotExist:
-                    pass
+                size_obj = Size.objects.filter(id=size_id, product=product).first()
+
             OrderItem.objects.create(
                 order=order,
                 product=product,
@@ -627,7 +634,10 @@ def checkout(request):
     
     return render(request, 'webapp/checkout.html', {
         'categories': categories,
-        'user_data': user_data
+        'user_data': user_data,
+        'cart_items': cart_items,
+        'total': total_price,
+        'delivery_price': delivery_price
     })
 
 
@@ -645,7 +655,26 @@ def order_history(request):
             if not Review.objects.filter(order=order, product=item.product).exists():
                 all_reviewed = False
                 break
-        orders_info.append({'order': order, 'all_reviewed': all_reviewed})
+        # Расчет стоимости доставки по правилам
+        items_total = float(order.total_price or 0)
+        if items_total < 1000:
+            delivery_price = 1700
+        elif items_total < 2500:
+            delivery_price = 1400
+        elif items_total < 4000:
+            delivery_price = 1000
+        else:
+            delivery_price = 0
+
+        grand_total = items_total + delivery_price
+
+        orders_info.append({
+            'order': order,
+            'all_reviewed': all_reviewed,
+            'items_total': items_total,
+            'delivery_price': delivery_price,
+            'grand_total': grand_total
+        })
 
     return render(request, 'webapp/order_history.html', {
         'categories': categories,

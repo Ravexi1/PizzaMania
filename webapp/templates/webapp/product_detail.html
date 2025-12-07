@@ -36,14 +36,13 @@
                 <div class="mb-4 md:mb-6">
                     {% if product.discount > 0 %}
                     <div class="flex items-center gap-2 md:gap-4 flex-wrap">
-                        <span class="text-2xl md:text-3xl font-bold text-red-600" id="price-display">{% if product.sizes.exists %}{{ product.sizes.first.get_discounted_price|floatformat:0 }}{% else %}{{ product.get_discounted_price|floatformat:0 }}{% endif %}</span>
-                        <span class="text-lg md:text-xl text-gray-400 line-through">{% if product.sizes.exists %}{{ product.sizes.first.price|floatformat:0 }}{% else %}{{ product.price|floatformat:0 }}{% endif %}</span>
+                        <span class="text-2xl md:text-3xl font-bold text-red-600" id="price-display">{% if product.sizes.exists %}{{ product.sizes.first.get_discounted_price|floatformat:0 }}{% else %}{{ product.get_discounted_price|floatformat:0 }}{% endif %} ₸</span>
+                        <span id="original-price-display" class="text-lg md:text-xl text-gray-400 line-through">{% if product.sizes.exists %}{{ product.sizes.first.price|floatformat:0 }}{% else %}{{ product.price|floatformat:0 }}{% endif %} ₸</span>
                         <span class="bg-red-600 text-white px-2 md:px-3 py-1 rounded-full text-xs md:text-sm">-{{ product.discount|floatformat:0 }}%</span>
                     </div>
                     {% else %}
-                    <span class="text-2xl md:text-3xl font-bold text-red-600" id="price-display">{% if product.sizes.exists %}{{ product.sizes.first.price|floatformat:0 }}{% else %}{{ product.price|floatformat:0 }}{% endif %}</span>
+                    <span class="text-2xl md:text-3xl font-bold text-red-600" id="price-display">{% if product.sizes.exists %}{{ product.sizes.first.price|floatformat:0 }}{% else %}{{ product.price|floatformat:0 }}{% endif %} ₸</span>
                     {% endif %}
-                    <span class="text-gray-500 ml-2">₸</span>
                 </div>
 
                 <!-- Выбор размера (если есть размеры) -->
@@ -129,21 +128,28 @@
                         // Функция пересчёта цены
                         function updatePrice() {
                             let totalPrice = basePrice;
-                            
+                            let originalPrice = null;
+
                             // Добавляем цену выбранного размера (если есть размеры)
                             const selectedSize = document.querySelector('input[name="size"]:checked');
                             if (selectedSize) {
                                 totalPrice = parseFloat(selectedSize.dataset.price);
+                                originalPrice = parseFloat(selectedSize.dataset.originalPrice);
                             }
-                            
+
                             // Добавляем цены выбранных добавок
                             const selectedAddons = document.querySelectorAll('input[name="addon"]:checked');
                             selectedAddons.forEach(addon => {
                                 totalPrice += parseFloat(addon.dataset.addonPrice);
                             });
-                            
+
                             // Обновляем отображение цены (без дробных частей)
-                            document.getElementById('price-display').textContent = Math.round(totalPrice);
+                            document.getElementById('price-display').textContent = Math.round(totalPrice) + ' ₸';
+                            // Обновляем только основную зачеркнутую цену (цены в карточках размеров остаются свои)
+                            if (originalPrice !== null) {
+                                const el = document.getElementById('original-price-display');
+                                if (el) el.textContent = Math.round(originalPrice) + ' ₸';
+                            }
                         }
                     
                     // Слушатель на размеры

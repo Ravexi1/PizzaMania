@@ -198,9 +198,9 @@
                 quantity
             };
             
-            // Визуально помечаем как удалённый
-            item.classList.add('opacity-50');
+            // Визуально помечаем как удалённый с отступами
             item.style.position = 'relative';
+            item.classList.add('px-4', 'md:px-6', 'lg:px-8');
             
             // Создаём оверлей с кнопкой восстановления
             const overlay = document.createElement('div');
@@ -268,7 +268,7 @@
                               // Обновляем cart_key на новый
                               item.dataset.cartKey = restoreData.cart_key || cartKey;
                               overlay.remove();
-                              item.classList.remove('opacity-50');
+                              item.classList.remove('px-4', 'md:px-6', 'lg:px-8');
                               item.style.position = '';
                               delete item.dataset.removed;
                               delete item.dataset.itemData;
