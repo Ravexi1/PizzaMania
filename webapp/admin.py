@@ -7,22 +7,13 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug']
     prepopulated_fields = {'slug': ('name',)}
 
-
-class ReviewInline(admin.TabularInline):
-    model = Review
-    extra = 0
-    readonly_fields = ['name', 'rating', 'comment', 'created_at']
-
-
 class SizeInline(admin.TabularInline):
     model = Size
     extra = 1
     fields = ['name', 'price']
     verbose_name = "Размеры и цены"
 
-
 # Addon теперь глобальная модель, привязывается через M2M в Product
-
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
@@ -30,34 +21,13 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ['categories', 'created_at']
     search_fields = ['name', 'description']
     filter_horizontal = ['categories', 'addons']
-    inlines = [SizeInline, ReviewInline]
-    # Убираем лишние поля из формы
-    exclude = ['price', 'pizza_price_25', 'pizza_price_30', 'pizza_price_35', 'drinks_price_05', 'drinks_price_1']
+    inlines = [SizeInline]
+    # Размеры редактируются через инлайн `Size`.
     
     def save_model(self, request, obj, form, change):
-        # Если цена не установлена (поле исключено из формы), устанавливаем её на 0
-        # Позже, при наличии размеров, она будет вычислена как минимальная
-        if not obj.price:
-            obj.price = 0
-        
+        # Никакой дополнительной логики при сохранении продукта не требуется;
+        # размеры и цены управляются через инлайн `Size`.
         super().save_model(request, obj, form, change)
-        
-        # Управляем категорией "Акции" на основе значения скидки
-        try:
-            promo_category, created = Category.objects.get_or_create(
-                slug='offers', 
-                defaults={'name': 'Акции'}
-            )
-            if obj.discount and obj.discount > 0:
-                # Добавляем категорию "Акции" если скидка > 0
-                if promo_category not in obj.categories.all():
-                    obj.categories.add(promo_category)
-            else:
-                # Удаляем категорию "Акции" если скидка = 0
-                if promo_category in obj.categories.all():
-                    obj.categories.remove(promo_category)
-        except Category.DoesNotExist:
-            pass
 
 
 @admin.register(Review)

@@ -2,14 +2,86 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import JsonResponse
 from django.contrib.auth import login, authenticate, logout
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from .models import Product, Category, Review, Order, OrderItem, UserProfile, Chat, Message, Size, Addon
+import uuid
+from django.views.decorators.http import require_POST
 import re
 import os
+import logging
+from django.core.cache import cache
+from decimal import Decimal
+from django.utils import timezone
+from PIL import Image, UnidentifiedImageError
+
+logger = logging.getLogger(__name__)
+
+# Configuration for security helpers
+MAX_UPLOAD_SIZE = 5 * 1024 * 1024  # 5 MB
+ALLOWED_IMAGE_EXT = {'.jpg', '.jpeg', '.png', '.webp'}
+MAX_IMAGE_PIXELS = 50_000_000  # max total pixels to avoid decompression bombs
+try:
+    Image.MAX_IMAGE_PIXELS = MAX_IMAGE_PIXELS
+except Exception:
+    pass
+
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0].strip()
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
+def rate_limit_exceeded(key_prefix, limit=5, period=60):
+    """Simple rate limiter using Django cache. Returns True if exceeded."""
+    key = f"rl:{key_prefix}"
+    try:
+        count = cache.get(key) or 0
+        if count >= limit:
+            return True
+        cache.set(key, count + 1, timeout=period)
+    except Exception as e:
+        logger.exception('Rate limiter cache error: %s', e)
+    return False
+
+def is_valid_image(fobj):
+    """Validate uploaded image: extension whitelist, size and actual image verification via Pillow."""
+    name = getattr(fobj, 'name', '')
+    _, ext = os.path.splitext(name.lower())
+    if ext not in ALLOWED_IMAGE_EXT:
+        return False
+    if hasattr(fobj, 'size') and fobj.size > MAX_UPLOAD_SIZE:
+        return False
+    # If UploadedFile, check content_type starts with image/
+    content_type = getattr(fobj, 'content_type', '')
+    if content_type and not str(content_type).startswith('image/'):
+        logger.warning('Uploaded file content_type not image/: %s', content_type)
+        return False
+    # Verify image can be opened
+    try:
+        fobj.seek(0)
+        img = Image.open(fobj)
+        # ensure pixels not too large
+        width, height = img.size
+        if width * height > MAX_IMAGE_PIXELS:
+            logger.warning('Image too large in pixels: %dx%d', width, height)
+            return False
+        img.verify()
+        fobj.seek(0)
+    except (UnidentifiedImageError, Exception) as e:
+        logger.warning('Image validation failed: %s', e)
+        try:
+            fobj.seek(0)
+        except Exception:
+            pass
+        return False
+    return True
 
 
 def legal(request):
@@ -47,45 +119,33 @@ def build_cart_items(cart):
     total = 0
 
     for cart_key, item in cart.items():
-        # Совместимость со старой структурой корзины
-        if isinstance(item, dict) and 'product_id' not in item:
-            product_id = cart_key
-            product = get_object_or_404(Product, pk=product_id)
-            subtotal = item['price'] * item['quantity']
-            total += subtotal
-            cart_items.append({
-                'product': product,
-                'quantity': item['quantity'],
-                'price': item['price'],
-                'subtotal': subtotal,
-                'size_name': None,
-                'size_id': None,
-                'addons_info': [],
-                'addon_ids': [],
-                'cart_key': cart_key
-            })
-        else:
-            product_id = item.get('product_id', cart_key.split('_')[0])
-            product = get_object_or_404(Product, pk=product_id)
-            subtotal = item['price'] * item['quantity']
-            total += subtotal
+        # Ожидаем новую структуру корзины: item - dict с полями
+        # 'product_id', 'quantity', 'price', опционально 'size_name', 'size_id', 'addons_info', 'addon_ids'
+        product_id = item.get('product_id')
+        # Если по какой-то причине product_id отсутствует — извлекаем из ключа
+        if not product_id:
+            product_id = cart_key.split('_')[0]
 
-            size_name = item.get('size_name')
-            size_id = item.get('size_id')
-            addons_info = item.get('addons_info', [])
-            addon_ids = item.get('addon_ids', [])
+        product = get_object_or_404(Product, pk=product_id)
+        subtotal = item['price'] * item['quantity']
+        total += subtotal
 
-            cart_items.append({
-                'product': product,
-                'quantity': item['quantity'],
-                'price': item['price'],
-                'subtotal': subtotal,
-                'size_name': size_name,
-                'size_id': size_id,
-                'addons_info': addons_info,
-                'addon_ids': addon_ids,
-                'cart_key': cart_key
-            })
+        size_name = item.get('size_name')
+        size_id = item.get('size_id')
+        addons_info = item.get('addons_info', [])
+        addon_ids = item.get('addon_ids', [])
+
+        cart_items.append({
+            'product': product,
+            'quantity': item['quantity'],
+            'price': item['price'],
+            'subtotal': subtotal,
+            'size_name': size_name,
+            'size_id': size_id,
+            'addons_info': addons_info,
+            'addon_ids': addon_ids,
+            'cart_key': cart_key
+        })
 
     return cart_items, total
 
@@ -117,16 +177,8 @@ def jobs(request):
     return render(request, 'webapp/jobs.html', {'categories': categories})
 
 
-def product_list(request):
-    category_slug = request.GET.get('category')
-    products = Product.objects.all()
-    
-    if category_slug:
-        category = get_object_or_404(Category, slug=category_slug)
-        products = products.filter(category=category)
-    
-    categories = Category.objects.all()
-    return render(request, 'webapp/product_list.html', {'products': products, 'categories': categories})
+# `product_list` view removed — product listing is presented on `home` as category sections.
+# If a separate product list page is required in future, reintroduce it here.
 
 
 def product_detail(request, pk):
@@ -138,9 +190,11 @@ def product_detail(request, pk):
     
     if request.user.is_authenticated and order_id:
         try:
-            order = Order.objects.get(id=order_id, user=request.user)
+            # safe parse
+            order_id_int = int(order_id)
+            order = Order.objects.get(id=order_id_int, user=request.user)
             user_has_order_with_product = order.items.filter(product=product).exists()
-        except Order.DoesNotExist:
+        except (ValueError, Order.DoesNotExist):
             pass
     
     if request.method == 'POST':
@@ -148,10 +202,21 @@ def product_detail(request, pk):
             messages.error(request, 'Пожалуйста, авторизуйтесь для оставления отзыва!')
             return redirect('login')
         
-        order_id = request.POST.get('order_id')
-        rating = request.POST.get('rating')
+        order_id_raw = request.POST.get('order_id')
+        rating_raw = request.POST.get('rating')
         comment = request.POST.get('comment')
         
+        # safe parsing
+        try:
+            order_id = int(order_id_raw) if order_id_raw else None
+        except (ValueError, TypeError):
+            order_id = None
+
+        try:
+            rating = int(rating_raw) if rating_raw else None
+        except (ValueError, TypeError):
+            rating = None
+
         if not order_id:
             messages.error(request, 'Отзыв можно оставить только на заказанный товар!')
             return redirect('product_detail', pk=pk)
@@ -165,6 +230,18 @@ def product_detail(request, pk):
             messages.error(request, 'Заказ не найден!')
             return redirect('product_detail', pk=pk)
         
+        # rating must be 1..5
+        if rating is None or not (1 <= rating <= 5):
+            messages.error(request, 'Некорректная оценка. Используйте от 1 до 5.')
+            return redirect('product_detail', pk=pk)
+
+        # Simple anti-spam: rate-limit reviews per user (5 per minute)
+        if request.user.is_authenticated:
+            rl_key = f"review:{request.user.id}"
+            if rate_limit_exceeded(rl_key, limit=5, period=60):
+                messages.error(request, 'Слишком много отзывов. Попробуйте позже.')
+                return redirect('product_detail', pk=pk)
+
         if rating and comment:
             # Создаем один отзыв для всех товаров в заказе
             Review.objects.create(
@@ -172,7 +249,7 @@ def product_detail(request, pk):
                 user=request.user,
                 order=order,
                 name=request.user.first_name or request.user.username,
-                rating=int(rating),
+                rating=rating,
                 comment=comment
             )
             messages.success(request, 'Отзыв добавлен!')
@@ -187,40 +264,73 @@ def product_detail(request, pk):
     })
 
 
+@login_required
 def product_create(request):
+    if not request.user.is_staff:
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
+        messages.error(request, 'Доступ запрещён.')
+        return redirect('home')
+
     if request.method == 'POST':
         name = request.POST.get('name')
         description = request.POST.get('description')
-        price = request.POST.get('price')
         category_id = request.POST.get('category')
         image = request.FILES.get('image')
         
-        if name and description and price and category_id:
-            Product.objects.create(
+        if name and description:
+            # Validate uploaded image if provided
+            if image and not is_valid_image(image):
+                messages.error(request, 'Неверный файл изображения или превышен размер (max 5MB).')
+                categories = Category.objects.all()
+                return render(request, 'webapp/product_form.html', {'categories': categories})
+            product = Product.objects.create(
                 name=name,
                 description=description,
-                price=price,
-                category_id=category_id,
                 image=image
             )
+            # Если передали категорию — привяжем её к M2M
+            if category_id:
+                try:
+                    cat = Category.objects.get(id=category_id)
+                    product.categories.add(cat)
+                except Category.DoesNotExist:
+                    pass
             messages.success(request, 'Продукт создан!')
-            return redirect('product_list')
+            return redirect('home')
     
     categories = Category.objects.all()
     return render(request, 'webapp/product_form.html', {'categories': categories})
 
 
+@login_required
 def product_update(request, pk):
+    if not request.user.is_staff:
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
+        messages.error(request, 'Доступ запрещён.')
+        return redirect('home')
+
     product = get_object_or_404(Product, pk=pk)
     
     if request.method == 'POST':
         product.name = request.POST.get('name')
         product.description = request.POST.get('description')
-        product.price = request.POST.get('price')
-        product.category_id = request.POST.get('category')
+        # Цена управляется в `Size` инлайне; категории — M2M
+        category_id = request.POST.get('category')
+        if category_id:
+            try:
+                cat = Category.objects.get(id=category_id)
+                product.categories.set([cat])
+            except Category.DoesNotExist:
+                pass
         
         if request.FILES.get('image'):
-            product.image = request.FILES.get('image')
+            new_image = request.FILES.get('image')
+            if not is_valid_image(new_image):
+                messages.error(request, 'Неверный файл изображения или превышен размер (max 5MB).')
+                return render(request, 'webapp/product_form.html', {'product': product, 'categories': categories})
+            product.image = new_image
         
         product.save()
         messages.success(request, 'Продукт обновлен!')
@@ -230,17 +340,23 @@ def product_update(request, pk):
     return render(request, 'webapp/product_form.html', {'product': product, 'categories': categories})
 
 
+@login_required
 def product_delete(request, pk):
+    if not request.user.is_staff:
+        messages.error(request, 'Доступ запрещён.')
+        return redirect('home')
+
     product = get_object_or_404(Product, pk=pk)
     
     if request.method == 'POST':
         product.delete()
         messages.success(request, 'Продукт удален!')
-        return redirect('product_list')
+        return redirect('home')
     
     return render(request, 'webapp/product_confirm_delete.html', {'product': product})
 
-
+@require_POST
+@csrf_protect
 def add_to_cart(request, pk):
     """Добавить товар в корзину с поддержкой размеров и добавок"""
     from .models import Size, Addon
@@ -261,7 +377,7 @@ def add_to_cart(request, pk):
     addon_ids = request.POST.getlist('addon_ids')
     
     # Рассчитываем цену
-    price = float(product.get_discounted_price())
+    price = float(product.get_discounted_price() or 0)
     size_name = None
     addons_info = []
     
@@ -333,7 +449,8 @@ def cart_view(request):
         'total': total
     })
 
-
+@require_POST
+@csrf_protect
 def remove_from_cart(request, pk):
     """Удалить товар из корзины"""
     cart = get_cart(request)
@@ -387,6 +504,7 @@ def update_cart(request, pk):
     return redirect('cart_view')
 
 
+@csrf_protect
 def update_cart_item(request):
     """Обновить количество конкретного товара в корзине по cart_key"""
     if request.method != 'POST':
@@ -409,6 +527,7 @@ def update_cart_item(request):
     return JsonResponse({'status': 'error', 'message': 'Товар не найден'})
 
 
+@csrf_protect
 def remove_cart_item(request):
     """Удалить конкретный товар из корзины по cart_key"""
     if request.method != 'POST':
@@ -425,15 +544,19 @@ def remove_cart_item(request):
     return JsonResponse({'status': 'error', 'message': 'Товар не найден'})
 
 
-def restore_cart_item(request):
-    """Восстановление не поддерживается - товар нужно добавить заново"""
-    return JsonResponse({'status': 'error', 'message': 'Восстановление не поддерживается'})
+## NOTE: `restore_cart_item` removed — project does not support restoring items from a deleted state.
+## If restoration is required in future, reintroduce an endpoint here and add a corresponding URL.
 
 
 def register(request):
     categories = Category.objects.all()
     
     if request.method == 'POST':
+        # rate-limit by IP for registration attempts
+        ip = get_client_ip(request)
+        if rate_limit_exceeded(f'register:{ip}', limit=5, period=60):
+            messages.error(request, 'Слишком много попыток. Попробуйте позже.')
+            return render(request, 'webapp/register.html', {'categories': categories})
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
         phone = request.POST.get('phone')
@@ -488,6 +611,12 @@ def user_login(request):
     categories = Category.objects.all()
     
     if request.method == 'POST':
+        # rate-limit by IP
+        ip = get_client_ip(request)
+        if rate_limit_exceeded(f'login:{ip}', limit=10, period=60):
+            messages.error(request, 'Слишком много попыток входа. Попробуйте позже.', extra_tags='toast')
+            return render(request, 'webapp/login.html', {'categories': categories})
+
         username = request.POST.get('username')
         password = request.POST.get('password')
         
@@ -504,7 +633,11 @@ def user_login(request):
 
 
 @ensure_csrf_cookie
+@csrf_protect
 def user_logout(request):
+    # Require POST for logout to avoid CSRF via GET
+    if request.method != 'POST':
+        return redirect('home')
     # Django's logout already flushes the session; avoid double-flushing.
     logout(request)
     messages.success(request, 'Вы вышли из системы')
@@ -573,7 +706,9 @@ def checkout(request):
                 if not apartment:
                     apartment = profile.apartment
         
-        # Создание заказа
+        # Пересчёт цен на стороне сервера (не доверяем значениям в сессии)
+        server_total = Decimal('0.00')
+        # Создаём черновой заказ (без total), затем добавим итоговые суммы
         order = Order.objects.create(
             user=request.user,
             customer_first_name=first_name,
@@ -583,23 +718,51 @@ def checkout(request):
             entrance=entrance,
             apartment=apartment,
             courier_comment=courier_comment,
-            total_price=total_price
+            total_price=Decimal('0.00'),
+            delivery_price=Decimal('0.00')
         )
-        
-        # Добавление товаров в заказ
-        for item in cart_items:
-            product = item['product']
+
+        for cart_key, item in cart.items():
+            try:
+                product_id = item.get('product_id') or str(cart_key).split('_')[0]
+                product = Product.objects.get(pk=product_id)
+            except Exception:
+                logger.exception('Invalid product in cart during checkout: %s', cart_key)
+                continue
+
+            qty = int(item.get('quantity', 1))
             size_id = item.get('size_id')
-            addon_ids = item.get('addon_ids', [])
-            size_obj = None
+            addon_ids = item.get('addon_ids') or []
+
+            # Base price from Size if provided, else from product minimal size
+            unit_price = Decimal('0.00')
             if size_id:
-                size_obj = Size.objects.filter(id=size_id, product=product).first()
+                try:
+                    size_obj = Size.objects.get(id=size_id, product=product)
+                    unit_price = Decimal(size_obj.get_discounted_price())
+                except Size.DoesNotExist:
+                    size_obj = None
+                    unit_price = Decimal(product.get_min_price() or 0)
+            else:
+                size_obj = None
+                unit_price = Decimal(product.get_min_price() or 0)
+
+            # Addons
+            addons_total = Decimal('0.00')
+            if addon_ids:
+                addons_qs = Addon.objects.filter(id__in=addon_ids)
+                for a in addons_qs:
+                    addons_total += Decimal(a.price)
+
+            item_price = (unit_price + addons_total)
+            subtotal = item_price * qty
+            server_total += subtotal
 
             OrderItem.objects.create(
                 order=order,
                 product=product,
-                quantity=item['quantity'],
-                price=item['price'],
+                quantity=qty,
+                price=item_price,
                 size=size_obj,
                 addons_info=addon_ids
             )
@@ -622,8 +785,24 @@ def checkout(request):
                         entrance=entrance or '',
                         apartment=apartment or ''
                     )
-            except Exception:
-                pass
+            except Exception as e:
+                logger.exception('Error saving user profile during checkout: %s', e)
+
+        # Рассчитываем доставку по server_total
+        total_price = server_total
+        if total_price < Decimal('1000'):
+            delivery_price = Decimal('1700')
+        elif total_price < Decimal('2500'):
+            delivery_price = Decimal('1400')
+        elif total_price < Decimal('4000'):
+            delivery_price = Decimal('1000')
+        else:
+            delivery_price = Decimal('0')
+
+        # Обновим order итоговыми суммами
+        order.total_price = total_price
+        order.delivery_price = delivery_price
+        order.save()
 
         # Очистка корзины
         request.session['cart'] = {}
@@ -746,6 +925,11 @@ def order_review(request, order_id):
         created = 0
         rating_count = 0
 
+        # Validate uploaded photo
+        if photo and not is_valid_image(photo):
+            messages.error(request, 'Неверный файл изображения или превышен размер (max 5MB).', extra_tags='toast frontend')
+            return redirect('order_review', order_id=order_id)
+
         # Сначала проверяем, сколько оценок указано
         for item in order.items.all():
             rating_raw = request.POST.get(f'rating_{item.id}')
@@ -844,6 +1028,7 @@ def support(request):
     return render(request, 'webapp/support.html', {'chats': chats})
 
 
+@csrf_protect
 def chat_create(request):
     """Создать чат (AJAX)."""
     if request.method != 'POST':
@@ -852,15 +1037,33 @@ def chat_create(request):
     name = request.POST.get('name') or ''
     text = request.POST.get('text') or ''
 
-    chat = Chat.objects.create(
-        user=request.user if request.user.is_authenticated else None,
-        user_name=name or (request.user.get_full_name() if request.user.is_authenticated else 'Гость')
-    )
+    # rate-limit chat creation by IP
+    ip = get_client_ip(request)
+    if rate_limit_exceeded(f'chat_create:{ip}', limit=10, period=60):
+        return JsonResponse({'status': 'error', 'message': 'Too many requests'}, status=429)
+
+    # create chat and bind token for anonymous users so subsequent requests can be authorized
+    token = None
+    if request.user.is_authenticated:
+        chat = Chat.objects.create(
+            user=request.user,
+            user_name=name or request.user.get_full_name()
+        )
+    else:
+        token = uuid.uuid4().hex
+        chat = Chat.objects.create(
+            user=None,
+            user_name=name or 'Гость',
+            token=token
+        )
 
     if text:
         Message.objects.create(chat=chat, sender_user=request.user if request.user.is_authenticated else None, sender_name=name or '', text=text)
 
-    return JsonResponse({'status': 'ok', 'chat_id': chat.id})
+    res = {'status': 'ok', 'chat_id': chat.id}
+    if token:
+        res['token'] = token
+    return JsonResponse(res)
 
 
 def chat_detail(request, chat_id):
@@ -879,11 +1082,23 @@ def chat_detail(request, chat_id):
     return render(request, 'webapp/chat_detail.html', {'chat': chat, 'messages': messages_qs})
 
 
+@csrf_protect
 def chat_send(request, chat_id):
     if request.method != 'POST':
         return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)
 
     chat = get_object_or_404(Chat, id=chat_id)
+    # Authorization: allow only staff, owner, or anonymous client with valid token
+    allowed = False
+    if request.user.is_authenticated and (request.user.is_staff or chat.user == request.user):
+        allowed = True
+    elif not request.user.is_authenticated and chat.user is None:
+        # check token from header or POST
+        token = request.headers.get('X-Chat-Token') or request.POST.get('token')
+        if token and chat.token and token == chat.token:
+            allowed = True
+    if not allowed:
+        return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
     text = request.POST.get('text', '').strip()
     if not text:
         return JsonResponse({'status': 'error', 'message': 'Empty message'}, status=400)
@@ -900,12 +1115,13 @@ def chat_send(request, chat_id):
             'is_system': msg.is_system,
             'created_at': msg.created_at.isoformat(),
         })
-    except Exception:
-        pass
+    except Exception as e:
+        logger.exception('Error broadcasting chat message: %s', e)
 
     return JsonResponse({'status': 'ok', 'message': {'id': msg.id, 'text': msg.text, 'sender_name': msg.sender_name or (msg.sender_user.get_username() if msg.sender_user else ''), 'created_at': msg.created_at.isoformat(), 'is_system': msg.is_system}})
 
 
+@csrf_protect
 def chat_operator_join(request, chat_id):
     """Оператор присоединяется к чату, ставится operator и создаётся системное сообщение."""
     if not request.user.is_authenticated or not request.user.is_staff:
@@ -931,8 +1147,8 @@ def chat_operator_join(request, chat_id):
             'sender_name': name,
             'is_system': True,
         })
-    except Exception:
-        pass
+    except Exception as e:
+        logger.exception('Error broadcasting operator join: %s', e)
 
     # If request is AJAX, return JSON; if normal POST (form), redirect to chat detail
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -943,101 +1159,21 @@ def chat_operator_join(request, chat_id):
 def chat_messages(request, chat_id):
     """Возвращает JSON с сообщениями чата (для виджета)."""
     chat = get_object_or_404(Chat, id=chat_id)
+    # Authorization: allow only staff, owner, or anonymous client with valid token
+    if request.user.is_authenticated:
+        if not (request.user.is_staff or chat.user == request.user):
+            return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
+    else:
+        # check token in header or GET param
+        token = request.headers.get('X-Chat-Token') or request.GET.get('token')
+        if not (token and chat.token and token == chat.token):
+            return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
+
     msgs = chat.messages.all().order_by('created_at')
     out = []
     for m in msgs:
         out.append({'id': m.id, 'text': m.text, 'sender_name': m.sender_name or (m.sender_user.get_username() if m.sender_user else ''), 'created_at': m.created_at.isoformat(), 'is_system': m.is_system})
     return JsonResponse({'status': 'ok', 'messages': out})
-    categories = Category.objects.all()
-
-    # Если по всем товарам в заказе уже есть отзывы — перенаправляем назад
-    all_reviewed = True
-    for item in order.items.all():
-        if not Review.objects.filter(order=order, product=item.product).exists():
-            all_reviewed = False
-            break
-    if all_reviewed:
-        messages.info(request, 'Для этого заказа отзывы уже оставлены.')
-        return redirect('order_history')
-
-    if request.method == 'POST':
-        comment = request.POST.get('comment', '').strip()
-        photo = request.FILES.get('photo')
-        created = 0
-        rating_count = 0
-
-        # Сначала проверяем, сколько оценок указано
-        for item in order.items.all():
-            rating_raw = request.POST.get(f'rating_{item.id}')
-            if rating_raw:
-                rating_count += 1
-
-        # Если нет оценок, показываем ошибку и возвращаемся
-        if rating_count == 0:
-            messages.error(request, 'Пожалуйста, поставьте оценки хотя бы одному товару!', extra_tags='toast frontend')
-            return redirect('order_review', order_id=order_id)
-
-        for item in order.items.all():
-            # Ожидаем поля рейтинга с именем rating_<item_id>
-            rating_raw = request.POST.get(f'rating_{item.id}')
-            if not rating_raw:
-                continue
-            try:
-                rating_val = int(rating_raw)
-            except (ValueError, TypeError):
-                continue
-
-            # Создаём объект Review
-            review = Review(
-                product=item.product,
-                user=request.user,
-                order=order,
-                name=request.user.first_name or request.user.username,
-                rating=rating_val,
-                comment=comment
-            )
-            
-            # Копируем фото для каждого отзыва если оно было загружено
-            if photo:
-                # Читаем содержимое файла
-                photo.seek(0)
-                photo_content = photo.read()
-                
-                # Создаём новый файл с уникальным именем
-                file_ext = os.path.splitext(photo.name)[1]
-                new_filename = f'review_{order.id}_{item.product.id}{file_ext}'
-                
-                # Сохраняем как новый файл
-                review.photo.save(new_filename, ContentFile(photo_content), save=False)
-            
-            try:
-                review.save()
-                created += 1
-            except IntegrityError:
-                # Отзыв уже существует для этого товара и заказа
-                continue
-
-        if created:
-            messages.success(request, 'Спасибо за отзыв!', extra_tags='toast frontend')
-        else:
-            messages.error(request, 'Отзыв на все товары в этом заказе уже оставлен.', extra_tags='toast frontend')
-
-        return redirect('order_history')
-
-    # Подготавливаем информацию о товарах для отображения
-    order_items_with_review_status = []
-    for item in order.items.all():
-        has_review = Review.objects.filter(order=order, product=item.product).exists()
-        order_items_with_review_status.append({
-            'item': item,
-            'has_review': has_review
-        })
-
-    return render(request, 'webapp/order_review.html', {
-        'categories': categories,
-        'order': order,
-        'order_items_with_review_status': order_items_with_review_status
-    })
 
 
 @login_required

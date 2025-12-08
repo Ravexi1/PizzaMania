@@ -18,16 +18,11 @@ class Category(models.Model):
 class Product(models.Model):
     name = models.CharField(max_length=200, verbose_name="Название")
     description = models.TextField(verbose_name="Описание")
-    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена")
+    # Цены теперь хранятся в модели `Size`.
     discount = models.DecimalField(max_digits=5, decimal_places=2, default=0, verbose_name="Скидка (%)", validators=[MinValueValidator(0)])
     image = models.ImageField(upload_to='products/', blank=True, null=True, verbose_name="Изображение")
     categories = models.ManyToManyField(Category, related_name='products', verbose_name="Категории")
-    # Специальные поля для пицц и напитков — используются для автоматического создания размеров
-    pizza_price_25 = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Цена 25 см")
-    pizza_price_30 = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Цена 30 см")
-    pizza_price_35 = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Цена 35 см")
-    drinks_price_05 = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Цена 0.5 л")
-    drinks_price_1 = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Цена 1 л")
+    # Поля размеров/цен теперь хранятся в модели `Size` — дополнительные специальные поля удалены.
     # Добавки привязываются через M2M (модель Addon без FK)
     addons = models.ManyToManyField('Addon', blank=True, related_name='products', verbose_name="Добавки")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
@@ -41,38 +36,29 @@ class Product(models.Model):
         return self.name
     
     def get_average_rating(self):
-        reviews = self.reviews.all()
-        if reviews:
-            return sum([review.rating for review in reviews]) / len(reviews)
-        return 0
+        """Возвращает среднюю оценку продукта (float)."""
+        from django.db.models import Avg
+        avg = self.reviews.aggregate(avg=Avg('rating'))['avg']
+        return float(avg) if avg is not None else 0.0
     
     def get_discounted_price(self):
-        # Для товаров без размеров возвращаем скидочную цену от базовой цены
-        if not self.sizes.exists():
-            if self.discount > 0:
-                return self.price - (self.price * self.discount / 100)
-            return self.price
-        # Если есть размеры — возвращаем минимальную скидочную цену среди размеров
+        """Минимальная цена товара с учётом скидки (рассчитывается по размерам).
+        Если размеров нет, возвращает None.
+        """
         prices = [s.get_discounted_price() for s in self.sizes.all()]
-        return min(prices) if prices else self.price
+        return min(prices) if prices else None
 
     def get_price_list(self):
-        if self.sizes.exists():
-            return [s.get_discounted_price() for s in self.sizes.all()]
-        if self.price is not None:
-            return [self.get_discounted_price()]
-        return []
+        return [s.get_discounted_price() for s in self.sizes.all()]
 
     def get_min_price(self):
         prices = self.get_price_list()
         return min(prices) if prices else None
 
     def get_original_min_price(self):
-        # Минимальная цена без учета скидки
-        if self.sizes.exists():
-            prices = [s.price for s in self.sizes.all()]
-            return min(prices) if prices else None
-        return self.price
+        # Минимальная цена без учета скидки — берём минимальную цену среди размеров
+        prices = [s.price for s in self.sizes.all()]
+        return min(prices) if prices else None
 
     def get_display_price(self):
         """Строка для отображения цены: либо 'От {min}', либо просто цена (целая часть)."""
@@ -83,13 +69,8 @@ class Product(models.Model):
             return f"От {int(p)}"
         return f"{int(p)}"
 
-    def clean(self):
-        # Больше не требуем обязательные размеры для пиццы и напитков — можно любые
-        pass
-
-    def save(self, *args, **kwargs):
-        # Сохраняем сам объект (логика управления категорией offers находится в ProductAdmin.save_model)
-        super().save(*args, **kwargs)
+    # Валидация специфичных правил производится в формах/инлайн-админке.
+    
 
 
 
@@ -126,6 +107,7 @@ class Order(models.Model):
     courier_comment = models.TextField(blank=True, default='', verbose_name="Комментарий курьеру")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new', verbose_name="Статус")
     total_price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Общая сумма")
+    delivery_price = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Стоимость доставки")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     
     class Meta:
@@ -215,6 +197,7 @@ class Chat(models.Model):
     """Чат между пользователем и операторами."""
     user = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='chats')
     user_name = models.CharField(max_length=150, blank=True, default='')
+    token = models.CharField(max_length=64, blank=True, null=True, verbose_name='Client token')
     operator = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='operator_chats')
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

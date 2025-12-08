@@ -87,6 +87,9 @@
     panel.classList.toggle('hidden');
     if(!panel.classList.contains('hidden')){
       if(currentChatId){
+        // load stored token if any
+        const storedToken = localStorage.getItem('pizzamania_chat_token') || null;
+        if(storedToken) window.pizzamania_chat_token = storedToken;
         await loadMessages(currentChatId);
         connectWS(currentChatId);
       } else {
@@ -97,7 +100,14 @@
           credentials: 'same-origin',
           headers: {'Content-Type':'application/x-www-form-urlencoded','X-CSRFToken':csrftoken,'X-Requested-With':'XMLHttpRequest'},
           body: `text=`
-        }).then(r=>r.json()).then(data=>{ if(data.status==='ok'){ currentChatId = data.chat_id; localStorage.setItem('pizzamania_chat_id', currentChatId); connectWS(currentChatId); } });
+        }).then(r=>r.json()).then(data=>{
+          if(data.status==='ok'){
+            currentChatId = data.chat_id;
+            localStorage.setItem('pizzamania_chat_id', currentChatId);
+            if(data.token){ localStorage.setItem('pizzamania_chat_token', data.token); window.pizzamania_chat_token = data.token }
+            connectWS(currentChatId);
+          }
+        });
       }
     }
   });
@@ -127,14 +137,18 @@
     }
 
     // Fallback to HTTP POST
+    const chatToken = localStorage.getItem('pizzamania_chat_token') || window.pizzamania_chat_token || '';
+    const headers = {'Content-Type':'application/x-www-form-urlencoded','X-CSRFToken':csrftoken,'X-Requested-With':'XMLHttpRequest'};
+    if(chatToken) headers['X-Chat-Token'] = chatToken;
     fetch(url,{
       method:'POST',
       credentials: 'same-origin',
-      headers:{'Content-Type':'application/x-www-form-urlencoded','X-CSRFToken':csrftoken,'X-Requested-With':'XMLHttpRequest'},
+      headers: headers,
       body: body
     }).then(r=>r.json()).then(data=>{
       if(data.status==='ok'){
         if(data.chat_id){ currentChatId = data.chat_id; localStorage.setItem('pizzamania_chat_id', currentChatId); }
+        if(data.token){ localStorage.setItem('pizzamania_chat_token', data.token); window.pizzamania_chat_token = data.token }
         const msg = document.createElement('div');
         msg.className = 'mb-2 text-sm';
         msg.innerHTML = `<div class="bg-red-50 text-gray-800 px-3 py-2 rounded">${escapeHtml(text)}</div>`;

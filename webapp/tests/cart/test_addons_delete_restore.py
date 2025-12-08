@@ -12,7 +12,7 @@ def test_delete_and_restore_with_addons():
     category, _ = Category.objects.get_or_create(slug='pizza', defaults={'name': 'Пицца'})
     
     # Создаём продукт с размерами и добавками
-    product = Product.objects.create(name='Пепперони', description='Описание', price=Decimal('2000'))
+    product = Product.objects.create(name='Пепперони', description='Описание')
     product.categories.add(category)
     
     size_25 = Size.objects.create(product=product, name='25 см', price=Decimal('1500'))
@@ -100,7 +100,7 @@ def test_multiple_items_with_different_options():
     client = Client()
     category, _ = Category.objects.get_or_create(slug='pizza', defaults={'name': 'Пицца'})
     
-    product = Product.objects.create(name='Пепперони', description='Описание', price=Decimal('2000'))
+    product = Product.objects.create(name='Пепперони', description='Описание')
     product.categories.add(category)
     
     size_25 = Size.objects.create(product=product, name='25 см', price=Decimal('1500'))

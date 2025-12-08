@@ -8,7 +8,7 @@ from webapp.models import Product, Category, Size, Addon
 def test_restore_button_logic():
     client = Client()
     category, _ = Category.objects.get_or_create(slug='pizza', defaults={'name': 'Пицца'})
-    product = Product.objects.create(name='Тестовая пицца', description='Описание', price=Decimal('2000'))
+    product = Product.objects.create(name='Тестовая пицца', description='Описание')
     product.categories.add(category)
     size = Size.objects.create(product=product, name='30 см', price=Decimal('2000'))
     addon = Addon.objects.create(name='Сыр', price=Decimal('100'))

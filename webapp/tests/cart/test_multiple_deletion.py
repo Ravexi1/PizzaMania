@@ -12,15 +12,15 @@ def test_multiple_items_deletion():
     category, _ = Category.objects.get_or_create(slug='pizza', defaults={'name': 'Пицца'})
     
     # Создаём 3 товара
-    product1 = Product.objects.create(name='Пицца 1', description='Описание 1', price=Decimal('1000'))
+    product1 = Product.objects.create(name='Пицца 1', description='Описание 1')
     product1.categories.add(category)
     size1 = Size.objects.create(product=product1, name='30 см', price=Decimal('1000'))
     
-    product2 = Product.objects.create(name='Пицца 2', description='Описание 2', price=Decimal('1500'))
+    product2 = Product.objects.create(name='Пицца 2', description='Описание 2')
     product2.categories.add(category)
     size2 = Size.objects.create(product=product2, name='35 см', price=Decimal('1500'))
     
-    product3 = Product.objects.create(name='Пицца 3', description='Описание 3', price=Decimal('2000'))
+    product3 = Product.objects.create(name='Пицца 3', description='Описание 3')
     product3.categories.add(category)
     size3 = Size.objects.create(product=product3, name='40 см', price=Decimal('2000'))
     

@@ -36,12 +36,12 @@
                 <div class="mb-4 md:mb-6">
                     {% if product.discount > 0 %}
                     <div class="flex items-center gap-2 md:gap-4 flex-wrap">
-                        <span class="text-2xl md:text-3xl font-bold text-red-600" id="price-display">{% if product.sizes.exists %}{{ product.sizes.first.get_discounted_price|floatformat:0 }}{% else %}{{ product.get_discounted_price|floatformat:0 }}{% endif %} ₸</span>
-                        <span id="original-price-display" class="text-lg md:text-xl text-gray-400 line-through">{% if product.sizes.exists %}{{ product.sizes.first.price|floatformat:0 }}{% else %}{{ product.price|floatformat:0 }}{% endif %} ₸</span>
+                        <span class="text-2xl md:text-3xl font-bold text-red-600" id="price-display">{% if product.sizes.exists %}{{ product.sizes.first.get_discounted_price|floatformat:0 }}{% else %}{{ product.get_min_price|default:0|floatformat:0 }}{% endif %} ₸</span>
+                        <span id="original-price-display" class="text-lg md:text-xl text-gray-400 line-through">{% if product.sizes.exists %}{{ product.sizes.first.price|floatformat:0 }}{% else %}{{ product.get_original_min_price|default:0|floatformat:0 }}{% endif %} ₸</span>
                         <span class="bg-red-600 text-white px-2 md:px-3 py-1 rounded-full text-xs md:text-sm">-{{ product.discount|floatformat:0 }}%</span>
                     </div>
                     {% else %}
-                    <span class="text-2xl md:text-3xl font-bold text-red-600" id="price-display">{% if product.sizes.exists %}{{ product.sizes.first.price|floatformat:0 }}{% else %}{{ product.price|floatformat:0 }}{% endif %} ₸</span>
+                    <span class="text-2xl md:text-3xl font-bold text-red-600" id="price-display">{% if product.sizes.exists %}{{ product.sizes.first.price|floatformat:0 }}{% else %}{{ product.get_min_price|default:0|floatformat:0 }}{% endif %} ₸</span>
                     {% endif %}
                 </div>
 
@@ -109,7 +109,7 @@
                 <script>
                     document.addEventListener('DOMContentLoaded', function() {
                         // Базовая цена продукта
-                        const basePrice = {{ product.get_discounted_price|floatformat:0|cut:' ' }};
+                        const basePrice = {{ product.get_discounted_price|default:0|floatformat:0|cut:' ' }};
                         const productId = {{ product.pk }};
                         
                         function getCsrfToken() {

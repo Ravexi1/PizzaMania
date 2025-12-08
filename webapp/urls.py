@@ -15,7 +15,6 @@ urlpatterns = [
     path('logout/', views.user_logout, name='logout'),
     
     # Product CRUD
-    path('products/', views.product_list, name='product_list'),
     path('products/create/', views.product_create, name='product_create'),
     path('products/<int:pk>/', views.product_detail, name='product_detail'),
     path('products/<int:pk>/update/', views.product_update, name='product_update'),
