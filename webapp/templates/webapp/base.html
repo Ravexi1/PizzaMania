@@ -223,7 +223,10 @@
             <div class="flex space-x-4 items-center">
                 {% if user.is_authenticated %}
                     <span class="text-gray-700">{% trans "Привет" %}, {{ user.first_name }}!</span>
-                    <a href="{% url 'logout' %}" class="px-3 py-1 border rounded hover:bg-gray-100">{% trans "Выйти" %}</a>
+                    <form method="post" action="{% url 'logout' %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="px-3 py-1 border rounded hover:bg-gray-100">{% trans "Выйти" %}</button>
+                    </form>
                 {% else %}
                     <a href="{% url 'login' %}" class="px-3 py-1 border rounded hover:bg-gray-100">{% trans "Войти" %}</a>
                     <a href="{% url 'register' %}" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">{% trans "Регистрация" %}</a>
@@ -440,7 +443,10 @@
                 {% if user.is_authenticated %}
                     <span class="py-2 px-3 text-gray-200">{% trans "Привет" %}, {{ user.first_name }}!</span>
                     <a href="{% url 'order_history' %}" class="py-2 px-3 hover:bg-red-800 rounded">{% trans "Мои заказы" %} ({{ user_orders_count|default:0 }})</a>
-                    <a href="{% url 'logout' %}" class="py-2 px-3 hover:bg-red-800 rounded">{% trans "Выйти" %}</a>
+                    <form method="post" action="{% url 'logout' %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="py-2 px-3 hover:bg-red-800 rounded">{% trans "Выйти" %}</button>
+                    </form>
                 {% else %}
                     <a href="{% url 'login' %}" class="py-2 px-3 hover:bg-red-800 rounded">{% trans "Войти" %}</a>
                     <a href="{% url 'register' %}" class="py-2 px-3 bg-white text-red-600 hover:bg-gray-100 rounded font-semibold">{% trans "Регистрация" %}</a>

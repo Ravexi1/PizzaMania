@@ -31,12 +31,15 @@ except Exception:
     pass
 
 def get_client_ip(request):
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0].strip()
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
+    # Prefer REMOTE_ADDR; optionally honor X-Forwarded-For only when explicitly trusted
+    trusted_xff = str(os.environ.get('TRUST_X_FORWARDED_FOR', '')).lower() in {'1', 'true', 'yes'}
+    if trusted_xff:
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0].strip()
+            if ip:
+                return ip
+    return request.META.get('REMOTE_ADDR')
 
 def rate_limit_exceeded(key_prefix, limit=5, period=60):
     """Simple rate limiter using Django cache. Returns True if exceeded."""
@@ -862,8 +865,10 @@ def order_history(request):
 
 
 @login_required
+@require_POST
+@csrf_protect
 def repeat_order(request, order_id):
-    """Скопировать товары из заказа в сессию корзины и перейти в корзину"""
+    """Скопировать товары из заказа в сессию корзины и перейти в корзину (POST-only)."""
     order = get_object_or_404(Order, id=order_id, user=request.user)
     cart = get_cart(request)
 
@@ -1122,8 +1127,9 @@ def chat_send(request, chat_id):
 
 
 @csrf_protect
+@require_POST
 def chat_operator_join(request, chat_id):
-    """Оператор присоединяется к чату, ставится operator и создаётся системное сообщение."""
+    """Оператор присоединяется к чату, ставится operator и создаётся системное сообщение (POST-only)."""
     if not request.user.is_authenticated or not request.user.is_staff:
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)

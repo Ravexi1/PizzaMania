@@ -6,7 +6,7 @@
     <div class="flex items-center justify-between mb-4">
       <div>
         <h2 class="text-2xl font-bold">Чат #{{ chat.id }}</h2>
-        <div class="text-sm text-gray-500">Пользователь: {{ chat.user_name|default:chat.user.username }}</div>
+        <div class="text-sm text-gray-500">Пользователь: {% if chat.user %}{{ chat.user.username }}{% else %}{{ chat.user_name }}{% endif %}</div>
       </div>
       <div class="text-right">
         {% if chat.operator %}
@@ -22,7 +22,7 @@
         <div class="mb-3">
           <div class="text-xs text-gray-400">{{ msg.created_at|date:"d.m.Y H:i" }} {% if msg.is_system %}<span class="text-green-600">[система]</span>{% endif %}</div>
           <div class="mt-1">
-            <strong class="text-sm">{{ msg.sender_name|default:msg.sender_user.username }}</strong>
+            <strong class="text-sm">{% if msg.sender_user %}{{ msg.sender_user.username }}{% else %}{{ msg.sender_name }}{% endif %}</strong>
             <div class="text-sm text-gray-800">{{ msg.text }}</div>
           </div>
         </div>
@@ -58,13 +58,28 @@
         const d = JSON.parse(e.data);
         const wrapper = document.createElement('div');
         wrapper.className = 'mb-3';
+
         const meta = document.createElement('div');
         meta.className = 'text-xs text-gray-400';
         meta.textContent = new Date().toLocaleString();
-        if(d.is_system) meta.innerHTML += ' <span class="text-green-600">[система]</span>';
+        if (d.is_system) {
+          const sys = document.createElement('span');
+          sys.className = 'text-green-600';
+          sys.textContent = ' [система]';
+          meta.appendChild(sys);
+        }
+
         const body = document.createElement('div');
         body.className = 'mt-1';
-        body.innerHTML = `<strong class="text-sm">${d.sender_name||''}</strong><div class="text-sm text-gray-800">${d.message}</div>`;
+        const sender = document.createElement('strong');
+        sender.className = 'text-sm';
+        sender.textContent = d.sender_name || '';
+        const msg = document.createElement('div');
+        msg.className = 'text-sm text-gray-800';
+        msg.textContent = d.message || '';
+        body.appendChild(sender);
+        body.appendChild(msg);
+
         wrapper.appendChild(meta);
         wrapper.appendChild(body);
         messagesEl.appendChild(wrapper);

@@ -121,12 +121,12 @@
 
   closeBtn.addEventListener('click', function(e){ e.stopPropagation(); panel.classList.add('hidden') });
 
-  sendBtn.addEventListener('click', function(){
+  function doSend(){
     const text = textInput.value.trim();
     if(!text) return;
     const csrftoken = getCookie('csrftoken');
     const url = currentChatId?`/chat/${currentChatId}/send/`:`{% url 'chat_create' %}`;
-    const body = currentChatId ? `text=${encodeURIComponent(text)}` : `text=${encodeURIComponent(text)}`;
+    const body = `text=${encodeURIComponent(text)}`;
     // If websocket is available, send over WS for real-time
     if(socket && socket.readyState === WebSocket.OPEN){
       const userId = widget.dataset.userId || null;
@@ -157,7 +157,17 @@
         scrollBottom();
       }
     }).catch(err=>console.error(err));
-  });
+  }
+
+  sendBtn.addEventListener('click', doSend);
+  // Prevent form submit (Enter) from reloading page — handle as send
+  const chatForm = qs('#chat-form');
+  if(chatForm){
+    chatForm.addEventListener('submit', function(e){
+      e.preventDefault();
+      doSend();
+    });
+  }
 
   function escapeHtml(s){ return (s||'').replace(/[&<>\\"']/g, function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]}) }
 })();
