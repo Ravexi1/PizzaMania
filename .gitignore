@@ -21,3 +21,13 @@ staticfiles/
 # VSCode / PyCharm
 .idea/
 .vscode/
+
+# pytest
+.pytest_cache/
+
+# macOS
+.DS_Store
+
+# keep .env.example tracked, but ignore actual .env files
+.env.local
+.env.*

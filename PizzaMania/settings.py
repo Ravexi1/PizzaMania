@@ -10,7 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
+import secrets
 from pathlib import Path
+# `distutils` удалён в некоторых версиях Python; `strtobool` не используется, поэтому импорт удалён.
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,25 +23,45 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
+# Load .env in development if python-dotenv is available (optional)
+try:
+    from dotenv import load_dotenv
+    env_path = Path(__file__).resolve().parent.parent / '.env'
+    if env_path.exists():
+        load_dotenv(env_path)
+except Exception:
+    pass
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-kkfu5*7(zt69272d$q9vw_dp&s467a$u5s-ng6iqh$!-n)!xlw'
+# Provide `SECRET_KEY` via env `DJANGO_SECRET_KEY` in production.
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    if 'DJANGO_DEBUG' in os.environ and os.environ.get('DJANGO_DEBUG').lower() in ('1', 'true', 'yes'):
+        # In development, allow an ephemeral random key so the app can run without a .env
+        SECRET_KEY = secrets.token_urlsafe(50)
+    else:
+        raise ImproperlyConfigured('The DJANGO_SECRET_KEY environment variable is not set.\n'
+                                   'Set DJANGO_SECRET_KEY in the environment for production.')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = bool(os.environ.get('DJANGO_DEBUG', str(False))) and (str(os.environ.get('DJANGO_DEBUG', '')).lower() in ('1', 'true', 'yes'))
 
+# Hosts and CSRF trusted origins
+ALLOWED_HOSTS = [host.strip() for host in os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if host.strip()]
+csrf_origins = os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS')
+if csrf_origins:
+    CSRF_TRUSTED_ORIGINS = [o.strip() for o in csrf_origins.split(',') if o.strip()]
+else:
+    CSRF_TRUSTED_ORIGINS = [
+        'https://localhost:8000',
+        'https://127.0.0.1:8000',
+    ]
 
-ALLOWED_HOSTS = ["*"]
-CSRF_TRUSTED_ORIGINS = [
-    "https://localhost:8000",
-    "https://127.0.0.1:8000",
-    "https://orange-umbrella-5j6q6v75gwgf7g75-8000.app.github.dev",
-]
-
-# CSRF configuration
-CSRF_USE_SESSIONS = False  # Use cookies for CSRF token instead of sessions
-CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
-CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to read token for AJAX
-SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+# CSRF and session cookie security — enable in production (when DEBUG is False)
+CSRF_USE_SESSIONS = False
+CSRF_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = not DEBUG
 
 
 # Application definition
@@ -96,12 +120,31 @@ CHANNEL_LAYERS = {
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Database configuration: use MySQL only when explicitly enabled via USE_MYSQL env var.
+# This avoids accidentally attempting to connect to MySQL when .env.example contains placeholders.
+use_mysql_flag = os.environ.get('USE_MYSQL', '')
+use_mysql = str(use_mysql_flag).lower() in ('1', 'true', 'yes')
+if use_mysql:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('MYSQL_DATABASE', ''),
+            'USER': os.environ.get('MYSQL_USER', ''),
+            'PASSWORD': os.environ.get('MYSQL_PASSWORD', ''),
+            'HOST': os.environ.get('MYSQL_HOST', '127.0.0.1'),
+            'PORT': os.environ.get('MYSQL_PORT', '3306'),
+            'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
