@@ -98,13 +98,63 @@
             opacity: 1;
             transform: scale(1);
         }
-        /* Hide scrollbar for mobile categories */
-        .scrollbar-hide::-webkit-scrollbar {
+        /* Custom visible scrollbar for the mobile bottom categories
+           - show a thin, always-visible scrollbar for `.bottom-scroll`
+           - keep max-height so the scrollbar doesn't change navbar height */
+        .bottom-scroll {
+            -webkit-overflow-scrolling: touch;
+            overflow-x: auto;
+            /* Reserve stable space for the scrollbar to avoid layout shift */
+            scrollbar-gutter: stable;
+            max-height: 2.25rem; /* matches text size + padding to avoid growing the navbar */
+        }
+
+        /* Hide native browser scrollbar for the bottom-scroll container (we use custom overlay) */
+        .bottom-scroll::-webkit-scrollbar {
+            height: 0px;
             display: none;
         }
-        .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+        .bottom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        /* Firefox */
+        /* Firefox: hide native scrollbar for this container */
+        @supports (scrollbar-width: none) {
+            .bottom-scroll {
+                scrollbar-width: none; /* hide native */
+            }
+        }
+        /* Small inner bottom padding so text doesn't sit flush to the scrollbar.
+           We add padding to the inner row (not to the scroll container) so the
+           visible height of the navbar doesn't change. */
+        /* add larger inner bottom padding so text doesn't sit flush to the custom thumb */
+        .bottom-scroll > .flex {
+            box-sizing: content-box;
+        }
+        /* Custom persistent scrollbar overlay (visible even on mobile) */
+        /* Parent wrapper for mobile scroll area (spans full navbar width) */
+        .mobile-scroll-wrap {
+            position: relative;
+        }
+        .mobile-scroll-wrap .custom-scrollbar {
+            position: absolute;
+            /* left/width are set dynamically to match the .bottom-scroll area */
+            bottom: 8px; /* lower the track so it's further from the text */
+            height: 3px; /* even thinner track */
+            pointer-events: none; /* don't block touches */
+            z-index: 30;
+            left: 0;
+            width: 0;
+            margin-bottom: -5px;
+        }
+        .mobile-scroll-wrap .custom-scrollbar .thumb {
+            position: absolute;
+            height: 100%;
+            background: rgba(255,255,255,0.9);
+            border-radius: 999px;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.06) inset;
+            transition: left 0.08s linear, width 0.08s linear;
         }
     </style>
 </head>
@@ -390,7 +440,7 @@
     </nav>
 
     <!-- Нижний навбар -->
-    <nav class="bg-red-600 text-white p-4 sticky top-0 z-50">
+    <nav id="bottom-nav" class="bg-red-600 text-white p-4 sticky top-0 z-50">
         <!-- Desktop Navigation -->
         <div class="hidden md:flex justify-between items-center">
             <a href="{% url 'home' %}" class="text-xl font-bold hover:text-gray-200">🍕 PizzaMania</a>
@@ -409,9 +459,9 @@
         </div>
 
         <!-- Mobile Navigation - Категории, Корзина, Бургер -->
-        <div class="md:hidden flex justify-between items-center gap-3">
+        <div class="md:hidden flex justify-between items-center gap-3 mobile-scroll-wrap">
             <!-- Категории с прокруткой -->
-            <div class="flex-1 overflow-x-auto scrollbar-hide">
+            <div class="flex-1 overflow-x-auto scrollbar-hide bottom-scroll">
                 <div class="flex space-x-3 text-xs whitespace-nowrap">
                     <a href="{% url 'home' %}#offers" class="hover:text-gray-200">{% trans "Акции" %}</a>
                     {% load custom_filters %}
@@ -420,6 +470,8 @@
                     {% endfor %}
                 </div>
             </div>
+            <!-- custom scrollbar spans full mobile navbar width -->
+            <div class="custom-scrollbar" aria-hidden="true"><div class="thumb"></div></div>
             <!-- Корзина -->
             <a href="{% url 'cart_view' %}" class="w-9 h-9 bg-white rounded-full flex items-center justify-center text-red-600 hover:bg-gray-100 flex-shrink-0">
                 <i class="fa-solid fa-cart-shopping text-sm"></i>
@@ -456,6 +508,7 @@
         </div>
     </nav>
 
+
     <script>
         // Mobile menu toggle
         document.addEventListener('DOMContentLoaded', function() {
@@ -484,6 +537,81 @@
                 });
             }
         });
+    </script>
+
+    <script>
+    // Persistent custom scrollbar for horizontal .bottom-scroll
+    (function(){
+        function updateThumb(container){
+            try{
+                const sc = container;
+                const inner = sc.querySelector('.flex');
+                const wrapper = sc.closest('.mobile-scroll-wrap');
+                const track = wrapper ? wrapper.querySelector('.custom-scrollbar') : sc.querySelector('.custom-scrollbar');
+                const thumb = track && track.querySelector('.thumb');
+                if(!inner || !track || !thumb) return;
+                const visible = sc.clientWidth;
+                const full = inner.scrollWidth;
+                // ensure the track is sized/positioned to match the scroll area
+                try{
+                    // offsetLeft is relative to wrapper which is the positioned ancestor
+                    const leftPx = sc.offsetLeft || 0;
+                    track.style.left = leftPx + 'px';
+                    track.style.width = sc.clientWidth + 'px';
+                }catch(e){}
+                const trackWidth = track.clientWidth || sc.clientWidth;
+                if (full <= visible) {
+                    // nothing to scroll
+                    thumb.style.width = '0px';
+                    thumb.style.left = '0px';
+                    return;
+                }
+                const minWidth = 12; // px
+                // thumb width scaled relative to track width so it feels proportional to navbar
+                const thumbW = Math.max(Math.floor((visible / full) * trackWidth), minWidth);
+                const maxLeft = Math.max(0, trackWidth - thumbW);
+                // compute left proportionally across the track width
+                let left = 0;
+                if (full - visible > 0) {
+                    left = Math.round((sc.scrollLeft / (full - visible)) * maxLeft);
+                }
+                // snap to exact end if near the end
+                if (sc.scrollLeft >= (full - visible - 1)) {
+                    left = maxLeft;
+                }
+                left = Math.min(Math.max(0, left), maxLeft);
+                thumb.style.width = thumbW + 'px';
+                thumb.style.left = left + 'px';
+            }catch(e){}
+        }
+
+        document.addEventListener('DOMContentLoaded', function(){
+            const containers = Array.from(document.querySelectorAll('.bottom-scroll'));
+            containers.forEach(function(sc){
+                // initial
+                updateThumb(sc);
+                // update on scroll
+                sc.addEventListener('scroll', function(){ updateThumb(sc); });
+                // update on resize and content changes
+                window.addEventListener('resize', function(){ updateThumb(sc); });
+                // If categories update dynamically, observe size changes
+                const ro = new ResizeObserver(()=> updateThumb(sc));
+                ro.observe(sc);
+                const inner = sc.querySelector('.flex');
+                if(inner){
+                    ro.observe(inner);
+                }
+                // also observe wrapper and the track for width changes
+                const wrapper = sc.closest('.mobile-scroll-wrap');
+                if(wrapper){
+                    ro.observe(wrapper);
+                    const track = wrapper.querySelector('.custom-scrollbar');
+                    if(track) ro.observe(track);
+                }
+                // Make thumb visible always (pointer-events none so it doesn't block)
+            });
+        });
+    })();
     </script>
 
     <script>
