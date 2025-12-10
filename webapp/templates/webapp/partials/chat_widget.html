@@ -43,7 +43,9 @@
 
   async function loadMessages(chatId){
     try{
-      const res = await fetch(`/chat/${chatId}/messages/`);
+      const lang = window.location.pathname.split('/')[1] || '';
+      const prefix = lang ? '/' + lang : '';
+      const res = await fetch(`${prefix}/chat/${chatId}/messages/`);
       if(!res.ok) return;
       const data = await res.json();
       messagesEl.innerHTML = '';
@@ -125,8 +127,11 @@
     const text = textInput.value.trim();
     if(!text) return;
     const csrftoken = getCookie('csrftoken');
-    const url = currentChatId?`/chat/${currentChatId}/send/`:`{% url 'chat_create' %}`;
+    const lang = window.location.pathname.split('/')[1] || '';
+    const prefix = lang ? '/' + lang : '';
+    const url = currentChatId?`${prefix}/chat/${currentChatId}/send/`:`{% url 'chat_create' %}`;
     const body = `text=${encodeURIComponent(text)}`;
+    console.debug('chat send:', url, body.slice(0,80));
     // If websocket is available, send over WS for real-time
     if(socket && socket.readyState === WebSocket.OPEN){
       const userId = widget.dataset.userId || null;
