@@ -4,7 +4,7 @@
 
 
 {% block content %}
-<main class="max-w-5xl mx-auto py-6 md:py-10 px-4">
+<main class="max-w-7xl mx-auto py-6 md:py-10 px-4">
     <div class="bg-white rounded shadow-lg p-4 md:p-8">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             <!-- Изображение товара -->
@@ -49,12 +49,12 @@
                 {% if product.sizes.exists %}
                 <div class="mb-4 md:mb-6">
                     <label class="block text-xs md:text-sm font-semibold mb-2">{% trans "Выберите размер:" %}</label>
-                    <div class="flex gap-2 md:gap-3 overflow-x-auto pb-2" id="sizes-container">
+                    <div class="flex flex-wrap gap-2 md:gap-3 pb-2" id="sizes-container">
                         {% for size in product.sizes.all %}
-                        <label class="flex-1 min-w-[80px] cursor-pointer">
+                        <label class="flex-none min-w-[115px] md:min-w-[140px] max-w-[260px] md:max-w-[320px] cursor-pointer">
                             <input type="radio" name="size" value="{{ size.id }}" data-price="{{ size.get_discounted_price|floatformat:0|cut:' ' }}" data-original-price="{{ size.price|floatformat:0|cut:' ' }}" class="size-input hidden" {% if forloop.first %}checked{% endif %}>
                             <div class="size-btn border-2 rounded-lg px-2 md:px-4 py-2 md:py-3 text-center transition hover:border-red-600 {% if forloop.first %}border-red-600 bg-red-50{% else %}border-gray-200{% endif %}">
-                                <div class="font-semibold text-sm md:text-lg">{{ size.name }}</div>
+                                <div class="font-semibold text-sm md:text-lg break-words whitespace-normal">{{ size.name }}</div>
                                 <div class="text-gray-500 text-xs md:text-sm line-through">{{ size.price|floatformat:0 }} ₸</div>
                                 <div class="text-red-600 font-bold text-xs md:text-base">{{ size.get_discounted_price|floatformat:0 }} ₸</div>
                             </div>
@@ -174,21 +174,29 @@
                     // Инициализируем цену при загрузке
                     updatePrice();
                     
-                    // Слушатель на добавки
+                    // Слушатель на добавки — синхронизируем классы при изменении и инициализируем состояние
                     document.querySelectorAll('.addon-card').forEach(card => {
                         const checkbox = card.querySelector('input[name="addon"]');
                         if (checkbox) {
-                            // Обработчик изменения checkbox
-                            checkbox.addEventListener('change', function() {
-                                // Обновляем визуальное состояние
-                                if (this.checked) {
+                            const syncState = () => {
+                                if (checkbox.checked) {
                                     card.classList.add('border-red-600', 'bg-red-50');
+                                    card.classList.remove('border-gray-200');
                                 } else {
                                     card.classList.remove('border-red-600', 'bg-red-50');
+                                    card.classList.add('border-gray-200');
                                 }
+                            };
+
+                            // Устанавливаем начальное состояние в соответствии с checkbox (на случай, если что-то предустановлено)
+                            syncState();
+
+                            // Обработчик изменения checkbox
+                            checkbox.addEventListener('change', function() {
+                                syncState();
                                 updatePrice();
                             });
-                            
+
                             // Клик по карточке переключает checkbox (кроме клика по самому checkbox)
                             card.addEventListener('click', function(e) {
                                 if (e.target !== checkbox && !checkbox.contains(e.target)) {

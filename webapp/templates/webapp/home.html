@@ -5,16 +5,16 @@
 
 {% block content %}
     <!-- Главная страница с каталогом -->
-    <main class="max-w-5xl mx-auto py-6 md:py-10 px-4 space-y-12 md:space-y-16">
+    <main class="max-w-7xl mx-auto py-6 md:py-10 px-4 space-y-12 md:space-y-16">
         {% load custom_filters %}
         
         <!-- Блок "Акции" -->
         {% if discounted_products %}
         <section id="offers">
             <h2 class="text-xl md:text-2xl font-bold mb-4 px-2 md:px-0 text-red-600">🔥 {% trans "Акции" %}</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 {% for product in discounted_products %}
-                <a href="{% url 'product_detail' product.pk %}" class="flex md:block gap-4 md:gap-0 p-3 md:p-4 rounded transition group bg-red-50 border-2 border-red-200">
+                <a href="{% url 'product_detail' product.pk %}" class="flex flex-row md:flex-col gap-4 p-3 md:p-4 rounded transition group bg-red-50 border-2 border-red-200 items-stretch">
                     {% if product.image %}
                     <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-32 h-32 md:w-full md:h-auto md:aspect-square object-cover rounded md:mb-3 flex-shrink-0 md:group-hover:scale-95 transition-transform duration-300">
                     {% else %}
@@ -22,16 +22,16 @@
                         <span class="text-gray-400 text-xs md:text-sm">{% trans "Нет фото" %}</span>
                     </div>
                     {% endif %}
-                    <div class="flex-1 flex flex-col md:block">
+                    <div class="flex-1 flex flex-col h-32 md:h-auto">
                         <h3 class="font-bold text-sm md:text-lg mb-1 md:mb-2">{{ product.name }}</h3>
                         <p class="text-gray-600 text-xs md:text-sm mb-2 md:mb-3 line-clamp-2">{{ product.description|truncatewords:10 }}</p>
                         <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-1 md:gap-2 mt-auto">
                             <div>
-                                <div class="flex items-center gap-1 md:gap-2">
-                                    <span class="text-base md:text-xl font-bold text-red-600">{{ product.get_display_price }} ₸</span>
+                                <div class="flex flex-col">
                                     <span class="text-[10px] md:text-sm text-gray-400 line-through">{{ product.get_original_min_price|floatformat:0 }} ₸</span>
+                                    <span class="text-base md:text-xl font-bold text-red-600">{{ product.get_display_price }} ₸</span>
                                 </div>
-                                <span class="bg-red-600 text-white px-2 py-0.5 rounded-full text-[10px] md:text-xs">-{{ product.discount|floatformat:0 }}%</span>
+                                <span class="bg-red-600 text-white px-2 py-0.5 rounded-full text-[10px] md:text-xs mt-2 inline-block">-{{ product.discount|floatformat:0 }}%</span>
                             </div>
                             <span class="hidden md:inline-block px-3 md:px-4 py-1.5 md:py-2 rounded border border-red-500 text-red-600 hover:bg-red-600 hover:text-white transition text-xs md:text-sm">
                                 {% trans "Подробнее" %}
@@ -47,9 +47,9 @@
         {% for category in categories %}
         <section id="{{ category.slug }}">
             <h2 class="text-xl md:text-2xl font-bold mb-4 px-2 md:px-0">{% category_label category %}</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 {% for product in category.products.all %}
-                <a href="{% url 'product_detail' product.pk %}" class="flex md:block gap-4 md:gap-0 p-3 md:p-4 rounded transition group">
+                <a href="{% url 'product_detail' product.pk %}" class="flex flex-row md:flex-col gap-4 p-3 md:p-4 rounded transition group items-stretch">
                     {% if product.image %}
                     <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-32 h-32 md:w-full md:h-auto md:aspect-square object-cover rounded md:mb-3 flex-shrink-0 md:group-hover:scale-95 transition-transform duration-300">
                     {% else %}
@@ -57,15 +57,15 @@
                         <span class="text-gray-400 text-xs md:text-sm">{% trans "Нет фото" %}</span>
                     </div>
                     {% endif %}
-                    <div class="flex-1 flex flex-col md:block">
+                    <div class="flex-1 flex flex-col h-32 md:h-auto">
                         <h3 class="font-bold text-sm md:text-lg mb-1 md:mb-2">{{ product.name }}</h3>
                         <p class="text-gray-600 text-xs md:text-sm mb-2 md:mb-3 line-clamp-2">{{ product.description|truncatewords:10 }}</p>
-                        <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-1 md:gap-2 mt-auto">
+                        <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-1 md:gap-2 mt-auto">
                             <div>
                                 {% if product.discount and product.discount > 0 %}
-                                <div class="flex items-center gap-1 md:gap-2">
-                                    <span class="text-base md:text-xl font-bold text-red-600">{{ product.get_display_price }} ₸</span>
-                                    <span class="text-[10px] md:text-sm text-gray-400 line-through">{{ product.get_original_min_price|floatformat:0 }} ₸</span>
+                                <div class="flex flex-col">
+                                    <span class="text-[10px] md:text-sm text-gray-400 line-through mb-0.5">{{ product.get_original_min_price|floatformat:0 }} ₸</span>
+                                    <span class="text-base md:text-xl font-bold text-red-600 mt-1">{{ product.get_display_price }} ₸</span>
                                 </div>
                                 {% else %}
                                 <span class="text-base md:text-xl font-bold text-red-600">{{ product.get_display_price }} ₸</span>

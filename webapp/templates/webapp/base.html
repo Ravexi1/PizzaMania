@@ -262,6 +262,7 @@
 
     <!-- Верхний навбар -->
     <nav class="bg-white shadow p-4 text-sm">
+        <div class="max-w-7xl mx-auto w-full px-4">
         <!-- Desktop Navigation -->
         <div class="hidden md:flex justify-between items-center">
             <div class="flex space-x-6">
@@ -437,10 +438,12 @@
             }
         })();
         </script>
+        </div>
     </nav>
 
     <!-- Нижний навбар -->
     <nav id="bottom-nav" class="bg-red-600 text-white p-4 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto w-full px-4">
         <!-- Desktop Navigation -->
         <div class="hidden md:flex justify-between items-center">
             <a href="{% url 'home' %}" class="text-xl font-bold hover:text-gray-200">🍕 PizzaMania</a>
@@ -505,6 +508,7 @@
                 {% endif %}
                 <hr class="border-red-600 my-2">
             </div>
+        </div>
         </div>
     </nav>
 
@@ -647,7 +651,7 @@
 
     <!-- Верхний серый футер с информацией о доставке -->
     <div class="bg-gray-100 text-gray-800 py-4 px-4">
-        <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
             <div class="flex flex-col">
                 <div class="font-semibold">{% trans "Бесплатная доставка" %}</div>
                 <div class="text-sm text-gray-600">{% trans "При заказе от 5000 ₸ по г. Астана" %}</div>
@@ -668,7 +672,7 @@
 
     <!-- Основной футер -->
     <footer class="bg-gray-800 text-white p-6 md:p-8 mt-0">
-        <div class="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 text-sm">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 text-sm">
             <div>
                 <h3 class="font-bold mb-2 text-lg">PizzaMania</h3>
                 <p class="text-gray-300">{% trans "Пицца и закуски с доставкой по Астане. Свежие ингредиенты, быстрый сервис и тёплые улыбки." %}</p>
@@ -717,7 +721,7 @@
             </div>
         </div>
 
-        <div class="max-w-5xl mx-auto mt-6 text-center text-gray-500 text-sm">
+        <div class="max-w-7xl mx-auto px-4 mt-6 text-center text-gray-500 text-sm">
             <span>{% trans "Разработано с любовью для жителей Астаны. Все права защищены." %}</span>
         </div>
     </footer>
