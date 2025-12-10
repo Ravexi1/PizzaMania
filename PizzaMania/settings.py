@@ -52,15 +52,31 @@ csrf_origins = os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS')
 if csrf_origins:
     CSRF_TRUSTED_ORIGINS = [o.strip() for o in csrf_origins.split(',') if o.strip()]
 else:
+    # Default trusted origins for development. We also append any host from
+    # `ALLOWED_HOSTS` (useful when deploying to a single production host
+    # without setting `DJANGO_CSRF_TRUSTED_ORIGINS` env var).
     CSRF_TRUSTED_ORIGINS = [
         'https://localhost:8000',
         'https://127.0.0.1:8000',
     ]
+    for host in ALLOWED_HOSTS:
+        h = host.strip()
+        if not h or h in ('localhost', '127.0.0.1'):
+            continue
+        if h.startswith('http://') or h.startswith('https://'):
+            origin = h
+        else:
+            origin = f'https://{h}'
+        if origin not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(origin)
 
 # CSRF and session cookie security — enable in production (when DEBUG is False)
 CSRF_USE_SESSIONS = False
 CSRF_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_HTTPONLY = True
+# Allow JS to read the CSRF cookie so client-side code can set the
+# `X-CSRFToken` header for AJAX requests. Keep the cookie secure in
+# production by using HTTPS (CSRF_COOKIE_SECURE=True when DEBUG=False).
+CSRF_COOKIE_HTTPONLY = False
 SESSION_COOKIE_SECURE = not DEBUG
 
 
