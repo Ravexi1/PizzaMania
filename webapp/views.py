@@ -859,6 +859,17 @@ def profile(request):
         entrance = request.POST.get('entrance', '').strip()
         apartment = request.POST.get('apartment', '').strip()
         avatar = request.FILES.get('avatar')
+        # If request contains only an avatar (file input) and no other profile fields,
+        # allow updating avatar without requiring phone validation.
+        only_avatar_upload = bool(avatar) and not any(request.POST.get(f) for f in ('phone', 'street', 'entrance', 'apartment'))
+        if only_avatar_upload:
+            if not is_valid_image(avatar):
+                messages.error(request, 'Недопустимый файл изображения. Загрузите JPG, PNG или WebP размером до 5 МБ.')
+                return redirect('profile')
+            profile.avatar = avatar
+            profile.save()
+            messages.success(request, 'Аватар обновлён!', extra_tags='toast')
+            return redirect('profile')
         
         # Валидация телефона (только казахстанские номера: +7 + 10 цифр)
         phone_pattern = re.compile(r'^\+7\d{10}$')
