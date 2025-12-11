@@ -363,9 +363,20 @@
             <div class="space-y-3 md:space-y-4">
                 {% for review in reviews %}
                 <div class="border rounded-lg p-4 md:p-6{% if review.admin_comment %} bg-blue-50{% endif %}">
-                    <div class="flex justify-between items-start mb-2 gap-2">
-                        <h4 class="font-semibold text-sm md:text-base">{{ review.name }}</h4>
-                        <span class="text-xs md:text-sm text-gray-500 whitespace-nowrap">{{ review.created_at|date:"d.m.Y" }}</span>
+                    <div class="flex justify-between items-start mb-3 gap-2">
+                        <div class="flex items-center gap-2">
+                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden flex-shrink-0">
+                                {% if review.user.profile.avatar %}
+                                <img src="{{ review.user.profile.avatar.url }}" alt="{{ review.name }}" class="w-full h-full object-cover">
+                                {% else %}
+                                {{ review.name|first|upper }}
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-sm md:text-base">{{ review.name }}</h4>
+                                <span class="text-xs text-gray-500">{{ review.created_at|date:"d.m.Y" }}</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="text-yellow-500 mb-2 text-sm md:text-base">
                         {% for i in "12345" %}
@@ -380,9 +391,16 @@
                     
                     <!-- Админ комментарий (если есть) -->
                     {% if review.admin_comment %}
-                    <div class="bg-white border-l-4 border-blue-500 p-2 md:p-3 mt-3">
-                        <p class="text-[10px] md:text-xs font-semibold text-blue-600 mb-1">💬 {% trans "Ответ администратора:" %}</p>
-                        <p class="text-xs md:text-sm text-gray-700">{{ review.admin_comment }}</p>
+                    <div class="bg-white border-l-4 border-blue-500 p-3 md:p-4 mt-4 rounded-r">
+                        <div class="flex items-start gap-2 mb-2">
+                            <div class="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                <i class="fa-solid fa-shield text-blue-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] md:text-xs font-semibold text-blue-700">{% trans "Администратор" %}</p>
+                            </div>
+                        </div>
+                        <p class="text-xs md:text-sm text-gray-700 ml-10">{{ review.admin_comment }}</p>
                     </div>
                     {% endif %}
                     

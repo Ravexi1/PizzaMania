@@ -1,0 +1,344 @@
+{% extends 'webapp/base.html' %}
+{% load i18n %}
+
+{% block content %}
+<main class="max-w-6xl mx-auto py-6 md:py-10 px-4">
+    <div class="mb-6 md:mb-8">
+        <h1 class="text-2xl md:text-3xl font-bold">{% trans "Мой профиль" %}</h1>
+        <p class="text-gray-600 mt-2">{% trans "Управляйте своими данными и просматривайте историю заказов" %}</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Правая колонка на мобильных (порядок изменен) -->
+        <div class="lg:hidden space-y-6">
+            <!-- Карточка аккаунта -->
+            <div class="bg-gradient-to-br from-red-600 to-red-700 rounded-lg shadow-lg p-6 text-white">
+                <form method="POST" enctype="multipart/form-data" id="avatar-form">
+                    {% csrf_token %}
+                    <div class="flex items-center mb-4">
+                        <label for="avatar-upload-mobile" class="cursor-pointer">
+                            <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-2xl font-bold overflow-hidden">
+                                {% if profile.avatar %}
+                                <img src="{{ profile.avatar.url }}" alt="Avatar" class="w-full h-full object-cover">
+                                {% else %}
+                                {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                                {% endif %}
+                            </div>
+                        </label>
+                        <input type="file" name="avatar" id="avatar-upload-mobile" accept="image/*" class="hidden" onchange="document.getElementById('avatar-form').submit()">
+                        <div class="ml-4">
+                            <h3 class="font-bold text-lg">{{ user.first_name }} {{ user.last_name }}</h3>
+                            <p class="text-red-100 text-sm">{{ profile.phone }}</p>
+                            <button type="button" onclick="document.getElementById('avatar-upload-mobile').click()" class="text-xs text-white underline mt-1">
+                                {% if profile.avatar %}{% trans "Изменить фото" %}{% else %}{% trans "Загрузить фото" %}{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                <div class="border-t border-white border-opacity-20 pt-4">
+                    <div class="text-sm text-red-100 mb-1">{% trans "Зарегистрирован" %}</div>
+                    <div class="font-semibold">{{ user.date_joined|date:"d.m.Y" }}</div>
+                </div>
+            </div>
+
+            <!-- Статистика (мобильная) -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="font-bold mb-4 flex items-center">
+                    <i class="fa-solid fa-chart-simple text-red-600 mr-2"></i>
+                    {% trans "Статистика" %}
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 text-sm">{% trans "Всего заказов" %}</span>
+                        <span class="font-bold text-lg">{{ user_orders_count|default:0 }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 text-sm">{% trans "Оставлено отзывов" %}</span>
+                        <span class="font-bold text-lg">{{ user.reviews.count }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Быстрые действия (мобильная) -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="font-bold mb-4 flex items-center">
+                    <i class="fa-solid fa-bolt text-red-600 mr-2"></i>
+                    {% trans "Быстрые действия" %}
+                </h3>
+                <div class="space-y-2">
+                    <a href="{% url 'order_history' %}" class="block px-4 py-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition text-sm">
+                        <i class="fa-solid fa-list mr-2 text-gray-600"></i>
+                        {% trans "Все заказы" %}
+                    </a>
+                    <a href="{% url 'home' %}" class="block px-4 py-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition text-sm">
+                        <i class="fa-solid fa-pizza-slice mr-2 text-gray-600"></i>
+                        {% trans "Меню" %}
+                    </a>
+                    <form method="POST" action="{% url 'logout' %}" class="mt-4">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full px-4 py-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition text-sm font-semibold">
+                            <i class="fa-solid fa-right-from-bracket mr-2"></i>
+                            {% trans "Выйти" %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Левая колонка: Личные данные -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                <h2 class="text-xl font-bold mb-6 flex items-center">
+                    <i class="fa-solid fa-user text-red-600 mr-3"></i>
+                    {% trans "Личные данные" %}
+                </h2>
+                
+                <form method="POST" enctype="multipart/form-data" class="space-y-4 md:space-y-5">
+                    {% csrf_token %}
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">
+                                <i class="fa-solid fa-user-circle text-gray-400 mr-1"></i>
+                                {% trans "Имя" %}
+                            </label>
+                            <input type="text" value="{{ user.first_name }}" disabled 
+                                class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-gray-100 cursor-not-allowed text-gray-600">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">
+                                <i class="fa-solid fa-user-circle text-gray-400 mr-1"></i>
+                                {% trans "Фамилия" %}
+                            </label>
+                            <input type="text" value="{{ user.last_name }}" disabled 
+                                class="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-gray-100 cursor-not-allowed text-gray-600">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-2">
+                            <i class="fa-solid fa-phone text-gray-400 mr-1"></i>
+                            {% trans "Телефон" %}
+                        </label>
+                        <input type="tel" name="phone" value="{{ profile.phone }}" required 
+                            pattern="^\+?\d{10,15}$" placeholder="+7 777 123 4567"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-red-500 focus:border-transparent transition">
+                        <p class="text-xs text-gray-500 mt-1">{% trans "Формат: +7 XXX XXX XXXX" %}</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-2">
+                            <i class="fa-solid fa-location-dot text-gray-400 mr-1"></i>
+                            {% trans "Улица и номер дома" %}
+                        </label>
+                        <input type="text" name="street" value="{{ profile.street }}" required 
+                            placeholder="{% trans 'ул. Достык 12' %}"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-red-500 focus:border-transparent transition">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">
+                                <i class="fa-solid fa-building text-gray-400 mr-1"></i>
+                                {% trans "Подъезд" %}
+                            </label>
+                            <input type="text" name="entrance" value="{{ profile.entrance }}" 
+                                placeholder="{% trans 'Опционально' %}"
+                                class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-red-500 focus:border-transparent transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">
+                                <i class="fa-solid fa-door-closed text-gray-400 mr-1"></i>
+                                {% trans "Квартира" %}
+                            </label>
+                            <input type="text" name="apartment" value="{{ profile.apartment }}" 
+                                placeholder="{% trans 'Опционально' %}"
+                                class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-red-500 focus:border-transparent transition">
+                        </div>
+                    </div>
+
+                    <div class="pt-4">
+                        <button type="submit" class="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 font-semibold transition flex items-center justify-center">
+                            <i class="fa-solid fa-save mr-2"></i>
+                            {% trans "Сохранить изменения" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- История заказов -->
+            <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 mt-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold flex items-center">
+                        <i class="fa-solid fa-clock-rotate-left text-red-600 mr-3"></i>
+                        {% trans "Последние заказы" %}
+                    </h2>
+                    <a href="{% url 'order_history' %}" class="text-red-600 hover:text-red-700 text-sm font-semibold">
+                        {% trans "Показать все" %} →
+                    </a>
+                </div>
+
+                {% if recent_orders %}
+                <div class="space-y-4">
+                    {% for order_data in recent_orders %}
+                    <div class="border border-gray-200 rounded-lg p-4 hover:border-red-300 transition">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="font-semibold text-gray-900">{% trans "Заказ" %} #{{ order_data.order.id }}</span>
+                                <span class="text-sm text-gray-500 ml-3">{{ order_data.order.created_at|date:"d.m.Y H:i" }}</span>
+                            </div>
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                {% if order_data.order.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                {% elif order_data.order.status == 'processing' %}bg-blue-100 text-blue-800
+                                {% elif order_data.order.status == 'completed' %}bg-green-100 text-green-800
+                                {% elif order_data.order.status == 'cancelled' %}bg-red-100 text-red-800
+                                {% endif %}">
+                                {% if order_data.order.status == 'pending' %}{% trans "Ожидает" %}
+                                {% elif order_data.order.status == 'processing' %}{% trans "Готовится" %}
+                                {% elif order_data.order.status == 'completed' %}{% trans "Завершен" %}
+                                {% elif order_data.order.status == 'cancelled' %}{% trans "Отменён" %}
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="text-sm text-gray-600 mb-2">
+                            {{ order_data.order.items.count }} {% trans "товар(ов)" %} • {{ order_data.order.total_price|floatformat:0 }} ₸
+                        </div>
+                        <div class="flex gap-2 mb-3">
+                            {% for item in order_data.order.items.all|slice:":3" %}
+                            <div class="w-16 h-16 rounded overflow-hidden">
+                                {% if item.product.image %}
+                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="w-full h-full object-cover">
+                                {% else %}
+                                <div class="w-full h-full bg-gray-100 flex items-center justify-center text-xs text-gray-400">
+                                    📦
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                            {% if order_data.order.items.count > 3 %}
+                            <div class="w-16 h-16 rounded bg-gray-100 flex items-center justify-center text-xs text-gray-600 font-semibold">
+                                +{{ order_data.order.items.count|add:"-3" }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        {% if order_data.order.status == 'completed' %}
+                        <div class="flex gap-2 mt-5">
+                            <form method="post" action="{% url 'repeat_order' order_data.order.id %}" class="flex-1">
+                                {% csrf_token %}
+                                <button type="submit" class="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 text-sm font-semibold transition">
+                                    <i class="fa-solid fa-rotate-right mr-1"></i>
+                                    {% trans "Повторить" %}
+                                </button>
+                            </form>
+                            {% if not order_data.all_reviewed %}
+                            <a href="{% url 'order_review' order_data.order.id %}" class="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 text-sm font-semibold transition text-center">
+                                <i class="fa-solid fa-star mr-1"></i>
+                                {% trans "Отзыв" %}
+                            </a>
+                            {% else %}
+                            <div class="flex-1 bg-green-50 text-green-700 py-2 rounded-lg text-sm font-semibold text-center border border-green-200">
+                                <i class="fa-solid fa-check mr-1"></i>
+                                {% trans "Отзыв оставлен" %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-8">
+                    <i class="fa-solid fa-shopping-bag text-gray-300 text-4xl mb-3"></i>
+                    <p class="text-gray-500">{% trans "У вас пока нет заказов" %}</p>
+                    <a href="{% url 'home' %}" class="inline-block mt-4 text-red-600 hover:text-red-700 font-semibold">
+                        {% trans "Начать покупки" %} →
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Правая колонка: Информационные карточки (только на десктопе) -->
+        <div class="space-y-6 hidden lg:block">
+            <!-- Карточка аватара (десктоп) -->
+            <div class="bg-gradient-to-br from-red-600 to-red-700 rounded-lg shadow-lg p-6 text-white">
+                <form method="post" enctype="multipart/form-data" id="avatar-form-desktop" class="text-center">
+                    {% csrf_token %}
+                    <input type="file" name="avatar" id="avatar-upload-desktop" accept="image/*" class="hidden">
+                    <div class="flex flex-col items-center">
+                        <div class="w-24 h-24 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-3xl font-bold mb-4 cursor-pointer hover:bg-opacity-30 transition overflow-hidden" onclick="document.getElementById('avatar-upload-desktop').click();">
+                            {% if profile.avatar %}
+                            <img src="{{ profile.avatar.url }}" alt="Avatar" class="w-full h-full object-cover">
+                            {% else %}
+                            {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                            {% endif %}
+                        </div>
+                        <h3 class="font-bold text-lg mb-1">{{ user.first_name }} {{ user.last_name }}</h3>
+                        <p class="text-red-100 text-sm mb-3">{{ profile.phone }}</p>
+                        <button type="button" onclick="document.getElementById('avatar-upload-desktop').click();" class="text-sm bg-white bg-opacity-20 px-4 py-2 rounded-lg hover:bg-opacity-30 transition">
+                            <i class="fa-solid fa-camera mr-1"></i>
+                            {% if profile.avatar %}{% trans "Изменить фото" %}{% else %}{% trans "Загрузить фото" %}{% endif %}
+                        </button>
+                    </div>
+                </form>
+                <div class="border-t border-white border-opacity-20 mt-4 pt-4">
+                    <div class="text-sm text-red-100 mb-1">{% trans "Зарегистрирован" %}</div>
+                    <div class="font-semibold">{{ user.date_joined|date:"d.m.Y" }}</div>
+                </div>
+            </div>
+
+            <script>
+            document.getElementById('avatar-upload-desktop').addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    document.getElementById('avatar-form-desktop').submit();
+                }
+            });
+            </script>
+
+            <!-- Статистика -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="font-bold mb-4 flex items-center">
+                    <i class="fa-solid fa-chart-simple text-red-600 mr-2"></i>
+                    {% trans "Статистика" %}
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 text-sm">{% trans "Всего заказов" %}</span>
+                        <span class="font-bold text-lg">{{ user_orders_count|default:0 }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 text-sm">{% trans "Оставлено отзывов" %}</span>
+                        <span class="font-bold text-lg">{{ user.reviews.count }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Быстрые действия -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="font-bold mb-4 flex items-center">
+                    <i class="fa-solid fa-bolt text-red-600 mr-2"></i>
+                    {% trans "Быстрые действия" %}
+                </h3>
+                <div class="space-y-2">
+                    <a href="{% url 'order_history' %}" class="block px-4 py-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition text-sm">
+                        <i class="fa-solid fa-list mr-2 text-gray-600"></i>
+                        {% trans "Все заказы" %}
+                    </a>
+                    <a href="{% url 'home' %}" class="block px-4 py-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition text-sm">
+                        <i class="fa-solid fa-pizza-slice mr-2 text-gray-600"></i>
+                        {% trans "Меню" %}
+                    </a>
+                    <form method="POST" action="{% url 'logout' %}" class="mt-4">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full px-4 py-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition text-sm font-semibold">
+                            <i class="fa-solid fa-right-from-bracket mr-2"></i>
+                            {% trans "Выйти" %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

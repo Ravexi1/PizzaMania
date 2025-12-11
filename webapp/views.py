@@ -840,6 +840,80 @@ def checkout(request):
 
 
 @login_required
+def profile(request):
+    """Страница профиля пользователя с редактированием данных и историей заказов"""
+    categories = Category.objects.all()
+    
+    # Получаем или создаем профиль
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    
+    # Проверка безопасности: пользователь может видеть только свой профиль
+    if profile.user != request.user:
+        messages.error(request, 'У вас нет доступа к этому профилю.')
+        return redirect('home')
+    
+    if request.method == 'POST':
+        # Валидация и обновление данных (имя и фамилия НЕ обновляются)
+        phone = request.POST.get('phone', '').strip()
+        street = request.POST.get('street', '').strip()
+        entrance = request.POST.get('entrance', '').strip()
+        apartment = request.POST.get('apartment', '').strip()
+        avatar = request.FILES.get('avatar')
+        
+        # Валидация телефона (только казахстанские номера: +7 + 10 цифр)
+        phone_pattern = re.compile(r'^\+7\d{10}$')
+        if not phone or not phone_pattern.match(phone):
+            messages.error(request, 'Неверный формат номера телефона. Используйте казахстанский номер: +7 и 10 цифр (например, +77001234567).')
+        else:
+            # Валидация аватара
+            if avatar:
+                if not is_valid_image(avatar):
+                    messages.error(request, 'Недопустимый файл изображения. Загрузите JPG, PNG или WebP размером до 5 МБ.')
+                    return redirect('profile')
+            
+            # Обновляем профиль (имя и фамилия НЕ обновляются)
+            profile.phone = phone
+            profile.street = street
+            profile.entrance = entrance
+            profile.apartment = apartment
+            
+            # Обновляем аватар если загружен
+            if avatar:
+                profile.avatar = avatar
+            
+            profile.save()
+            
+            messages.success(request, 'Данные профиля успешно обновлены!', extra_tags='toast')
+            return redirect('profile')
+    
+    # Получаем последние 5 заказов для отображения в профиле с информацией о отзывах
+    recent_orders_list = Order.objects.filter(user=request.user).prefetch_related('items__product', 'items').order_by('-created_at')[:5]
+    
+    # Проверяем статус отзывов для каждого заказа
+    recent_orders = []
+    for order in recent_orders_list:
+        all_reviewed = True
+        if order.status == 'completed':
+            for item in order.items.all():
+                if not Review.objects.filter(order=order, product=item.product).exists():
+                    all_reviewed = False
+                    break
+        else:
+            all_reviewed = False
+        
+        recent_orders.append({
+            'order': order,
+            'all_reviewed': all_reviewed
+        })
+    
+    return render(request, 'webapp/profile.html', {
+        'categories': categories,
+        'profile': profile,
+        'recent_orders': recent_orders,
+    })
+
+
+@login_required
 def order_history(request):
     """Просмотр истории заказов пользователя"""
     categories = Category.objects.all()

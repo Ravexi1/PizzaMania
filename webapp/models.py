@@ -80,6 +80,7 @@ class UserProfile(models.Model):
     street = models.CharField(max_length=200, verbose_name="Улица")
     entrance = models.CharField(max_length=10, blank=True, verbose_name="Подъезд")
     apartment = models.CharField(max_length=10, blank=True, verbose_name="Квартира")
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True, verbose_name="Аватар")
     
     class Meta:
         verbose_name = "Профиль пользователя"
