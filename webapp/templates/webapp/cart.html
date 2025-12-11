@@ -104,6 +104,52 @@
         return v.toString().replace(/\.?0+$/, '');
     }
 
+    function getTotalCartItems() {
+        let total = 0;
+        document.querySelectorAll('.cart-item').forEach(item => {
+            if (item.dataset.removed !== 'true') {
+                total += parseInt(item.querySelector('.quantity-input').value) || 0;
+            }
+        });
+        return total;
+    }
+    
+    function showToast(message, type = 'error') {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            container.className = 'fixed inset-x-0 top-6 z-[9999] flex flex-col items-center space-y-2';
+            document.body.prepend(container);
+        }
+        
+        const toast = document.createElement('div');
+        const bgColor = type === 'error' ? 'bg-red-600' : 'bg-green-600';
+        toast.className = `toast-enter px-6 py-4 rounded-lg shadow-lg text-white ${bgColor} max-w-md pointer-events-auto`;
+        
+        const inner = document.createElement('div');
+        inner.className = 'flex items-center justify-between';
+        
+        const msgSpan = document.createElement('span');
+        msgSpan.textContent = message;
+        
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'ml-4 text-white hover:text-gray-200';
+        closeBtn.textContent = '✕';
+        closeBtn.addEventListener('click', function() { toast.remove(); });
+        
+        inner.appendChild(msgSpan);
+        inner.appendChild(closeBtn);
+        toast.appendChild(inner);
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.classList.remove('toast-enter');
+            toast.classList.add('toast-exit');
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+    
     function recalcItem(item) {
         const qtyInput = item.querySelector('.quantity-input');
         const qty = Math.max(1, parseInt(qtyInput.value) || 1);
@@ -125,6 +171,11 @@
             total += unit * qty;
         });
         document.getElementById('total-price').textContent = formatPrice(total) + ' ₸';
+        
+        // Обновляем счетчик корзины в навбаре
+        if (window.updateCartCount) {
+            window.updateCartCount();
+        }
     }
 
     // Events: +/- buttons
@@ -132,7 +183,15 @@
         btn.addEventListener('click', function() {
             const item = this.closest('.cart-item');
             const input = item.querySelector('.quantity-input');
-            input.value = (parseInt(input.value) || 0) + 1;
+            const newValue = (parseInt(input.value) || 0) + 1;
+            
+            // Проверка лимита 100 товаров
+            if (getTotalCartItems() >= 100) {
+                showToast('Превышен лимит товаров в корзине! Максимум 100 товаров.', 'error');
+                return;
+            }
+            
+            input.value = newValue;
             recalcItem(item);
             recalcTotal();
             sendUpdate(item);
@@ -155,9 +214,31 @@
         input.addEventListener('change', function() {
             const item = this.closest('.cart-item');
             if (!item) return;
+            
+            // Проверка лимита 100 товаров
+            const newQty = parseInt(this.value) || 1;
+            const oldQty = parseInt(item.dataset.oldQty || 1);
+            const totalItems = getTotalCartItems();
+            const diff = newQty - oldQty;
+            
+            if (totalItems + diff > 100) {
+                showToast(`Превышен лимит товаров в корзине! Максимум 100 товаров. Сейчас в корзине: ${totalItems}`, 'error');
+                this.value = oldQty;
+                return;
+            }
+            
+            item.dataset.oldQty = newQty;
             recalcItem(item);
             recalcTotal();
             sendUpdate(item);
+        });
+        
+        // Сохраняем начальное значение
+        input.addEventListener('focus', function() {
+            const item = this.closest('.cart-item');
+            if (item) {
+                item.dataset.oldQty = this.value;
+            }
         });
     });
 

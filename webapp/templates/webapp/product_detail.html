@@ -277,6 +277,39 @@
                                     toast.classList.add('toast-exit');
                                     setTimeout(() => toast.remove(), 300);
                                 }, 2000);
+                                
+                                // Обновляем счетчик корзины
+                                if (window.updateCartCount) {
+                                    window.updateCartCount();
+                                }
+                            } else if (data.status === 'error') {
+                                // Показываем toast с ошибкой
+                                if (!container) {
+                                    const div = document.createElement('div');
+                                    div.id = 'toast-container';
+                                    div.className = 'fixed inset-x-0 top-6 z-[9999] flex flex-col items-center space-y-2';
+                                    document.body.prepend(div);
+                                }
+                                const toast = document.createElement('div');
+                                toast.className = 'toast-enter px-6 py-4 rounded-lg shadow-lg text-white bg-red-600 max-w-md pointer-events-auto';
+                                const inner = document.createElement('div');
+                                inner.className = 'flex items-center justify-between';
+                                const msgSpan = document.createElement('span');
+                                msgSpan.textContent = data.message || 'Ошибка добавления товара';
+                                const closeBtn = document.createElement('button');
+                                closeBtn.className = 'ml-4 text-white hover:text-gray-200';
+                                closeBtn.textContent = '✕';
+                                closeBtn.addEventListener('click', function(){ toast.remove(); });
+                                inner.appendChild(msgSpan);
+                                inner.appendChild(closeBtn);
+                                toast.appendChild(inner);
+                                document.getElementById('toast-container').appendChild(toast);
+                                
+                                setTimeout(() => {
+                                    toast.classList.remove('toast-enter');
+                                    toast.classList.add('toast-exit');
+                                    setTimeout(() => toast.remove(), 300);
+                                }, 4000);
                             }
                         })
                         .catch(err => console.error('Error:', err));

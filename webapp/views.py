@@ -375,6 +375,17 @@ def add_to_cart(request, pk):
         messages.error(request, 'Неверное количество товара!')
         return redirect('product_detail', pk=pk)
     
+    # Проверка лимита товаров в корзине
+    cart = get_cart(request)
+    total_items = sum(item.get('quantity', 0) for item in cart.values())
+    
+    if total_items + quantity > 100:
+        error_msg = f'Превышен лимит товаров в корзине! Максимум 100 товаров. Сейчас в корзине: {total_items}'
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': error_msg}, status=400)
+        messages.error(request, error_msg, extra_tags='toast')
+        return redirect('product_detail', pk=pk)
+    
     # Получаем выбранный размер и добавки
     size_id = request.POST.get('size_id')
     addon_ids = request.POST.getlist('addon_ids')
@@ -398,7 +409,6 @@ def add_to_cart(request, pk):
             price += float(addon.price)
             addons_info.append(addon.name)
     
-    cart = get_cart(request)
     product_id = str(pk)
     
     # Создаём уникальный ключ товара с размером и добавками
@@ -451,6 +461,12 @@ def cart_view(request):
         'cart_items': cart_items,
         'total': total
     })
+
+def cart_count_api(request):
+    """API endpoint для получения количества товаров в корзине"""
+    cart = get_cart(request)
+    total_items = sum(item.get('quantity', 0) for item in cart.values())
+    return JsonResponse({'count': total_items})
 
 @require_POST
 @csrf_protect
@@ -1104,6 +1120,13 @@ def chat_send(request, chat_id):
             allowed = True
     if not allowed:
         return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
+    
+    # Rate limiting для предотвращения спама
+    ip = get_client_ip(request)
+    user_key = f'{request.user.id}' if request.user.is_authenticated else ip
+    if rate_limit_exceeded(f'chat_send:{user_key}:{chat_id}', limit=10, period=60):
+        return JsonResponse({'status': 'error', 'message': 'Слишком много сообщений. Подождите немного.'}, status=429)
+    
     text = request.POST.get('text', '').strip()
     if not text:
         return JsonResponse({'status': 'error', 'message': 'Empty message'}, status=400)

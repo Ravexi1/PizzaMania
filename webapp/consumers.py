@@ -3,12 +3,15 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from .models import Chat, Message
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
+import time
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.chat_id = self.scope['url_route']['kwargs'].get('chat_id')
         self.group_name = f'chat_{self.chat_id}'
+        self.rate_limit_key = None  # will be set based on user
 
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
@@ -33,7 +36,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
             if not text:
                 return
 
-            # ТУТ ИЗМЕНЕНИЕ: без второй обёртки
+            # Rate limiting для WebSocket
+            user_key = str(user_id) if user_id else self.scope.get('client', ['unknown'])[0]
+            if await self._check_rate_limit(user_key):
+                await self.send(text_data=json.dumps({
+                    'error': 'Слишком много сообщений. Подождите немного.'
+                }))
+                return
+
             msg = await self._create_message(text, user_id, user_name)
 
             payload = {
@@ -44,6 +54,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'created_at': msg.created_at.isoformat(),
             }
             await self.channel_layer.group_send(self.group_name, payload)
+
+    @database_sync_to_async
+    def _check_rate_limit(self, user_key):
+        """Проверка rate limit: 10 сообщений в минуту"""
+        key = f"rl:ws_chat:{user_key}:{self.chat_id}"
+        try:
+            count = cache.get(key) or 0
+            if count >= 10:
+                return True
+            cache.set(key, count + 1, timeout=60)
+        except Exception:
+            pass
+        return False
 
     @database_sync_to_async
     def _create_message(self, text, user_id, user_name):

@@ -94,23 +94,8 @@
         if(storedToken) window.pizzamania_chat_token = storedToken;
         await loadMessages(currentChatId);
         connectWS(currentChatId);
-      } else {
-        // create new chat via AJAX
-        const csrftoken = getCookie('csrftoken');
-        fetch('{% url "chat_create" %}',{
-          method: 'POST',
-          credentials: 'same-origin',
-          headers: {'Content-Type':'application/x-www-form-urlencoded','X-CSRFToken':csrftoken,'X-Requested-With':'XMLHttpRequest'},
-          body: `text=`
-        }).then(r=>r.json()).then(data=>{
-          if(data.status==='ok'){
-            currentChatId = data.chat_id;
-            localStorage.setItem('pizzamania_chat_id', currentChatId);
-            if(data.token){ localStorage.setItem('pizzamania_chat_token', data.token); window.pizzamania_chat_token = data.token }
-            connectWS(currentChatId);
-          }
-        });
       }
+      // Чат будет создан при отправке первого сообщения
     }
   });
 
@@ -129,7 +114,42 @@
     const csrftoken = getCookie('csrftoken');
     const lang = window.location.pathname.split('/')[1] || '';
     const prefix = lang ? '/' + lang : '';
-    const url = currentChatId?`${prefix}/chat/${currentChatId}/send/`:`{% url 'chat_create' %}`;
+    
+    // Если чата нет, создаем его через chat_create и отправляем сообщение
+    if(!currentChatId){
+      const userId = widget.dataset.userId || null;
+      const userName = widget.dataset.userName || '';
+      const body = `text=${encodeURIComponent(text)}&name=${encodeURIComponent(userName || '')}`;
+      fetch('{% url "chat_create" %}',{
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {'Content-Type':'application/x-www-form-urlencoded','X-CSRFToken':csrftoken,'X-Requested-With':'XMLHttpRequest'},
+        body: body
+      }).then(r=>r.json()).then(data=>{
+        if(data.status==='ok'){
+          currentChatId = data.chat_id;
+          localStorage.setItem('pizzamania_chat_id', currentChatId);
+          if(data.token){ 
+            localStorage.setItem('pizzamania_chat_token', data.token); 
+            window.pizzamania_chat_token = data.token;
+          }
+          // Отобразить отправленное сообщение
+          const msg = document.createElement('div');
+          msg.className = 'mb-2 text-sm';
+          msg.innerHTML = `<div class="bg-red-50 text-gray-800 px-3 py-2 rounded">${escapeHtml(text)}</div>`;
+          messagesEl.appendChild(msg);
+          textInput.value = '';
+          scrollBottom();
+          // Подключиться к WebSocket для дальнейших сообщений
+          connectWS(currentChatId);
+        } else {
+          alert(data.message || 'Ошибка создания чата');
+        }
+      }).catch(err=>console.error(err));
+      return;
+    }
+    
+    const url = `${prefix}/chat/${currentChatId}/send/`;
     const body = `text=${encodeURIComponent(text)}`;
     console.debug('chat send:', url, body.slice(0,80));
     // If websocket is available, send over WS for real-time
@@ -152,14 +172,14 @@
       body: body
     }).then(r=>r.json()).then(data=>{
       if(data.status==='ok'){
-        if(data.chat_id){ currentChatId = data.chat_id; localStorage.setItem('pizzamania_chat_id', currentChatId); }
-        if(data.token){ localStorage.setItem('pizzamania_chat_token', data.token); window.pizzamania_chat_token = data.token }
         const msg = document.createElement('div');
         msg.className = 'mb-2 text-sm';
         msg.innerHTML = `<div class="bg-red-50 text-gray-800 px-3 py-2 rounded">${escapeHtml(text)}</div>`;
         messagesEl.appendChild(msg);
         textInput.value = '';
         scrollBottom();
+      } else if(data.status==='error'){
+        alert(data.message || 'Ошибка отправки сообщения');
       }
     }).catch(err=>console.error(err));
   }

@@ -16,7 +16,7 @@
         {% with chat=item.chat last=item.last operator_connected=item.operator_connected %}
         <div class="bg-white rounded-lg shadow p-4 flex justify-between items-center">
           <div>
-            <div class="font-semibold">Чат #{{ chat.id }} — {{ chat.user_name|default:chat.user.username }}</div>
+            <div class="font-semibold">Чат #{{ chat.id }} — {% if chat.user_name %}{{ chat.user_name }}{% elif chat.user %}{{ chat.user.username }}{% else %}Гость{% endif %}</div>
             <div class="text-sm text-gray-500">Оператор: {% if chat.operator and operator_connected %}{{ chat.operator.get_full_name|default:chat.operator.username }}{% else %}<span class="text-red-500">не подключён</span>{% endif %}</div>
             <div class="text-sm text-gray-600 mt-2">Последние сообщения: {{ last.text|default:'—' }}</div>
           </div>

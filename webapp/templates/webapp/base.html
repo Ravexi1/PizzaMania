@@ -156,6 +156,17 @@
             box-shadow: 0 0 0 1px rgba(0,0,0,0.06) inset;
             transition: left 0.08s linear, width 0.08s linear;
         }
+        
+        /* Cart icon animation */
+        #cart-icon-desktop, #cart-icon-mobile {
+            transition: transform 0.2s ease;
+        }
+
+        /* On hover, make the badge border slightly gray to match icon hover */
+        #cart-icon-desktop:hover #cart-count-desktop,
+        #cart-icon-mobile:hover #cart-count-mobile {
+            border-color: #f3f4f6; /* light gray (tailwind gray-100) */
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
@@ -457,7 +468,10 @@
             </div>
             <div class="flex items-center gap-3">
                 <a href="{% url 'order_history' %}" class="bg-white text-red-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100">{% trans "Мои заказы" %} <span class="ml-1">{{ user_orders_count|default:0 }}</span></a>
-                <a href="{% url 'cart_view' %}" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-600 hover:bg-gray-100"><i class="fa-solid fa-cart-shopping"></i></a>
+                <a href="{% url 'cart_view' %}" id="cart-icon-desktop" class="relative w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-600 hover:bg-gray-100 transition-transform">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span id="cart-count-desktop" class="hidden absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center border-2 border-white">0</span>
+                </a>
             </div>
         </div>
 
@@ -476,8 +490,9 @@
             <!-- custom scrollbar spans full mobile navbar width -->
             <div class="custom-scrollbar" aria-hidden="true"><div class="thumb"></div></div>
             <!-- Корзина -->
-            <a href="{% url 'cart_view' %}" class="w-9 h-9 bg-white rounded-full flex items-center justify-center text-red-600 hover:bg-gray-100 flex-shrink-0">
+            <a href="{% url 'cart_view' %}" id="cart-icon-mobile" class="relative w-9 h-9 bg-white rounded-full flex items-center justify-center text-red-600 hover:bg-gray-100 flex-shrink-0 transition-transform">
                 <i class="fa-solid fa-cart-shopping text-sm"></i>
+                <span id="cart-count-mobile" class="hidden absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-white">0</span>
             </a>
             <!-- Бургер меню -->
             <button id="mobile-menu-btn" class="flex flex-col gap-1.5 p-2 flex-shrink-0">
@@ -645,6 +660,62 @@
                 // ignore malformed URLs
             }
         });
+    </script>
+
+    <script>
+        // Функция для обновления счетчика корзины
+        function updateCartCount() {
+            fetch(window.location.pathname.split('/').slice(0, 2).join('/') + '/api/cart-count/')
+                .then(response => response.json())
+                .then(data => {
+                    const count = data.count || 0;
+                    const countDesktop = document.getElementById('cart-count-desktop');
+                    const countMobile = document.getElementById('cart-count-mobile');
+                    const cartIconDesktop = document.getElementById('cart-icon-desktop');
+                    const cartIconMobile = document.getElementById('cart-icon-mobile');
+                    
+                    // Обновляем десктоп
+                    if (countDesktop) {
+                        countDesktop.textContent = count;
+                        if (count > 0) {
+                            countDesktop.classList.remove('hidden');
+                            // Анимация
+                            if (cartIconDesktop) {
+                                cartIconDesktop.style.transform = 'scale(1.2)';
+                                setTimeout(() => {
+                                    cartIconDesktop.style.transform = 'scale(1)';
+                                }, 200);
+                            }
+                        } else {
+                            countDesktop.classList.add('hidden');
+                        }
+                    }
+                    
+                    // Обновляем мобильный
+                    if (countMobile) {
+                        countMobile.textContent = count;
+                        if (count > 0) {
+                            countMobile.classList.remove('hidden');
+                            // Анимация
+                            if (cartIconMobile) {
+                                cartIconMobile.style.transform = 'scale(1.2)';
+                                setTimeout(() => {
+                                    cartIconMobile.style.transform = 'scale(1)';
+                                }, 200);
+                            }
+                        } else {
+                            countMobile.classList.add('hidden');
+                        }
+                    }
+                })
+                .catch(err => console.error('Error updating cart count:', err));
+        }
+        
+        // Обновляем счетчик при загрузке страницы
+        document.addEventListener('DOMContentLoaded', updateCartCount);
+        
+        // Экспортируем функцию для использования на других страницах
+        window.updateCartCount = updateCartCount;
     </script>
 
     {% block content %}{% endblock %}
