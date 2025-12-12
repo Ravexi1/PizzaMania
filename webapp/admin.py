@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Product, Review, Order, OrderItem, UserProfile, Size, Addon
+from .models import Category, Product, Review, Order, OrderItem, UserProfile, Size, Addon, PromoCode, BonusTransaction
 
 
 @admin.register(Category)
@@ -45,11 +45,11 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['id', 'customer_first_name', 'customer_last_name', 'customer_phone', 'status', 'total_price', 'created_at']
+    list_display = ['id', 'customer_first_name', 'customer_last_name', 'customer_phone', 'status', 'total_price', 'promo_code', 'bonus_used', 'created_at']
     list_filter = ['status', 'created_at']
     search_fields = ['customer_first_name', 'customer_last_name', 'customer_phone', 'street']
     inlines = [OrderItemInline]
-    readonly_fields = ['created_at', 'user']
+    readonly_fields = ['created_at', 'user', 'bonus_earned']
     fieldsets = (
         ('Информация о клиенте', {
             'fields': ('user', 'customer_first_name', 'customer_last_name', 'customer_phone')
@@ -58,15 +58,16 @@ class OrderAdmin(admin.ModelAdmin):
             'fields': ('street', 'entrance', 'apartment', 'courier_comment')
         }),
         ('Информация о заказе', {
-            'fields': ('status', 'total_price', 'created_at')
+            'fields': ('status', 'total_price', 'delivery_price', 'promo_code', 'promo_discount', 'bonus_used', 'bonus_earned', 'created_at')
         }),
     )
 
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ['user', 'phone', 'street']
+    list_display = ['user', 'phone', 'street', 'bonus_balance']
     search_fields = ['user__username', 'user__first_name', 'user__last_name', 'phone']
+    readonly_fields = ['bonus_balance']
 
 
 @admin.register(Size)
@@ -80,3 +81,34 @@ class SizeAdmin(admin.ModelAdmin):
 class AddonAdmin(admin.ModelAdmin):
     list_display = ['name', 'price']
     search_fields = ['name']
+
+
+@admin.register(PromoCode)
+class PromoCodeAdmin(admin.ModelAdmin):
+    list_display = ['code', 'discount_type', 'discount_value', 'min_order_amount', 'is_active', 'valid_from', 'valid_to', 'used_count']
+    list_filter = ['discount_type', 'is_active', 'valid_from', 'valid_to']
+    search_fields = ['code']
+    readonly_fields = ['used_count', 'created_at']
+    fieldsets = (
+        ('Основная информация', {
+            'fields': ('code', 'discount_type', 'discount_value', 'min_order_amount')
+        }),
+        ('Бесплатный товар', {
+            'fields': ('free_product',),
+            'description': 'Применяется только если тип скидки "Бесплатный товар"'
+        }),
+        ('Период действия', {
+            'fields': ('is_active', 'valid_from', 'valid_to')
+        }),
+        ('Лимиты', {
+            'fields': ('usage_limit', 'used_count', 'created_at')
+        }),
+    )
+
+
+@admin.register(BonusTransaction)
+class BonusTransactionAdmin(admin.ModelAdmin):
+    list_display = ['user', 'transaction_type', 'amount', 'description', 'order', 'created_at']
+    list_filter = ['transaction_type', 'created_at']
+    search_fields = ['user__username', 'description']
+    readonly_fields = ['created_at']

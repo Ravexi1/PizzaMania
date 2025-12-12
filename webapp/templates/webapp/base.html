@@ -808,4 +808,62 @@
 
     {% block extra_scripts %}{% endblock %}
 </body>
+<!-- Floating delivery info bar -->
+<div id="delivery-info-bar" class="fixed bottom-4 left-0 right-0 z-40 hidden">
+    <div class="max-w-md mx-auto px-4">
+        <div class="bg-white shadow-lg border rounded-2xl p-3 flex items-center justify-between">
+            <div class="text-sm">
+                <span class="font-semibold text-gray-800">Доставка:</span>
+                <span id="delivery-price-text" class="ml-1 text-gray-700">—</span>
+            </div>
+            <div class="text-sm ml-4">
+                <span class="font-semibold text-gray-800">До бесплатной доставки:</span>
+                <span id="to-free-text" class="ml-1 text-green-700">—</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Порог бесплатной доставки и базовая стоимость доставки
+    const FREE_DELIVERY_THRESHOLD = 4000;
+
+    function calcDelivery(total) {
+        if (total >= 4000) return 0;
+        if (total >= 2500) return 1000;
+        if (total >= 1000) return 1400;
+        return 1700;
+    }
+
+    function updateDeliveryBar(total) {
+        const bar = document.getElementById('delivery-info-bar');
+        const deliveryText = document.getElementById('delivery-price-text');
+        const toFreeText = document.getElementById('to-free-text');
+        if (!bar || !deliveryText || !toFreeText) return;
+
+        // Hide on checkout page
+        const isCheckout = window.location.pathname.includes('/checkout');
+        if (isCheckout) {
+            bar.classList.add('hidden');
+            return;
+        }
+
+        const toFree = Math.max(0, FREE_DELIVERY_THRESHOLD - total);
+        const delivery = calcDelivery(total);
+
+        deliveryText.textContent = delivery > 0 ? `${delivery.toFixed(0)} ₸` : 'Бесплатно';
+        toFreeText.textContent = toFree > 0 ? `${toFree.toFixed(0)} ₸` : '0 ₸';
+
+        // Show bar only if cart has items
+        bar.classList.toggle('hidden', total <= 0);
+    }
+
+    // Fetch cart total from API
+    (function fetchCartTotal() {
+        fetch('{% url "cart_total_api" %}')
+            .then(r => r.json())
+            .then(data => updateDeliveryBar(Number(data.total || 0)))
+            .catch(() => {});
+    })();
+</script>
 </html>

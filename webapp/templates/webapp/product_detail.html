@@ -360,6 +360,28 @@
                 {% endif %}
 
             <!-- Список отзывов -->
+            <div class="mb-6">
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <a href="?filter=all{% if order_id %}&order_id={{ order_id }}{% endif %}" 
+                       class="px-4 py-2 rounded-lg text-sm font-medium transition {% if request.GET.filter == 'all' or not request.GET.filter %}bg-red-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
+                        {% trans "Все отзывы" %}
+                    </a>
+                    <a href="?filter=with_photo{% if order_id %}&order_id={{ order_id }}{% endif %}" 
+                       class="px-4 py-2 rounded-lg text-sm font-medium transition {% if request.GET.filter == 'with_photo' %}bg-red-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
+                        📷 {% trans "С фото" %}
+                    </a>
+                    <a href="?filter=positive{% if order_id %}&order_id={{ order_id }}{% endif %}" 
+                       class="px-4 py-2 rounded-lg text-sm font-medium transition {% if request.GET.filter == 'positive' %}bg-red-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
+                        👍 {% trans "Положительные" %}
+                    </a>
+                    <a href="?filter=negative{% if order_id %}&order_id={{ order_id }}{% endif %}" 
+                       class="px-4 py-2 rounded-lg text-sm font-medium transition {% if request.GET.filter == 'negative' %}bg-red-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
+                        👎 {% trans "Отрицательные" %}
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Список отзывов -->
             <div class="space-y-3 md:space-y-4">
                 {% for review in reviews %}
                 <div class="border rounded-lg p-4 md:p-6{% if review.admin_comment %} bg-blue-50{% endif %}">

@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User
+from decimal import Decimal
 
 
 class Category(models.Model):
@@ -81,6 +82,7 @@ class UserProfile(models.Model):
     entrance = models.CharField(max_length=10, blank=True, verbose_name="Подъезд")
     apartment = models.CharField(max_length=10, blank=True, verbose_name="Квартира")
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True, verbose_name="Аватар")
+    bonus_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Баланс бонусов")
     
     class Meta:
         verbose_name = "Профиль пользователя"
@@ -109,6 +111,10 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new', verbose_name="Статус")
     total_price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Общая сумма")
     delivery_price = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Стоимость доставки")
+    promo_code = models.ForeignKey('PromoCode', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Промокод")
+    promo_discount = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Скидка по промокоду")
+    bonus_used = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Использовано бонусов")
+    bonus_earned = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Начислено бонусов")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     
     class Meta:
@@ -229,3 +235,90 @@ class Message(models.Model):
     def __str__(self):
         who = self.sender_name or (self.sender_user.get_username() if self.sender_user else 'Система')
         return f"[{self.chat.id}] {who}: {self.text[:40]}"
+
+
+class PromoCode(models.Model):
+    DISCOUNT_TYPE_CHOICES = [
+        ('percentage', 'Процент скидки'),
+        ('fixed', 'Фиксированная скидка'),
+        ('free_product', 'Бесплатный товар'),
+    ]
+    
+    code = models.CharField(max_length=50, unique=True, verbose_name="Код промокода")
+    discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPE_CHOICES, verbose_name="Тип скидки")
+    discount_value = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Значение скидки", help_text="Процент или сумма")
+    min_order_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Минимальная сумма заказа")
+    free_product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Бесплатный товар")
+    is_active = models.BooleanField(default=True, verbose_name="Активен")
+    valid_from = models.DateTimeField(verbose_name="Действует с")
+    valid_to = models.DateTimeField(verbose_name="Действует до")
+    usage_limit = models.PositiveIntegerField(null=True, blank=True, verbose_name="Лимит использований")
+    used_count = models.PositiveIntegerField(default=0, verbose_name="Использовано раз")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    
+    class Meta:
+        verbose_name = "Промокод"
+        verbose_name_plural = "Промокоды"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.code} ({self.get_discount_type_display()})"
+    
+    def is_valid(self):
+        """Проверяет, действителен ли промокод."""
+        from django.utils import timezone
+        now = timezone.now()
+        
+        if not self.is_active:
+            return False, "Промокод неактивен"
+        
+        if now < self.valid_from:
+            return False, "Промокод еще не активен"
+        
+        if now > self.valid_to:
+            return False, "Срок действия промокода истек"
+        
+        if self.usage_limit and self.used_count >= self.usage_limit:
+            return False, "Промокод исчерпан"
+        
+        return True, "OK"
+    
+    def apply_discount(self, order_total):
+        """Вычисляет скидку для заказа."""
+        if order_total < self.min_order_amount:
+            return Decimal('0.00')
+        
+        if self.discount_type == 'percentage':
+            discount = order_total * (self.discount_value / 100)
+            return min(discount, order_total)
+        elif self.discount_type == 'fixed':
+            return min(self.discount_value, order_total)
+        elif self.discount_type == 'free_product':
+            # Для бесплатного товара возвращаем 0, обработка будет в checkout
+            return Decimal('0.00')
+        
+        return Decimal('0.00')
+
+
+class BonusTransaction(models.Model):
+    TRANSACTION_TYPE_CHOICES = [
+        ('earned', 'Начислено'),
+        ('spent', 'Потрачено'),
+        ('expired', 'Списано (истек срок)'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bonus_transactions', verbose_name="Пользователь")
+    order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Заказ")
+    transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPE_CHOICES, verbose_name="Тип операции")
+    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Сумма")
+    description = models.CharField(max_length=200, verbose_name="Описание")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата")
+    
+    class Meta:
+        verbose_name = "Транзакция бонусов"
+        verbose_name_plural = "Транзакции бонусов"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.get_transaction_type_display()}: {self.amount}"
+

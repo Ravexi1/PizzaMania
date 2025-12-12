@@ -95,6 +95,43 @@
                         <textarea name="courier_comment" rows="4" placeholder="{% trans "Например: звоните перед приездом, оставить в подъезде и т.д." %}" class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-red-500 focus:outline-none transition text-gray-900 resize-none"></textarea>
                     </div>
 
+                    <!-- Промокод -->
+                    <div class="mb-8">
+                        <label class="block text-sm font-semibold mb-2 text-gray-700">{% trans "Промокод" %}</label>
+                        <div class="flex gap-2 flex-col sm:flex-row">
+                            <input type="text" name="promo_code" id="promo-code-input" placeholder="{% trans "Введите промокод" %}" class="flex-1 border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-red-500 focus:outline-none transition text-gray-900">
+                            <button type="button" id="check-promo-btn" class="w-full sm:w-auto bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition font-semibold">
+                                {% trans "Проверить" %}
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">{% trans "Если у вас есть промокод, введите его здесь" %}</p>
+                        <div id="promo-message" class="mt-2 hidden"></div>
+                    </div>
+
+                    <!-- Использование бонусов -->
+                    {% if user.is_authenticated and bonus_balance > 0 %}
+                    <div class="mb-8">
+                        <div class="border rounded-xl p-4 md:p-5 bg-gradient-to-r from-yellow-50 to-yellow-100">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-xs font-semibold text-yellow-800">{% trans "Ваш баланс бонусов" %}</div>
+                                    <div class="text-2xl font-bold text-yellow-700">{{ bonus_balance|floatformat:0 }} ₸</div>
+                                </div>
+                                <!-- Modern toggle switch -->
+                                <label class="inline-flex items-center cursor-pointer">
+                                  <span class="mr-3 text-sm text-gray-700">{% trans "Использовать бонусы" %}</span>
+                                  <div class="relative inline-block">
+                                    <input type="checkbox" name="use_bonuses" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 rounded-full peer-checked:bg-yellow-500 transition-colors duration-300 ease-out"></div>
+                                    <div class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300 ease-out peer-checked:translate-x-5"></div>
+                                  </div>
+                                </label>
+                            </div>
+                            <div class="mt-2 text-xs text-gray-700">{% trans "Максимум 30% от суммы можно оплатить бонусами" %}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <!-- Способ оплаты -->
                     <div class="mb-8">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">{% trans "Способ оплаты" %}</h3>
@@ -156,6 +193,10 @@
                         <span class="font-semibold">{% trans "Бесплатно" %}</span>
                         {% endif %}
                     </div>
+                    <div class="flex justify-between text-gray-700" id="bonuses-row" style="display:none;">
+                        <span class="font-semibold">{% trans "Бонусы:" %}</span>
+                        <span class="font-semibold text-yellow-600" id="bonuses-used-text">-0 ₸</span>
+                    </div>
                     <div class="flex justify-between bg-red-50 p-3 rounded-lg mt-4">
                         <span class="font-bold text-gray-900 text-lg">{% trans "Итого:" %}</span>
                         <span class="font-bold text-red-600 text-lg" id="total-price">{{ total|add:delivery_price|floatformat:0 }} ₸</span>
@@ -167,6 +208,7 @@
                     <p class="text-xs text-blue-900">
                         <span class="font-semibold">{% trans "ℹ️ Информация:" %}</span><br>
                         {% trans "Время доставки 40-60 минут. Курьер позвонит за 5 минут до приезда." %}
+                        <br><span class="font-semibold">{% trans "Кэшбэк:" %}</span> {% trans "Вы получите 5% от суммы заказа в виде бонусов" %}
                     </p>
                 </div>
             </div>
@@ -193,6 +235,100 @@
             btn.classList.toggle('shadow-lg', isOpen);
         });
     }
+
+    // Проверка промокода
+    const checkPromoBtn = document.getElementById('check-promo-btn');
+    const promoInput = document.getElementById('promo-code-input');
+    const promoMessage = document.getElementById('promo-message');
+
+    if (checkPromoBtn && promoInput) {
+        checkPromoBtn.addEventListener('click', function() {
+            const promoCode = promoInput.value.trim();
+            
+            if (!promoCode) {
+                showPromoMessage('error', '{% trans "Введите промокод" %}');
+                return;
+            }
+
+            // Получаем CSRF токен
+            function getCsrfToken() {
+                const cookieValue = document.cookie
+                    .split('; ')
+                    .find(row => row.startsWith('csrftoken='))
+                    ?.split('=')[1];
+                return cookieValue;
+            }
+
+            checkPromoBtn.disabled = true;
+            checkPromoBtn.textContent = '{% trans "Проверка..." %}';
+
+            fetch('{% url "check_promo_code" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: `promo_code=${encodeURIComponent(promoCode)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showPromoMessage('success', data.message);
+                } else {
+                    showPromoMessage('error', data.message);
+                }
+            })
+            .catch(error => {
+                showPromoMessage('error', '{% trans "Ошибка проверки промокода" %}');
+            })
+            .finally(() => {
+                checkPromoBtn.disabled = false;
+                checkPromoBtn.textContent = '{% trans "Проверить" %}';
+            });
+        });
+    }
+
+    function showPromoMessage(type, message) {
+        if (!promoMessage) return;
+        
+        promoMessage.classList.remove('hidden', 'text-red-600', 'text-green-600', 'bg-red-50', 'bg-green-50');
+        
+        if (type === 'success') {
+            promoMessage.classList.add('text-green-600', 'bg-green-50');
+        } else {
+            promoMessage.classList.add('text-red-600', 'bg-red-50');
+        }
+        
+        promoMessage.classList.add('p-3', 'rounded-lg', 'text-sm', 'font-semibold');
+        promoMessage.textContent = message;
+    }
+
+    // Bonuses UI: update sidebar totals when toggle is on
+    (function(){
+        const toggle = document.querySelector('input[name="use_bonuses"]');
+        const subtotalEl = document.getElementById('subtotal-price');
+        const deliveryEl = document.getElementById('total-price');
+        const bonusesRow = document.getElementById('bonuses-row');
+        const bonusesText = document.getElementById('bonuses-used-text');
+        if (!toggle || !subtotalEl || !deliveryEl || !bonusesRow || !bonusesText) return;
+
+        function parsePrice(el){
+            return Number((el.textContent||'0').replace(/[^0-9.]/g,'')||0);
+        }
+        function format(n){ return `${Math.round(n)} ₸`; }
+
+        toggle.addEventListener('change', function(){
+            const subtotal = parsePrice(subtotalEl);
+            const deliveryPart = {{ delivery_price|floatformat:0 }};
+            const maxByRule = subtotal * 0.3; // 30% rule
+            const available = {{ bonus_balance|floatformat:0 }};
+            const bonusesUsed = Math.min(maxByRule, available);
+            const total = subtotal + deliveryPart - (this.checked ? bonusesUsed : 0);
+            bonusesRow.style.display = this.checked ? '' : 'none';
+            bonusesText.textContent = `-${Math.round(bonusesUsed)} ₸`;
+            document.getElementById('total-price').textContent = format(total);
+        });
+    })();
 </script>
 
 {% endblock %}

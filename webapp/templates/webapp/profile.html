@@ -39,6 +39,11 @@
                     <div class="text-sm text-red-100 mb-1">{% trans "Зарегистрирован" %}</div>
                     <div class="font-semibold">{{ user.date_joined|date:"d.m.Y" }}</div>
                 </div>
+                <div class="border-t border-white border-opacity-20 pt-4 mt-4">
+                    <div class="text-sm text-red-100 mb-1">{% trans "Бонусы" %} 🎁</div>
+                    <div class="font-bold text-2xl">{{ profile.bonus_balance|floatformat:0 }} ₸</div>
+                    <p class="text-xs text-red-100 mt-1">{% trans "Используйте бонусы при оформлении заказа" %}</p>
+                </div>
             </div>
 
             <!-- Статистика (мобильная) -->
@@ -285,6 +290,11 @@
                 <div class="border-t border-white border-opacity-20 mt-4 pt-4">
                     <div class="text-sm text-red-100 mb-1">{% trans "Зарегистрирован" %}</div>
                     <div class="font-semibold">{{ user.date_joined|date:"d.m.Y" }}</div>
+                </div>
+                <div class="border-t border-white border-opacity-20 mt-4 pt-4">
+                    <div class="text-sm text-red-100 mb-1">{% trans "Бонусы" %} 🎁</div>
+                    <div class="font-bold text-2xl">{{ profile.bonus_balance|floatformat:0 }} ₸</div>
+                    <p class="text-xs text-red-100 mt-1">{% trans "Используйте бонусы при оформлении заказа" %}</p>
                 </div>
             </div>
 

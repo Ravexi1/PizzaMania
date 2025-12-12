@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
-from .models import Product, Category, Review, Order, OrderItem, UserProfile, Chat, Message, Size, Addon
+from .models import Product, Category, Review, Order, OrderItem, UserProfile, Chat, Message, Size, Addon, PromoCode, BonusTransaction
 import uuid
 from django.views.decorators.http import require_POST
 import re
@@ -186,7 +186,19 @@ def jobs(request):
 
 def product_detail(request, pk):
     product = get_object_or_404(Product, pk=pk)
+    
+    # Получаем параметры фильтрации
+    filter_type = request.GET.get('filter', 'all')
+    
+    # Фильтрация отзывов
     reviews = product.reviews.all()
+    if filter_type == 'with_photo':
+        reviews = reviews.exclude(photo='')
+    elif filter_type == 'positive':
+        reviews = reviews.filter(rating__gte=4)
+    elif filter_type == 'negative':
+        reviews = reviews.filter(rating__lte=2)
+    
     categories = Category.objects.all()
     order_id = request.GET.get('order_id')
     user_has_order_with_product = False
@@ -468,6 +480,12 @@ def cart_count_api(request):
     total_items = sum(item.get('quantity', 0) for item in cart.values())
     return JsonResponse({'count': total_items})
 
+def cart_total_api(request):
+    """API endpoint для получения текущей суммы корзины."""
+    cart = get_cart(request)
+    cart_items, total_price = build_cart_items(cart)
+    return JsonResponse({'total': float(total_price)})
+
 @require_POST
 @csrf_protect
 def remove_from_cart(request, pk):
@@ -690,6 +708,7 @@ def checkout(request):
         'last_name': request.user.last_name,
     }
     
+    bonus_balance = Decimal('0.00')
     if hasattr(request.user, 'profile'):
         profile = request.user.profile
         user_data.update({
@@ -698,6 +717,13 @@ def checkout(request):
             'entrance': profile.entrance,
             'apartment': profile.apartment,
         })
+        bonus_balance = profile.bonus_balance
+    
+    # Обработка промокода (для GET-запросов)
+    promo_message = None
+    promo_discount = Decimal('0.00')
+    promo_code_obj = None
+    free_product = None
     
     if request.method == 'POST':
         first_name = request.POST.get('first_name')
@@ -818,9 +844,93 @@ def checkout(request):
         else:
             delivery_price = Decimal('0')
 
+        # Обработка промокода
+        promo_code_input = request.POST.get('promo_code', '').strip()
+        promo_discount = Decimal('0.00')
+        promo_code_obj = None
+        
+        if promo_code_input:
+            try:
+                promo_code_obj = PromoCode.objects.get(code=promo_code_input)
+                is_valid, message = promo_code_obj.is_valid()
+                
+                # Проверка: пользователь может применить конкретный промокод только 1 раз
+                if request.user.is_authenticated and Order.objects.filter(user=request.user, promo_code=promo_code_obj).exists():
+                    messages.warning(request, 'Вы уже использовали этот промокод ранее')
+                    is_valid = False
+
+                if is_valid:
+                    if total_price >= promo_code_obj.min_order_amount:
+                        if promo_code_obj.discount_type == 'free_product' and promo_code_obj.free_product:
+                            # Добавляем бесплатный товар в заказ
+                            free_size = promo_code_obj.free_product.sizes.first()
+                            OrderItem.objects.create(
+                                order=order,
+                                product=promo_code_obj.free_product,
+                                quantity=1,
+                                price=Decimal('0.00'),
+                                size=free_size,
+                                addons_info=[]
+                            )
+                        else:
+                            promo_discount = promo_code_obj.apply_discount(total_price)
+                        
+                        promo_code_obj.used_count += 1
+                        promo_code_obj.save()
+                    else:
+                        messages.warning(request, f'Минимальная сумма заказа для промокода: {promo_code_obj.min_order_amount} ₸')
+                else:
+                    messages.warning(request, f'Промокод недействителен: {message}')
+            except PromoCode.DoesNotExist:
+                messages.warning(request, 'Промокод не найден')
+
+        # Обработка бонусов
+        bonus_used = Decimal('0.00')
+        if request.user.is_authenticated and hasattr(request.user, 'profile'):
+            use_bonuses = request.POST.get('use_bonuses') == 'on'
+            if use_bonuses:
+                profile = request.user.profile
+                max_bonus_usage = min(profile.bonus_balance, total_price * Decimal('0.30'))  # Максимум 30% от суммы
+                bonus_used = max_bonus_usage
+                
+                if bonus_used > 0:
+                    profile.bonus_balance -= bonus_used
+                    profile.save()
+                    
+                    # Записываем транзакцию списания бонусов
+                    BonusTransaction.objects.create(
+                        user=request.user,
+                        order=order,
+                        transaction_type='spent',
+                        amount=bonus_used,
+                        description=f'Использовано при оплате заказа #{order.id}'
+                    )
+
+        # Начисление бонусов (5% от суммы заказа)
+        bonus_earned = Decimal('0.00')
+        if request.user.is_authenticated and hasattr(request.user, 'profile'):
+            bonus_earned = (total_price - promo_discount - bonus_used) * Decimal('0.05')
+            profile = request.user.profile
+            profile.bonus_balance += bonus_earned
+            profile.save()
+            
+            # Записываем транзакцию начисления бонусов
+            BonusTransaction.objects.create(
+                user=request.user,
+                order=order,
+                transaction_type='earned',
+                amount=bonus_earned,
+                description=f'Начислено за заказ #{order.id}'
+            )
+
         # Обновим order итоговыми суммами
-        order.total_price = total_price
+        final_total = total_price + delivery_price - promo_discount - bonus_used
+        order.total_price = final_total
         order.delivery_price = delivery_price
+        order.promo_code = promo_code_obj
+        order.promo_discount = promo_discount
+        order.bonus_used = bonus_used
+        order.bonus_earned = bonus_earned
         order.save()
 
         # Очистка корзины
@@ -835,8 +945,61 @@ def checkout(request):
         'user_data': user_data,
         'cart_items': cart_items,
         'total': total_price,
-        'delivery_price': delivery_price
+        'delivery_price': delivery_price,
+        'bonus_balance': bonus_balance
     })
+
+
+@require_POST
+def check_promo_code(request):
+    """API для проверки промокода"""
+    promo_code = request.POST.get('promo_code', '').strip()
+    cart = get_cart(request)
+    cart_items, total_price = build_cart_items(cart)
+    
+    # Конвертируем в Decimal для корректных вычислений
+    total_price = Decimal(str(total_price))
+    
+    if not promo_code:
+        return JsonResponse({'status': 'error', 'message': 'Введите промокод'})
+    
+    try:
+        promo = PromoCode.objects.get(code=promo_code)
+        is_valid, message = promo.is_valid()
+        
+        # Ограничение: один и тот же промокод можно применить пользователем только 1 раз
+        if request.user.is_authenticated:
+            if Order.objects.filter(user=request.user, promo_code=promo).exists():
+                return JsonResponse({'status': 'error', 'message': 'Вы уже использовали этот промокод ранее'})
+
+        if not is_valid:
+            return JsonResponse({'status': 'error', 'message': message})
+        
+        if total_price < promo.min_order_amount:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Минимальная сумма заказа: {promo.min_order_amount} ₸'
+            })
+        
+        # Рассчитываем скидку
+        if promo.discount_type == 'free_product' and promo.free_product:
+            return JsonResponse({
+                'status': 'success',
+                'message': f'🎁 Вы получите бесплатно: {promo.free_product.name}',
+                'discount': 0,
+                'discount_type': 'free_product'
+            })
+        else:
+            discount = promo.apply_discount(total_price)
+            return JsonResponse({
+                'status': 'success',
+                'message': f'✓ Промокод применен! Скидка: {discount} ₸',
+                'discount': float(discount),
+                'discount_type': promo.discount_type
+            })
+    
+    except PromoCode.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Промокод не найден'})
 
 
 @login_required
@@ -926,7 +1089,7 @@ def profile(request):
 
 @login_required
 def order_history(request):
-    """Просмотр истории заказов пользователя"""
+    """Просмотр истории заказов пользователя с корректными суммами товаров/доставки/скидок."""
     categories = Category.objects.all()
     orders = Order.objects.filter(user=request.user).prefetch_related('items__product')
 
@@ -938,18 +1101,15 @@ def order_history(request):
             if not Review.objects.filter(order=order, product=item.product).exists():
                 all_reviewed = False
                 break
-        # Расчет стоимости доставки по правилам
-        items_total = float(order.total_price or 0)
-        if items_total < 1000:
-            delivery_price = 1700
-        elif items_total < 2500:
-            delivery_price = 1400
-        elif items_total < 4000:
-            delivery_price = 1000
-        else:
-            delivery_price = 0
 
-        grand_total = items_total + delivery_price
+        # Корректный расчет: сумма товаров = сумма по позициям, доставка = из order.delivery_price,
+        # скидка по промокоду и бонусы учитываются отдельно.
+        items_total = float(sum((it.price or 0) * it.quantity for it in order.items.all()))
+        delivery_price = float(order.delivery_price or 0)
+        promo_discount = float(order.promo_discount or 0)
+        bonus_used = float(order.bonus_used or 0)
+
+        grand_total = items_total + delivery_price - promo_discount - bonus_used
 
         orders_info.append({
             'order': order,

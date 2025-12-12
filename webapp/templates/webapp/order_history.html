@@ -55,6 +55,15 @@
                 <div class="text-lg md:text-xl font-semibold space-y-1">
                     <div>{% trans "Товары" %}: <span class="text-gray-800 font-medium">{{ info.items_total|floatformat:0 }} ₸</span></div>
                     <div>{% trans "Доставка" %}: <span class="text-gray-800 font-medium">{% if info.delivery_price > 0 %}{{ info.delivery_price|floatformat:0 }} ₸{% else %}{% trans "Бесплатно" %}{% endif %}</span></div>
+                    {% if order.promo_discount > 0 %}
+                    <div class="text-green-600">{% trans "Скидка" %}: <span class="font-medium">-{{ order.promo_discount|floatformat:0 }} ₸</span></div>
+                    {% endif %}
+                    {% if order.bonus_used > 0 %}
+                    <div class="text-yellow-600">{% trans "Бонусы" %}: <span class="font-medium">-{{ order.bonus_used|floatformat:0 }} ₸</span></div>
+                    {% endif %}
+                    {% if order.bonus_earned > 0 %}
+                    <div class="text-blue-600 text-sm">🎁 {% trans "Начислено бонусов" %}: <span class="font-medium">+{{ order.bonus_earned|floatformat:0 }} ₸</span></div>
+                    {% endif %}
                     <div class="font-bold mt-1">{% trans "Итого" %}: <span class="text-red-600">{{ info.grand_total|floatformat:0 }} ₸</span></div>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-2 md:gap-3">

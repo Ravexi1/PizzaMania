@@ -38,6 +38,8 @@ urlpatterns = [
     
     # Checkout
     path('checkout/', views.checkout, name='checkout'),
+    path('api/check-promo/', views.check_promo_code, name='check_promo_code'),
+    path('api/cart-total/', views.cart_total_api, name='cart_total_api'),
     
     # Support / Chat
     path('support/', views.support, name='support'),
