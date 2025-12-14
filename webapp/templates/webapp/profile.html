@@ -73,7 +73,7 @@
                 <div class="space-y-2">
                     <a href="{% url 'order_history' %}" class="block px-4 py-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition text-sm">
                         <i class="fa-solid fa-list mr-2 text-gray-600"></i>
-                        {% trans "Все заказы" %}
+                        {% trans "Все заказы" %} ({{ user_orders_count|default:0 }})
                     </a>
                     <a href="{% url 'home' %}" class="block px-4 py-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition text-sm">
                         <i class="fa-solid fa-pizza-slice mr-2 text-gray-600"></i>
@@ -333,7 +333,7 @@
                 <div class="space-y-2">
                     <a href="{% url 'order_history' %}" class="block px-4 py-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition text-sm">
                         <i class="fa-solid fa-list mr-2 text-gray-600"></i>
-                        {% trans "Все заказы" %}
+                        {% trans "Все заказы" %} ({{ user_orders_count|default:0 }})
                     </a>
                     <a href="{% url 'home' %}" class="block px-4 py-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition text-sm">
                         <i class="fa-solid fa-pizza-slice mr-2 text-gray-600"></i>

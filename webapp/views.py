@@ -199,6 +199,15 @@ def product_detail(request, pk):
     elif filter_type == 'negative':
         reviews = reviews.filter(rating__lte=2)
     
+    # Подсчет количества отзывов по категориям
+    all_reviews = product.reviews.all()
+    reviews_count = {
+        'all': all_reviews.count(),
+        'with_photo': all_reviews.exclude(photo='').count(),
+        'positive': all_reviews.filter(rating__gte=4).count(),
+        'negative': all_reviews.filter(rating__lte=2).count(),
+    }
+    
     categories = Category.objects.all()
     order_id = request.GET.get('order_id')
     user_has_order_with_product = False
@@ -273,9 +282,61 @@ def product_detail(request, pk):
     return render(request, 'webapp/product_detail.html', {
         'product': product,
         'reviews': reviews,
+        'reviews_count': reviews_count,
         'categories': categories,
         'order_id': order_id,
         'user_has_order_with_product': user_has_order_with_product
+    })
+
+
+def filter_reviews_api(request, pk):
+    """API endpoint для фильтрации отзывов без перезагрузки страницы"""
+    product = get_object_or_404(Product, pk=pk)
+    filter_type = request.GET.get('filter', 'all')
+    order_id = request.GET.get('order_id', '')
+    
+    # Фильтрация отзывов
+    reviews = product.reviews.all()
+    if filter_type == 'with_photo':
+        reviews = reviews.exclude(photo='')
+    elif filter_type == 'positive':
+        reviews = reviews.filter(rating__gte=4)
+    elif filter_type == 'negative':
+        reviews = reviews.filter(rating__lte=2)
+    
+    # Подсчет количества отзывов по категориям
+    all_reviews = product.reviews.all()
+    reviews_count = {
+        'all': all_reviews.count(),
+        'with_photo': all_reviews.exclude(photo='').count(),
+        'positive': all_reviews.filter(rating__gte=4).count(),
+        'negative': all_reviews.filter(rating__lte=2).count(),
+    }
+    
+    # Формируем список отзывов
+    reviews_data = []
+    for review in reviews:
+        avatar_url = ''
+        if hasattr(review.user, 'profile') and review.user.profile.avatar:
+            avatar_url = review.user.profile.avatar.url
+        
+        reviews_data.append({
+            'id': review.id,
+            'name': review.name,
+            'rating': review.rating,
+            'comment': review.comment,
+            'photo_url': review.photo.url if review.photo else '',
+            'avatar_url': avatar_url,
+            'created_at': review.created_at.strftime('%d.%m.%Y'),
+            'admin_comment': review.admin_comment,
+            'user_is_staff': request.user.is_staff if request.user.is_authenticated else False,
+        })
+    
+    return JsonResponse({
+        'status': 'success',
+        'reviews': reviews_data,
+        'reviews_count': reviews_count,
+        'has_reviews': len(reviews_data) > 0,
     })
 
 

@@ -282,6 +282,12 @@
                                 if (window.updateCartCount) {
                                     window.updateCartCount();
                                 }
+                                
+                                // Обновляем панель доставки
+                                if (window.updateDeliveryPanel) {
+                                    window.updateDeliveryPanel();
+                                }
+                                
                             } else if (data.status === 'error') {
                                 // Показываем toast с ошибкой
                                 if (!container) {
@@ -361,28 +367,28 @@
 
             <!-- Список отзывов -->
             <div class="mb-6">
-                <div class="flex flex-wrap gap-2 mb-4">
-                    <a href="?filter=all{% if order_id %}&order_id={{ order_id }}{% endif %}" 
-                       class="px-4 py-2 rounded-lg text-sm font-medium transition {% if request.GET.filter == 'all' or not request.GET.filter %}bg-red-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
-                        {% trans "Все отзывы" %}
-                    </a>
-                    <a href="?filter=with_photo{% if order_id %}&order_id={{ order_id }}{% endif %}" 
-                       class="px-4 py-2 rounded-lg text-sm font-medium transition {% if request.GET.filter == 'with_photo' %}bg-red-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
-                        📷 {% trans "С фото" %}
-                    </a>
-                    <a href="?filter=positive{% if order_id %}&order_id={{ order_id }}{% endif %}" 
-                       class="px-4 py-2 rounded-lg text-sm font-medium transition {% if request.GET.filter == 'positive' %}bg-red-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
-                        👍 {% trans "Положительные" %}
-                    </a>
-                    <a href="?filter=negative{% if order_id %}&order_id={{ order_id }}{% endif %}" 
-                       class="px-4 py-2 rounded-lg text-sm font-medium transition {% if request.GET.filter == 'negative' %}bg-red-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
-                        👎 {% trans "Отрицательные" %}
-                    </a>
+                <div class="flex flex-wrap gap-2 mb-4" id="reviews-filter-buttons">
+                    <button data-filter="all" 
+                       class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition bg-red-600 text-white">
+                        {% trans "Все отзывы" %} (<span class="count-all">{{ reviews_count.all }}</span>)
+                    </button>
+                    <button data-filter="with_photo" 
+                       class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition bg-gray-200 text-gray-700 hover:bg-gray-300">
+                        {% trans "С фото" %} (<span class="count-with-photo">{{ reviews_count.with_photo }}</span>)
+                    </button>
+                    <button data-filter="positive" 
+                       class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition bg-gray-200 text-gray-700 hover:bg-gray-300">
+                        {% trans "Положительные" %} (<span class="count-positive">{{ reviews_count.positive }}</span>)
+                    </button>
+                    <button data-filter="negative" 
+                       class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition bg-gray-200 text-gray-700 hover:bg-gray-300">
+                        {% trans "Отрицательные" %} (<span class="count-negative">{{ reviews_count.negative }}</span>)
+                    </button>
                 </div>
             </div>
             
             <!-- Список отзывов -->
-            <div class="space-y-3 md:space-y-4">
+            <div class="space-y-3 md:space-y-4" id="reviews-list">
                 {% for review in reviews %}
                 <div class="border rounded-lg p-4 md:p-6{% if review.admin_comment %} bg-blue-50{% endif %}">
                     <div class="flex justify-between items-start mb-3 gap-2">
@@ -453,6 +459,138 @@
     </div>
 
     <script>
+        // AJAX фильтрация отзывов
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            const reviewsList = document.getElementById('reviews-list');
+            const productId = {{ product.pk }};
+            const orderIdParam = '{{ order_id|default:"" }}';
+            
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const filter = this.getAttribute('data-filter');
+                    
+                    // Обновляем стили кнопок
+                    filterButtons.forEach(btn => {
+                        btn.classList.remove('bg-red-600', 'text-white');
+                        btn.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                    });
+                    this.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                    this.classList.add('bg-red-600', 'text-white');
+                    
+                    // Получаем язык из URL
+                    const currentLang = window.location.pathname.split('/')[1] || 'ru';
+                    
+                    // Загружаем отзывы через API
+                    let url = `/${currentLang}/api/products/${productId}/reviews/?filter=${filter}`;
+                    if (orderIdParam) {
+                        url += `&order_id=${orderIdParam}`;
+                    }
+                    
+                    fetch(url)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                // Обновляем счетчики
+                                document.querySelector('.count-all').textContent = data.reviews_count.all;
+                                document.querySelector('.count-with-photo').textContent = data.reviews_count.with_photo;
+                                document.querySelector('.count-positive').textContent = data.reviews_count.positive;
+                                document.querySelector('.count-negative').textContent = data.reviews_count.negative;
+                                
+                                // Обновляем список отзывов
+                                if (data.has_reviews) {
+                                    let reviewsHtml = '';
+                                    data.reviews.forEach(review => {
+                                        let stars = '';
+                                        for (let i = 1; i <= 5; i++) {
+                                            stars += i <= review.rating ? '★' : '☆';
+                                        }
+                                        
+                                        let avatarHtml = '';
+                                        if (review.avatar_url) {
+                                            avatarHtml = `<img src="${review.avatar_url}" alt="${review.name}" class="w-full h-full object-cover">`;
+                                        } else {
+                                            avatarHtml = review.name.charAt(0).toUpperCase();
+                                        }
+                                        
+                                        let photoHtml = '';
+                                        if (review.photo_url) {
+                                            photoHtml = `<img src="${review.photo_url}" alt="Фото отзыва" class="w-64 h-64 md:w-96 md:h-96 object-cover rounded mb-3 cursor-pointer hover:opacity-90 transition" onclick="openImageModal('${review.photo_url}')">`;
+                                        }
+                                        
+                                        let adminCommentHtml = '';
+                                        if (review.admin_comment) {
+                                            adminCommentHtml = `
+                                                <div class="bg-white border-l-4 border-blue-500 p-3 md:p-4 mt-4 rounded-r">
+                                                    <div class="flex items-start gap-2 mb-2">
+                                                        <div class="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                                            <i class="fa-solid fa-shield text-blue-600"></i>
+                                                        </div>
+                                                        <div>
+                                                            <p class="text-[10px] md:text-xs font-semibold text-blue-700">{% trans "Администратор" %}</p>
+                                                        </div>
+                                                    </div>
+                                                    <p class="text-xs md:text-sm text-gray-700 ml-10">${review.admin_comment}</p>
+                                                </div>
+                                            `;
+                                        }
+                                        
+                                        let adminFormHtml = '';
+                                        if (review.user_is_staff) {
+                                            adminFormHtml = `
+                                                <form method="POST" action="/${currentLang}/reviews/${review.id}/admin-comment/" class="mt-3 md:mt-4 pt-3 md:pt-4 border-t">
+                                                    <input type="hidden" name="csrfmiddlewaretoken" value="${getCsrfToken()}">
+                                                    <div class="flex flex-col sm:flex-row gap-2">
+                                                        <input type="text" name="admin_comment" placeholder="{% trans "Ответить на отзыв..." %}" class="flex-1 px-2 md:px-3 py-1 md:py-1.5 border rounded text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                                        <button type="submit" class="bg-blue-600 text-white px-3 md:px-4 py-1 md:py-1.5 rounded text-xs md:text-sm hover:bg-blue-700 whitespace-nowrap">{% trans "Ответить" %}</button>
+                                                    </div>
+                                                </form>
+                                            `;
+                                        }
+                                        
+                                        reviewsHtml += `
+                                            <div class="border rounded-lg p-4 md:p-6${review.admin_comment ? ' bg-blue-50' : ''}">
+                                                <div class="flex justify-between items-start mb-3 gap-2">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden flex-shrink-0">
+                                                            ${avatarHtml}
+                                                        </div>
+                                                        <div>
+                                                            <h4 class="font-semibold text-sm md:text-base">${review.name}</h4>
+                                                            <span class="text-xs text-gray-500">${review.created_at}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="text-yellow-500 mb-2 text-sm md:text-base">${stars}</div>
+                                                <p class="text-gray-700 mb-3 text-sm md:text-base">${review.comment}</p>
+                                                ${photoHtml}
+                                                ${adminCommentHtml}
+                                                ${adminFormHtml}
+                                            </div>
+                                        `;
+                                    });
+                                    reviewsList.innerHTML = reviewsHtml;
+                                } else {
+                                    reviewsList.innerHTML = '<p class="text-gray-500 text-sm md:text-base">{% trans "Пока нет отзывов. Будьте первым!" %}</p>';
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error loading reviews:', error);
+                        });
+                });
+            });
+            
+            function getCsrfToken() {
+                const cookieValue = document.cookie
+                    .split('; ')
+                    .find(row => row.startsWith('csrftoken='))
+                    ?.split('=')[1];
+                return cookieValue || '';
+            }
+        });
+        
         function openImageModal(imageSrc) {
             const modal = document.getElementById('imageModal');
             const modalImage = document.getElementById('modalImage');

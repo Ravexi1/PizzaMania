@@ -191,6 +191,11 @@
         if (window.updateCartCount) {
             window.updateCartCount();
         }
+        
+        // Обновляем панель доставки
+        if (window.updateDeliveryPanel) {
+            window.updateDeliveryPanel();
+        }
     }
 
     // Events: +/- buttons
@@ -330,6 +335,11 @@
                   if (data.status === 'ok') {
                       // Товар успешно удалён, сохраняем данные для восстановления
                       item.dataset.itemData = JSON.stringify(itemData);
+                      
+                      // Обновляем панель доставки
+                      if (window.updateDeliveryPanel) {
+                          window.updateDeliveryPanel();
+                      }
                   }
               })
               .catch(() => {});
@@ -369,6 +379,11 @@
                               delete item.dataset.removed;
                               delete item.dataset.itemData;
                               recalcTotal();
+                              
+                              // Обновляем панель доставки
+                              if (window.updateDeliveryPanel) {
+                                  window.updateDeliveryPanel();
+                              }
                           }
                       })
                       .catch(() => {});

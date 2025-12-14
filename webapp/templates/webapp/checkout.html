@@ -193,6 +193,10 @@
                         <span class="font-semibold">{% trans "Бесплатно" %}</span>
                         {% endif %}
                     </div>
+                    <div class="flex justify-between text-gray-700" id="promo-discount-row" style="display:none;">
+                        <span class="font-semibold">{% trans "Скидка по промокоду:" %}</span>
+                        <span class="font-semibold text-green-600" id="promo-discount-text">-0 ₸</span>
+                    </div>
                     <div class="flex justify-between text-gray-700" id="bonuses-row" style="display:none;">
                         <span class="font-semibold">{% trans "Бонусы:" %}</span>
                         <span class="font-semibold text-yellow-600" id="bonuses-used-text">-0 ₸</span>
@@ -200,6 +204,10 @@
                     <div class="flex justify-between bg-red-50 p-3 rounded-lg mt-4">
                         <span class="font-bold text-gray-900 text-lg">{% trans "Итого:" %}</span>
                         <span class="font-bold text-red-600 text-lg" id="total-price">{{ total|add:delivery_price|floatformat:0 }} ₸</span>
+                    </div>
+                    <div class="flex justify-between text-gray-700 mt-2" id="bonus-earned-row">
+                        <span class="text-sm text-gray-600">{% trans "Будет начислено бонусов:" %}</span>
+                        <span class="text-sm font-semibold text-green-600" id="bonus-earned-text">{{ total|floatformat:0|default:0|floatformat:0|add:"0"|floatformat:0 }}+ ₸</span>
                     </div>
                 </div>
 
@@ -240,6 +248,8 @@
     const checkPromoBtn = document.getElementById('check-promo-btn');
     const promoInput = document.getElementById('promo-code-input');
     const promoMessage = document.getElementById('promo-message');
+    let appliedDiscount = 0;
+    let discountType = '';
 
     if (checkPromoBtn && promoInput) {
         checkPromoBtn.addEventListener('click', function() {
@@ -274,8 +284,14 @@
             .then(data => {
                 if (data.status === 'success') {
                     showPromoMessage('success', data.message);
+                    appliedDiscount = data.discount || 0;
+                    discountType = data.discount_type || '';
+                    updateTotals();
                 } else {
                     showPromoMessage('error', data.message);
+                    appliedDiscount = 0;
+                    discountType = '';
+                    updateTotals();
                 }
             })
             .catch(error => {
@@ -303,31 +319,69 @@
         promoMessage.textContent = message;
     }
 
+    function updateTotals() {
+        const subtotalEl = document.getElementById('subtotal-price');
+        const totalEl = document.getElementById('total-price');
+        const promoDiscountRow = document.getElementById('promo-discount-row');
+        const promoDiscountText = document.getElementById('promo-discount-text');
+        const bonusEarnedText = document.getElementById('bonus-earned-text');
+        const bonusesRow = document.getElementById('bonuses-row');
+        const bonusesText = document.getElementById('bonuses-used-text');
+        const toggle = document.querySelector('input[name="use_bonuses"]');
+        
+        if (!subtotalEl || !totalEl) return;
+
+        function parsePrice(el) {
+            return Number((el.textContent || '0').replace(/[^0-9.]/g, '') || 0);
+        }
+        
+        function format(n) { 
+            return `${Math.round(n)} ₸`; 
+        }
+
+        const subtotal = parsePrice(subtotalEl);
+        const deliveryPart = {{ delivery_price|floatformat:0 }};
+        
+        // Показываем/скрываем строку со скидкой
+        if (appliedDiscount > 0) {
+            promoDiscountRow.style.display = '';
+            promoDiscountText.textContent = `-${Math.round(appliedDiscount)} ₸`;
+        } else {
+            promoDiscountRow.style.display = 'none';
+        }
+        
+        // Бонусы
+        let bonusesUsed = 0;
+        if (toggle && toggle.checked) {
+            const maxByRule = subtotal * 0.3; // 30% rule
+            const available = {{ bonus_balance|floatformat:0 }};
+            bonusesUsed = Math.min(maxByRule, available);
+            bonusesRow.style.display = '';
+            bonusesText.textContent = `-${Math.round(bonusesUsed)} ₸`;
+        } else {
+            bonusesRow.style.display = 'none';
+        }
+        
+        // Итого
+        const total = subtotal + deliveryPart - appliedDiscount - bonusesUsed;
+        totalEl.textContent = format(Math.max(0, total));
+        
+        // Начисляемые бонусы (5% от суммы после всех скидок)
+        const bonusEarned = (subtotal - appliedDiscount - bonusesUsed) * 0.05;
+        bonusEarnedText.textContent = `+${Math.round(Math.max(0, bonusEarned))} ₸`;
+    }
+
     // Bonuses UI: update sidebar totals when toggle is on
     (function(){
         const toggle = document.querySelector('input[name="use_bonuses"]');
-        const subtotalEl = document.getElementById('subtotal-price');
-        const deliveryEl = document.getElementById('total-price');
-        const bonusesRow = document.getElementById('bonuses-row');
-        const bonusesText = document.getElementById('bonuses-used-text');
-        if (!toggle || !subtotalEl || !deliveryEl || !bonusesRow || !bonusesText) return;
-
-        function parsePrice(el){
-            return Number((el.textContent||'0').replace(/[^0-9.]/g,'')||0);
-        }
-        function format(n){ return `${Math.round(n)} ₸`; }
+        if (!toggle) return;
 
         toggle.addEventListener('change', function(){
-            const subtotal = parsePrice(subtotalEl);
-            const deliveryPart = {{ delivery_price|floatformat:0 }};
-            const maxByRule = subtotal * 0.3; // 30% rule
-            const available = {{ bonus_balance|floatformat:0 }};
-            const bonusesUsed = Math.min(maxByRule, available);
-            const total = subtotal + deliveryPart - (this.checked ? bonusesUsed : 0);
-            bonusesRow.style.display = this.checked ? '' : 'none';
-            bonusesText.textContent = `-${Math.round(bonusesUsed)} ₸`;
-            document.getElementById('total-price').textContent = format(total);
+            updateTotals();
         });
+        
+        // Initial update
+        updateTotals();
     })();
 </script>
 

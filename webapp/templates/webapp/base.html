@@ -288,7 +288,6 @@
                         {% csrf_token %}
                         <button type="submit" class="px-3 py-1 border rounded hover:bg-gray-100">{% trans "Выйти" %}</button>
                     </form>
-                    <a href="{% url 'order_history' %}" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold transition">{% trans "Мои заказы" %} <span class="ml-1">{{ user_orders_count|default:0 }}</span></a>
                 {% else %}
                     <a href="{% url 'login' %}" class="px-3 py-1 border rounded hover:bg-gray-100">{% trans "Войти" %}</a>
                     <a href="{% url 'register' %}" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">{% trans "Регистрация" %}</a>
@@ -810,7 +809,7 @@
 </body>
 <!-- Floating delivery info bar -->
 <div id="delivery-info-bar" class="fixed bottom-4 left-0 right-0 z-40 hidden">
-    <div class="max-w-md mx-auto px-4">
+    <div class="max-w-md mx-auto px-4 md:px-4 pr-20 md:pr-4">
         <div class="bg-white shadow-lg border rounded-2xl p-3 flex items-center justify-between">
             <div class="text-sm">
                 <span class="font-semibold text-gray-800">Доставка:</span>
@@ -858,12 +857,18 @@
         bar.classList.toggle('hidden', total <= 0);
     }
 
-    // Fetch cart total from API
-    (function fetchCartTotal() {
+    // Функция для получения актуальной суммы корзины и обновления панели доставки
+    function fetchAndUpdateDeliveryBar() {
         fetch('{% url "cart_total_api" %}')
             .then(r => r.json())
             .then(data => updateDeliveryBar(Number(data.total || 0)))
             .catch(() => {});
-    })();
+    }
+
+    // Делаем функцию глобальной для вызова из других файлов
+    window.updateDeliveryPanel = fetchAndUpdateDeliveryBar;
+
+    // Первоначальная загрузка при загрузке страницы
+    fetchAndUpdateDeliveryBar();
 </script>
 </html>
