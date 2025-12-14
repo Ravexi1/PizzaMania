@@ -207,7 +207,7 @@
                     </div>
                     <div class="flex justify-between text-gray-700 mt-2" id="bonus-earned-row">
                         <span class="text-sm text-gray-600">{% trans "Будет начислено бонусов:" %}</span>
-                        <span class="text-sm font-semibold text-green-600" id="bonus-earned-text">{{ total|floatformat:0|default:0|floatformat:0|add:"0"|floatformat:0 }}+ ₸</span>
+                        <span class="text-sm font-semibold text-green-600" id="bonus-earned-text">+0 ₸</span>
                     </div>
                 </div>
 
@@ -374,13 +374,14 @@
     // Bonuses UI: update sidebar totals when toggle is on
     (function(){
         const toggle = document.querySelector('input[name="use_bonuses"]');
-        if (!toggle) return;
-
-        toggle.addEventListener('change', function(){
-            updateTotals();
-        });
         
-        // Initial update
+        if (toggle) {
+            toggle.addEventListener('change', function(){
+                updateTotals();
+            });
+        }
+        
+        // Always call initial update, even if toggle doesn't exist
         updateTotals();
     })();
 </script>
