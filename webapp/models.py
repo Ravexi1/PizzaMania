@@ -28,6 +28,12 @@ class Product(models.Model):
     addons = models.ManyToManyField('Addon', blank=True, related_name='products', verbose_name="Добавки")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     
+    # Поля для UI улучшений
+    is_hit = models.BooleanField(default=False, verbose_name="Хит продаж")
+    is_new = models.BooleanField(default=False, verbose_name="Новинка")
+    average_rating = models.FloatField(default=0, verbose_name="Средний рейтинг")
+    reviews_count = models.IntegerField(default=0, verbose_name="Количество отзывов")
+    
     class Meta:
         verbose_name = "Продукт"
         verbose_name_plural = "Продукты"

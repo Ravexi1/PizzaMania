@@ -4,6 +4,41 @@
 
 {% block content %}
 <main class="max-w-7xl mx-auto py-6 md:py-10 px-4">
+    <!-- Индикатор прогресса -->
+    <div class="mb-8 bg-white rounded-xl shadow-lg p-6">
+        <div class="flex items-center justify-between max-w-2xl mx-auto">
+            <!-- Шаг 1: Корзина (текущий) -->
+            <div class="flex flex-col items-center flex-1">
+                <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-red-600 text-white flex items-center justify-center font-bold text-lg md:text-xl mb-2 shadow-lg animate-pulse">
+                    1
+                </div>
+                <span class="text-xs md:text-sm font-semibold text-red-600">{% trans "Корзина" %}</span>
+            </div>
+            
+            <!-- Линия между шагами -->
+            <div class="flex-1 h-1 bg-gray-300 mx-2 relative top-[-20px] md:top-[-24px]"></div>
+            
+            <!-- Шаг 2: Оформление -->
+            <div class="flex flex-col items-center flex-1">
+                <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-300 text-gray-500 flex items-center justify-center font-bold text-lg md:text-xl mb-2">
+                    2
+                </div>
+                <span class="text-xs md:text-sm font-medium text-gray-500">{% trans "Оформление" %}</span>
+            </div>
+            
+            <!-- Линия между шагами -->
+            <div class="flex-1 h-1 bg-gray-300 mx-2 relative top-[-20px] md:top-[-24px]"></div>
+            
+            <!-- Шаг 3: Подтверждение -->
+            <div class="flex flex-col items-center flex-1">
+                <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-300 text-gray-500 flex items-center justify-center font-bold text-lg md:text-xl mb-2">
+                    3
+                </div>
+                <span class="text-xs md:text-sm font-medium text-gray-500">{% trans "Подтверждение" %}</span>
+            </div>
+        </div>
+    </div>
+    
     <h1 class="text-2xl md:text-3xl font-bold mb-6 md:mb-8">{% trans "Корзина" %}</h1>
 
     <style>
@@ -18,6 +53,58 @@
         }
         @media (min-width: 768px) {
             .addons-text { -webkit-line-clamp: 1; }
+        }
+
+        /* Анимация изменения цены */
+        @keyframes price-bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); color: #dc2626; }
+        }
+        .price-change {
+            animation: price-bounce 0.5s ease;
+        }
+
+        /* Спиннер загрузки */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            border-radius: inherit;
+        }
+
+        /* Анимация прогресс-бара */
+        @keyframes progress-fill {
+            from { width: 0%; }
+        }
+        .progress-bar {
+            animation: progress-fill 0.8s ease-out;
+        }
+
+        /* Плавное появление/исчезновение */
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fade-out {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+        .fade-in {
+            animation: fade-in 0.3s ease;
+        }
+        .fade-out {
+            animation: fade-out 0.3s ease;
         }
     </style>
 
@@ -42,12 +129,12 @@
 
         <div class="space-y-3 md:space-y-4" id="cart-items">
             {% for item in cart_items %}
-            <div class="cart-item flex flex-col md:flex-row md:items-center gap-3 md:gap-6 border-b py-3 md:py-4" data-product-id="{{ item.product.pk }}" data-cart-key="{{ item.cart_key }}" data-unit-price="{{ item.price }}" data-size-id="{{ item.size_id|default:'' }}" data-addon-ids="{{ item.addon_ids|join:',' }}">
+            <div class="cart-item flex flex-col md:flex-row md:items-center gap-3 md:gap-6 border-b py-3 md:py-4" data-product-id="{{ item.product.pk }}" data-cart-key="{{ item.cart_key }}" data-unit-price="{{ item.price }}" data-original-price="{{ item.original_price }}" data-size-id="{{ item.size_id|default:'' }}" data-addon-ids="{{ item.addon_ids|join:',' }}">
                 <div class="flex gap-3 flex-1">
                     <!-- Изображение -->
                     <div class="w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
                         {% if item.product.image %}
-                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="product-image w-full h-full object-cover rounded">
+                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" loading="lazy" class="product-image w-full h-full object-cover rounded">
                         {% else %}
                         <div class="w-full h-full bg-gray-200 rounded flex items-center justify-center">
                             <span class="text-gray-400 text-xs">{% trans "Нет фото" %}</span>
@@ -85,18 +172,86 @@
             {% endfor %}
         </div>
 
+        <!-- Блок экономии (если есть скидки) -->
+        <div id="savings-block" class="mt-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-lg" style="display: none;">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-3xl">💰</span>
+                    <div>
+                        <p class="text-sm text-gray-600">{% trans "Вы экономите" %}</p>
+                        <p class="text-2xl font-bold text-green-600" id="savings-amount">0 ₸</p>
+                    </div>
+                </div>
+                <span class="text-4xl">🎉</span>
+            </div>
+        </div>
+
         <!-- Итого -->
         <div class="mt-4 md:mt-6 pt-4 md:pt-6">
             <div class="flex justify-between items-center mb-4 md:mb-6">
                 <span class="text-xl md:text-2xl font-bold">{% trans "Итого:" %}</span>
                 <span class="text-2xl md:text-3xl font-bold text-red-600" id="total-price">{{ total|floatformat:0 }} ₸</span>
             </div>
+            <!-- Улучшенная панель информации о доставке -->
+            <div id="cart-delivery-panel" class="mb-4 md:mb-6 bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-xl p-4 md:p-5 shadow-md">
+                <div class="flex items-center gap-3 mb-3">
+                    <span class="text-3xl">🚚</span>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-gray-800 text-sm md:text-base">{% trans "Доставка:" %}</span>
+                            <span id="cart-delivery-price" class="text-lg font-bold text-blue-700">—</span>
+                        </div>
+                        <p id="cart-next-threshold" class="text-xs text-gray-600" style="display: none;"></p>
+                    </div>
+                </div>
+                
+                <!-- Прогресс-бар до бесплатной доставки -->
+                <div class="mb-2">
+                    <div class="flex justify-between text-xs text-gray-600 mb-1">
+                        <span>{% trans "До бесплатной доставки" %}</span>
+                        <span id="cart-to-free" class="font-semibold text-green-700">—</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                        <div id="delivery-progress-bar" class="progress-bar bg-gradient-to-r from-green-400 to-emerald-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
             <a href="{% url 'checkout' %}" class="block w-full bg-red-600 text-white text-center py-3 md:py-4 rounded-lg text-lg md:text-xl font-semibold hover:bg-red-700">
                 {% trans "Оформить заказ" %}
             </a>
         </div>
+    </div>    
+    <!-- Рекомендации "Часто покупают вместе" (под оформлением заказа) -->
+    {% if recommended_products %}
+    <div class="mt-12">
+        <div class="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200">
+            <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <span>💡</span>
+                <span>{% trans "Часто покупают вместе" %}</span>
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                {% for product in recommended_products|slice:":4" %}
+                <div class="bg-white rounded-lg p-3 border-2 border-transparent hover:border-blue-400 transition group">
+                    <a href="{% url 'product_detail' product.pk %}">
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" class="w-full aspect-square object-cover rounded mb-2 group-hover:scale-95 transition">
+                        {% else %}
+                        <div class="w-full aspect-square bg-gray-100 rounded mb-2 flex items-center justify-center">
+                            <span class="text-gray-400 text-xs">{% trans "Нет фото" %}</span>
+                        </div>
+                        {% endif %}
+                        <h4 class="font-semibold text-sm mb-1 line-clamp-2">{{ product.name }}</h4>
+                        <p class="text-red-600 font-bold text-sm mb-2">{{ product.get_display_price }} ₸</p>
+                    </a>
+                    <button onclick="window.location.href='{% url 'product_detail' product.pk %}'" class="w-full bg-blue-600 text-white text-xs py-2 rounded hover:bg-blue-700 transition">
+                        {% trans "Добавить" %}
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
     </div>
-    {% else %}
+    {% endif %}    {% else %}
     <div class="bg-white rounded-lg shadow-lg p-8 md:p-12 text-center">
         <p class="text-lg md:text-xl text-gray-500 mb-4 md:mb-6">{% trans "Корзина пуста" %}</p>
         <a href="{% url 'home' %}" class="inline-block bg-red-600 text-white px-6 md:px-8 py-2.5 md:py-3 rounded-lg hover:bg-red-700 text-sm md:text-base">
@@ -171,12 +326,20 @@
         qtyInput.value = qty;
         const unit = parseFloat(item.dataset.unitPrice || 0);
         const subtotal = unit * qty;
-        item.querySelector('.subtotal-display').textContent = formatPrice(subtotal) + ' ₸';
+        
+        // Анимация изменения цены
+        const subtotalEl = item.querySelector('.subtotal-display');
+        subtotalEl.classList.add('price-change');
+        setTimeout(() => subtotalEl.classList.remove('price-change'), 500);
+        
+        subtotalEl.textContent = formatPrice(subtotal) + ' ₸';
         item.querySelector('.quantity-display').textContent = qty;
     }
 
     function recalcTotal() {
         let total = 0;
+        let totalSavings = 0;
+        
         document.querySelectorAll('.cart-item').forEach(item => {
             // Пропускаем удалённые товары
             if (item.dataset.removed === 'true') return;
@@ -184,9 +347,34 @@
             const unit = parseFloat(item.dataset.unitPrice || 0);
             const qty = parseInt(item.querySelector('.quantity-input').value) || 0;
             total += unit * qty;
+            
+            // Считаем экономию (если есть данные о скидке в dataset)
+            const originalPrice = parseFloat(item.dataset.originalPrice || 0);
+            if (originalPrice > unit) {
+                totalSavings += (originalPrice - unit) * qty;
+            }
         });
-        document.getElementById('total-price').textContent = formatPrice(total) + ' ₸';
         
+        // Анимация изменения общей суммы
+        const totalPriceEl = document.getElementById('total-price');
+        totalPriceEl.classList.add('price-change');
+        setTimeout(() => totalPriceEl.classList.remove('price-change'), 500);
+        
+        totalPriceEl.textContent = formatPrice(total) + ' ₸';
+        
+        // Показываем блок экономии если есть скидки
+        const savingsBlock = document.getElementById('savings-block');
+        const savingsAmount = document.getElementById('savings-amount');
+        if (totalSavings > 0) {
+            savingsBlock.style.display = 'block';
+            savingsAmount.textContent = formatPrice(totalSavings) + ' ₸';
+        } else {
+            savingsBlock.style.display = 'none';
+        }
+        
+        // Обновляем локальную панель доставки в корзине
+        updateCartDeliveryPanel(total);
+
         // Обновляем счетчик корзины в навбаре
         if (window.updateCartCount) {
             window.updateCartCount();
@@ -197,6 +385,73 @@
             window.updateDeliveryPanel();
         }
     }
+
+    // Логика доставки для панели корзины
+    const FREE_DELIVERY_THRESHOLD = 4000;
+    const THRESHOLDS = [
+        { min: 0, max: 999, price: 1700 },
+        { min: 1000, max: 2499, price: 1400 },
+        { min: 2500, max: 3999, price: 1000 },
+        { min: 4000, max: Infinity, price: 0 }
+    ];
+    
+    function calcDelivery(total) {
+        if (total >= 4000) return 0;
+        if (total >= 2500) return 1000;
+        if (total >= 1000) return 1400;
+        return 1700;
+    }
+    
+    function updateCartDeliveryPanel(total){
+        const priceEl = document.getElementById('cart-delivery-price');
+        const toFreeEl = document.getElementById('cart-to-free');
+        const progressBar = document.getElementById('delivery-progress-bar');
+        const nextThresholdEl = document.getElementById('cart-next-threshold');
+        
+        if (!priceEl || !toFreeEl || !progressBar) return;
+        
+        const toFree = Math.max(0, FREE_DELIVERY_THRESHOLD - total);
+        const delivery = calcDelivery(total);
+        
+        // Обновляем текст
+        priceEl.textContent = delivery > 0 ? formatPrice(delivery) + ' ₸' : '{% trans "Бесплатно" %} 🎉';
+        toFreeEl.textContent = formatPrice(toFree) + ' ₸';
+        
+        // Прогресс-бар (0 до 4000)
+        const progress = Math.min(100, (total / FREE_DELIVERY_THRESHOLD) * 100);
+        progressBar.style.width = progress + '%';
+        
+        // Подсказка о следующем пороге
+        let nextMessage = '';
+        if (total < 1000) {
+            const toNext = 1000 - total;
+            nextMessage = `Добавьте на ${formatPrice(toNext)} ₸ и доставка будет 1400 ₸ вместо 1700 ₸`;
+        } else if (total < 2500) {
+            const toNext = 2500 - total;
+            nextMessage = `Добавьте на ${formatPrice(toNext)} ₸ и доставка будет 1000 ₸ вместо 1400 ₸`;
+        } else if (total < 4000) {
+            const toNext = 4000 - total;
+            nextMessage = `Добавьте на ${formatPrice(toNext)} ₸ и доставка будет БЕСПЛАТНОЙ!`;
+        }
+        
+        if (nextMessage && nextThresholdEl) {
+            nextThresholdEl.textContent = nextMessage;
+            nextThresholdEl.style.display = 'block';
+        } else if (nextThresholdEl) {
+            nextThresholdEl.style.display = 'none';
+        }
+    }
+
+    // Инициализация панели после загрузки
+    document.addEventListener('DOMContentLoaded', function(){
+        // взять текущее значение из total-price
+        const txt = document.getElementById('total-price').textContent.replace(/[^0-9.]/g,'');
+        const total = parseFloat(txt || '0');
+        updateCartDeliveryPanel(total);
+        
+        // Инициализируем блок экономии
+        recalcTotal();
+    });
 
     // Events: +/- buttons
     document.querySelectorAll('.increase-qty').forEach(btn => {
@@ -284,6 +539,7 @@
         btn.addEventListener('click', function() {
             const item = this.closest('.cart-item');
             if (!item) return;
+            
             const cartKey = item.dataset.cartKey;
             const productId = item.dataset.productId;
             const sizeId = item.dataset.sizeId || '';
@@ -299,18 +555,20 @@
                 quantity
             };
             
-            // Визуально помечаем как удалённый с отступами
+            // Визуально помечаем как удалённый
             item.style.position = 'relative';
-            item.classList.add('px-4', 'md:px-6', 'lg:px-8');
             
-            // Создаём оверлей с кнопкой восстановления
+            // Создаём оверлей с загрузкой
             const overlay = document.createElement('div');
-            overlay.className = 'absolute inset-0 bg-gray-300 bg-opacity-70 flex items-center justify-center rounded z-10';
-            overlay.style.pointerEvents = 'auto';
+            overlay.className = 'loading-overlay';
             overlay.innerHTML = `
-                <button type="button" class="restore-btn bg-green-500 text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-green-600 hover:scale-105 transition-all pointer-events-auto shadow-2xl">
-                    Восстановить
-                </button>
+                <div class="flex flex-col items-center gap-2">
+                    <svg class="spinner w-8 h-8 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-gray-700">{% trans "Удаляем..." %}</span>
+                </div>
             `;
             item.appendChild(overlay);
             
@@ -318,7 +576,7 @@
             item.dataset.removed = 'true';
             recalcTotal();
             
-            // УДАЛЯЕМ ТОВАР СРАЗУ
+            // УДАЛЯЕМ ТОВАР
             const csrf = getCsrfToken();
             const currentLang = window.location.pathname.split('/')[1] || 'ru';
             fetch(`/${currentLang}/cart/remove_item/`, {
@@ -336,62 +594,83 @@
                       // Товар успешно удалён, сохраняем данные для восстановления
                       item.dataset.itemData = JSON.stringify(itemData);
                       
+                      // Обновляем оверлей с кнопкой восстановления
+                      overlay.innerHTML = `
+                          <button type="button" class="restore-btn bg-green-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-600 transition shadow-lg">
+                              ↩️ {% trans "Восстановить" %}
+                          </button>
+                      `;
+                      overlay.style.background = 'rgba(240, 240, 240, 0.9)';
+                      
                       // Обновляем панель доставки
                       if (window.updateDeliveryPanel) {
                           window.updateDeliveryPanel();
                       }
+                      
+                      // Обработчик восстановления
+                      overlay.querySelector('.restore-btn').addEventListener('click', function() {
+                          // Показываем loading при восстановлении
+                          overlay.innerHTML = `
+                              <div class="flex flex-col items-center gap-2">
+                                  <svg class="spinner w-8 h-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                  <span class="text-sm font-semibold text-gray-700">{% trans "Восстанавливаем..." %}</span>
+                              </div>
+                          `;
+                          
+                          // Восстанавливаем товар через добавление
+                          const data = JSON.parse(item.dataset.itemData);
+                          const formData = new URLSearchParams();
+                          formData.append('quantity', data.quantity);
+                          if (data.sizeId) formData.append('size_id', data.sizeId);
+                          if (data.addonIds && data.addonIds.length > 0) {
+                              data.addonIds.forEach(addonId => {
+                                  formData.append('addon_ids', addonId);
+                              });
+                          }
+                          
+                          fetch(`/${currentLang}/cart/add/${data.productId}/`, {
+                              method: 'POST',
+                              credentials: 'same-origin',
+                              headers: {
+                                  'Content-Type': 'application/x-www-form-urlencoded',
+                                  'X-CSRFToken': csrf,
+                                  'X-Requested-With': 'XMLHttpRequest'
+                              },
+                              body: formData.toString()
+                          }).then(response => response.json())
+                            .then(restoreData => {
+                                if (restoreData.status === 'ok') {
+                                    // Обновляем cart_key на новый
+                                    item.dataset.cartKey = restoreData.cart_key || cartKey;
+                                    overlay.remove();
+                                    item.style.position = '';
+                                    delete item.dataset.removed;
+                                    delete item.dataset.itemData;
+                                    recalcTotal();
+                                    
+                                    // Обновляем панель доставки
+                                    if (window.updateDeliveryPanel) {
+                                        window.updateDeliveryPanel();
+                                    }
+                                    
+                                    showToast('{% trans "Товар восстановлен" %}', 'success');
+                                }
+                            })
+                            .catch(() => {});
+                      });
                   }
               })
-              .catch(() => {});
-            
-            // Обработчик восстановления
-            overlay.querySelector('.restore-btn').addEventListener('click', function() {
-                // Восстанавливаем товар через добавление
-                const itemDataStr = item.dataset.itemData;
-                if (itemDataStr) {
-                    const data = JSON.parse(itemDataStr);
-                    const formData = new URLSearchParams();
-                    formData.append('quantity', data.quantity);
-                    if (data.sizeId) formData.append('size_id', data.sizeId);
-                    if (data.addonIds && data.addonIds.length > 0) {
-                        data.addonIds.forEach(addonId => {
-                            formData.append('addon_ids', addonId);
-                        });
-                    }
-                    
-                    fetch(`/${currentLang}/cart/add/${data.productId}/`, {
-                        method: 'POST',
-                        credentials: 'same-origin',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                            'X-CSRFToken': csrf,
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: formData.toString()
-                    }).then(response => response.json())
-                      .then(restoreData => {
-                          if (restoreData.status === 'ok') {
-                              // Обновляем cart_key на новый
-                              item.dataset.cartKey = restoreData.cart_key || cartKey;
-                              overlay.remove();
-                              item.classList.remove('px-4', 'md:px-6', 'lg:px-8');
-                              item.style.position = '';
-                              delete item.dataset.removed;
-                              delete item.dataset.itemData;
-                              recalcTotal();
-                              
-                              // Обновляем панель доставки
-                              if (window.updateDeliveryPanel) {
-                                  window.updateDeliveryPanel();
-                              }
-                          }
-                      })
-                      .catch(() => {});
-                }
-            });
+              .catch(() => {
+                  showToast('{% trans "Ошибка при удалении товара" %}', 'error');
+                  overlay.remove();
+                  item.dataset.removed = 'false';
+                  recalcTotal();
+              });
         });
     });
 
-</script>
 </script>
 {% endblock %}

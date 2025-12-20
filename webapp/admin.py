@@ -17,12 +17,29 @@ class SizeInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'discount', 'created_at']
-    list_filter = ['categories', 'created_at']
+    list_display = ['name', 'discount', 'is_hit', 'is_new', 'average_rating', 'reviews_count', 'created_at']
+    list_filter = ['categories', 'is_hit', 'is_new', 'created_at']
     search_fields = ['name', 'description']
     filter_horizontal = ['categories', 'addons']
     inlines = [SizeInline]
+    readonly_fields = ['average_rating', 'reviews_count']
     # Размеры редактируются через инлайн `Size`.
+    
+    fieldsets = (
+        ('Основная информация', {
+            'fields': ('name', 'description', 'image', 'categories', 'addons')
+        }),
+        ('Ценообразование', {
+            'fields': ('discount',)
+        }),
+        ('Маркировка', {
+            'fields': ('is_hit', 'is_new')
+        }),
+        ('Рейтинг (автоматически)', {
+            'fields': ('average_rating', 'reviews_count'),
+            'classes': ('collapse',)
+        }),
+    )
     
     def save_model(self, request, obj, form, change):
         # Никакой дополнительной логики при сохранении продукта не требуется;

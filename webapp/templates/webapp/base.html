@@ -172,10 +172,10 @@
 <body class="bg-gray-50 text-gray-900">
     <!-- Toast Notifications (only show if there are messages) -->
     {% if messages %}
-    <div id="toast-container" class="fixed inset-x-0 top-6 z-[9999] flex flex-col items-center space-y-2">
+    <div id="toast-container" class="fixed left-1/2 -translate-x-1/2 top-6 z-[9999] flex flex-col items-center space-y-2 pointer-events-none w-max">
         {% for message in messages %}
             {% if 'toast' in message.tags %}
-            <div data-message="{{ message|escapejs }}" class="toast-enter px-6 py-4 rounded-lg shadow-lg text-white {% if 'error' in message.tags %}bg-red-600{% else %}bg-green-600{% endif %} max-w-md pointer-events-auto">
+            <div data-message="{{ message|escapejs }}" class="toast-enter px-6 py-4 rounded-lg shadow-lg text-white {% if 'error' in message.tags %}bg-red-600{% else %}bg-green-600{% endif %} max-w-md" style="pointer-events: auto;">
                 <div class="flex items-center justify-between">
                     <span>{{ message }}</span>
                     <button class="ml-4 text-white hover:text-gray-200" onclick="(function(btn){const toast=btn.parentElement.parentElement; const msg = toast.getAttribute('data-message') || toast.textContent.trim(); toast.remove(); try{ let s = JSON.parse(sessionStorage.getItem('shown_toasts')||'[]').filter(m=>m!==msg); sessionStorage.setItem('shown_toasts', JSON.stringify(s)); }catch(e){} })(this)">

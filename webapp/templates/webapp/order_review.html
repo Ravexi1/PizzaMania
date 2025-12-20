@@ -16,7 +16,7 @@
                 <div class="flex gap-4 pb-4 border-b last:border-b-0">
                     <!-- Изображение товара -->
                     {% if item_status.item.product.image %}
-                    <img src="{{ item_status.item.product.image.url }}" alt="{{ item_status.item.product.name }}" class="w-24 h-24 object-cover rounded">
+                    <img src="{{ item_status.item.product.image.url }}" alt="{{ item_status.item.product.name }}" loading="lazy" class="w-24 h-24 object-cover rounded">
                     {% else %}
                     <div class="w-24 h-24 bg-gray-200 rounded flex items-center justify-center">
                         <span class="text-gray-400 text-xs">{% trans "Нет фото" %}</span>

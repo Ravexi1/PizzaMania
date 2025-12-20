@@ -19,7 +19,7 @@
                         <label for="avatar-upload-mobile" class="cursor-pointer">
                             <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-2xl font-bold overflow-hidden">
                                 {% if profile.avatar %}
-                                <img src="{{ profile.avatar.url }}" alt="Avatar" class="w-full h-full object-cover">
+                                <img src="{{ profile.avatar.url }}" alt="Avatar" loading="lazy" class="w-full h-full object-cover">
                                 {% else %}
                                 {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
                                 {% endif %}
@@ -212,7 +212,7 @@
                             {% for item in order_data.order.items.all|slice:":3" %}
                             <div class="w-16 h-16 rounded overflow-hidden">
                                 {% if item.product.image %}
-                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="w-full h-full object-cover">
+                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" loading="lazy" class="w-full h-full object-cover">
                                 {% else %}
                                 <div class="w-full h-full bg-gray-100 flex items-center justify-center text-xs text-gray-400">
                                     📦
@@ -274,7 +274,7 @@
                     <div class="flex flex-col items-center">
                         <div class="w-24 h-24 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-3xl font-bold mb-4 cursor-pointer hover:bg-opacity-30 transition overflow-hidden" onclick="document.getElementById('avatar-upload-desktop').click();">
                             {% if profile.avatar %}
-                            <img src="{{ profile.avatar.url }}" alt="Avatar" class="w-full h-full object-cover">
+                            <img src="{{ profile.avatar.url }}" alt="Avatar" loading="lazy" class="w-full h-full object-cover">
                             {% else %}
                             {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
                             {% endif %}

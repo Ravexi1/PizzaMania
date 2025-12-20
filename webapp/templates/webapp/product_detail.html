@@ -5,12 +5,41 @@
 
 {% block content %}
 <main class="max-w-7xl mx-auto py-6 md:py-10 px-4">
+    <style>
+        /* Для Chrome, Safari, Edge и Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Для Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        /* Lightweight page-specific styling for richer UI states */
+        .pill-card { box-shadow: 0 8px 24px -18px rgba(0,0,0,0.4); }
+        .pill-card-active { box-shadow: 0 10px 32px -12px rgba(239,68,68,0.45); }
+        .addon-tile { box-shadow: 0 8px 24px -18px rgba(0,0,0,0.35); }
+        .addon-tile-active { box-shadow: 0 10px 32px -12px rgba(239,68,68,0.45); }
+        .admin-bubble { position: relative; }
+        .admin-bubble:before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 18px;
+            border: 8px solid transparent;
+            border-bottom-color: #bfdbfe; /* tailwind blue-200 */
+        }
+        .skeleton { background: linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%); background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite; }
+        @keyframes shimmer { 0%{background-position: -200% 0;} 100%{background-position: 200% 0;} }
+    </style>
     <div class="bg-white rounded shadow-lg p-4 md:p-8">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             <!-- Изображение товара -->
             <div>
                 {% if product.image %}
-                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full rounded-lg cursor-pointer hover:opacity-90 transition" onclick="openImageModal('{{ product.image.url|escapejs }}')">
+                <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" class="w-full rounded-lg cursor-pointer hover:opacity-90 transition" onclick="openImageModal('{{ product.image.url|escapejs }}')">
                 {% else %}
                 <div class="w-full h-64 md:h-96 bg-gray-200 rounded-lg flex items-center justify-center">
                     <span class="text-gray-400 text-lg md:text-xl">{% trans "Нет изображения" %}</span>
@@ -33,6 +62,16 @@
 
                 <p class="text-gray-700 mb-4 md:mb-6 text-sm md:text-base">{{ product.description }}</p>
 
+                <!-- Рейтинг -->
+                <div class="mb-4 md:mb-6">
+                    <div class="flex items-center gap-2">
+                        <span class="text-yellow-500 text-xl md:text-2xl">★</span>
+                        <span class="text-lg md:text-xl font-semibold">{{ product.get_average_rating|floatformat:1 }}</span>
+                        <span class="text-gray-500 text-sm md:text-base">({{ product.reviews.count }} отзывов)</span>
+                    </div>
+                </div>
+
+                <!-- Цена -->
                 <div class="mb-4 md:mb-6">
                     {% if product.discount > 0 %}
                     <div class="flex items-center gap-2 md:gap-4 flex-wrap">
@@ -43,20 +82,27 @@
                     {% else %}
                     <span class="text-2xl md:text-3xl font-bold text-red-600" id="price-display">{% if product.sizes.exists %}{{ product.sizes.first.price|floatformat:0 }}{% else %}{{ product.get_min_price|default:0|floatformat:0 }}{% endif %} ₸</span>
                     {% endif %}
+                    
                 </div>
 
                 <!-- Выбор размера (если есть размеры) -->
                 {% if product.sizes.exists %}
                 <div class="mb-4 md:mb-6">
                     <label class="block text-xs md:text-sm font-semibold mb-2">{% trans "Выберите размер:" %}</label>
-                    <div class="flex flex-wrap gap-2 md:gap-3 pb-2" id="sizes-container">
+                    <div class="flex flex-wrap gap-3 md:gap-4 pb-2" id="sizes-container">
                         {% for size in product.sizes.all %}
-                        <label class="flex-none min-w-[115px] md:min-w-[140px] max-w-[260px] md:max-w-[320px] cursor-pointer">
+                        <label class="flex-none min-w-[140px] md:min-w-[150px] max-w-[260px] md:max-w-[320px] cursor-pointer">
                             <input type="radio" name="size" value="{{ size.id }}" data-price="{{ size.get_discounted_price|floatformat:0|cut:' ' }}" data-original-price="{{ size.price|floatformat:0|cut:' ' }}" class="size-input hidden" {% if forloop.first %}checked{% endif %}>
-                            <div class="size-btn border-2 rounded-lg px-2 md:px-4 py-2 md:py-3 text-center transition hover:border-red-600 {% if forloop.first %}border-red-600 bg-red-50{% else %}border-gray-200{% endif %}">
-                                <div class="font-semibold text-sm md:text-lg break-words whitespace-normal">{{ size.name }}</div>
+                            <div class="size-btn pill-card border-2 rounded-2xl px-3 md:px-4 py-3 md:py-4 text-center transition transform hover:-translate-y-[1px] hover:border-red-500 bg-white {% if forloop.first %}border-red-600 bg-red-50 pill-card-active{% else %}border-gray-200{% endif %}">
+                                <div class="flex items-center justify-center gap-2 mb-1">
+                                    <div class="font-semibold text-sm md:text-lg break-words whitespace-normal">{{ size.name }}</div>
+                                    <span class="checkmark hidden text-red-600 text-sm md:text-base">✔</span>
+                                </div>
+                                {% if product.discount > 0 %}
                                 <div class="text-gray-500 text-xs md:text-sm line-through">{{ size.price|floatformat:0 }} ₸</div>
-                                <div class="text-red-600 font-bold text-xs md:text-base">{{ size.get_discounted_price|floatformat:0 }} ₸</div>
+                                {% endif %}
+                                <div class="text-red-600 font-bold text-sm md:text-base">{{ size.get_discounted_price|floatformat:0 }} ₸</div>
+                                
                             </div>
                         </label>
                         {% endfor %}
@@ -64,32 +110,12 @@
                 </div>
                 {% endif %}
 
-                <!-- Добавки "По вкусу" (если есть добавки) -->
-                {% if product.addons.exists %}
                 <div class="mb-4 md:mb-6">
-                    <h3 class="text-base md:text-lg font-semibold mb-2 md:mb-3">{% trans "Добавить по вкусу" %} 🌶️</h3>
-                    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-3 gap-2 md:gap-3" id="addons-container">
-                        {% for addon in product.addons.all %}
-                        <label class="addon-card flex flex-col items-center gap-1 md:gap-2 p-2 md:p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-red-600 transition" data-addon-id="{{ addon.id }}" data-addon-price="{{ addon.price|floatformat:0|cut:' ' }}">
-                            <input type="checkbox" name="addon" value="{{ addon.id }}" class="addon-input hidden" data-addon-price="{{ addon.price|floatformat:0|cut:' ' }}">
-                            {% if addon.image %}
-                            <img src="{{ addon.image.url }}" alt="{{ addon.name }}" class="w-12 h-12 md:w-16 md:h-16 object-cover rounded">
-                            {% else %}
-                            <div class="w-12 h-12 md:w-16 md:h-16 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-lg md:text-2xl">📦</div>
-                            {% endif %}
-                            <span class="text-[10px] md:text-xs font-semibold text-center leading-tight">{{ addon.name }}</span>
-                            <span class="text-red-600 font-bold text-[10px] md:text-sm">+{{ addon.price|floatformat:0 }} ₸</span>
-                        </label>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-
-                <div class="mb-4 md:mb-6">
-                    <div class="flex items-center gap-2">
-                        <span class="text-yellow-500 text-xl md:text-2xl">★</span>
-                        <span class="text-lg md:text-xl font-semibold">{{ product.get_average_rating|floatformat:1 }}</span>
-                        <span class="text-gray-500 text-sm md:text-base">({{ product.reviews.count }} отзывов)</span>
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4">
+                        <button type="button" id="add-to-cart-btn" class="bg-red-600 text-white px-6 md:px-8 py-2.5 md:py-3 rounded-lg hover:bg-red-700 text-base md:text-lg font-semibold w-full sm:w-auto transition transform hover:-translate-y-[1px]">
+                            {% trans "Добавить в корзину" %}
+                        </button>
+                        <input type="number" id="quantity-input" value="1" min="1" class="border rounded px-3 md:px-4 py-2 w-full sm:w-20 text-center text-sm md:text-base">
                     </div>
                 </div>
 
@@ -97,12 +123,78 @@
                     {% csrf_token %}
                 </form>
 
+                <!-- Добавки "По вкусу" (если есть добавки) -->
+                {% if product.addons.exists %}
                 <div class="mb-4 md:mb-6">
-                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4">
-                        <input type="number" id="quantity-input" value="1" min="1" class="border rounded px-3 md:px-4 py-2 w-full sm:w-20 text-center text-sm md:text-base">
-                        <button type="button" id="add-to-cart-btn" class="bg-red-600 text-white px-6 md:px-8 py-2.5 md:py-3 rounded-lg hover:bg-red-700 text-base md:text-lg font-semibold w-full sm:w-auto">
-                            {% trans "Добавить в корзину" %}
+                    <h3 class="text-base md:text-lg font-semibold mb-2 md:mb-3">{% trans "Добавить по вкусу" %} 🌶️</h3>
+                    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-3 gap-3 md:gap-4" id="addons-container">
+                        {% for addon in product.addons.all|slice:":6" %}
+                        <label class="addon-card addon-tile flex flex-col items-center gap-1.5 md:gap-2.5 p-3 md:p-4 border-2 border-gray-200 rounded-2xl cursor-pointer transition transform hover:-translate-y-[1px] bg-white" data-addon-id="{{ addon.id }}" data-addon-price="{{ addon.price|floatformat:0|cut:' ' }}">
+                            <input type="checkbox" name="addon" value="{{ addon.id }}" class="addon-input hidden" data-addon-price="{{ addon.price|floatformat:0|cut:' ' }}">
+                            <div class="w-12 h-12 md:w-16 md:h-16 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden relative">
+                                {% if addon.image %}
+                                <img src="{{ addon.image.url }}" alt="{{ addon.name }}" class="w-full h-full object-cover">
+                                {% else %}
+                                <span class="text-gray-400 text-lg md:text-2xl">📦</span>
+                                {% endif %}
+                                <span class="addon-check hidden absolute -top-2 -right-2 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs shadow-lg">✔</span>
+                            </div>
+                            <span class="text-[10px] md:text-xs font-semibold text-center leading-tight">{{ addon.name }}</span>
+                            <span class="text-red-600 font-bold text-[10px] md:text-sm">+{{ addon.price|floatformat:0 }} ₸</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    {% if product.addons.count > 6 %}
+                    <div class="mt-3">
+                        <button type="button" id="show-all-addons" class="px-4 py-2 text-sm font-semibold rounded-lg bg-red-600 hover:bg-red-700 text-white shadow-lg transition transform hover:-translate-y-[1px]">
+                            <span class="flex items-center gap-2">
+                                <span>{% trans "Смотреть все добавки" %}</span>
+                                <span id="addons-count" class="bg-white text-red-600 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold" style="display: none;">0</span>
+                            </span>
                         </button>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Mobile sticky CTA bar -->
+                <div class="md:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-gray-200 shadow-[0_-8px_32px_-18px_rgba(0,0,0,0.35)] px-4 py-3 flex items-center justify-between gap-3" id="sticky-bar">
+                    <div class="flex flex-col leading-tight">
+                        <span class="text-xs text-gray-500">{% trans "Итого" %}</span>
+                        <span class="text-xl font-bold text-red-600" id="sticky-price">{% if product.sizes.exists %}{{ product.sizes.first.get_discounted_price|floatformat:0 }}{% else %}{{ product.get_min_price|default:0|floatformat:0 }}{% endif %} ₸</span>
+                    </div>
+                    <button type="button" id="sticky-add-to-cart-btn" class="flex-1 bg-red-600 text-white px-4 py-3 rounded-xl text-base font-semibold hover:bg-red-700 transition transform hover:-translate-y-[1px] shadow-lg">
+                        {% trans "Добавить" %}
+                    </button>
+                </div>
+                
+                <!-- Modal: all addons -->
+                <div id="addons-modal" class="hidden fixed inset-0 z-[9998] flex items-end sm:items-center justify-center">
+                    <div class="absolute inset-0 bg-black/40" data-modal-close></div>
+                    <div class="relative w-full sm:max-w-2xl bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl p-4 sm:p-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-lg font-bold">{% trans "Все добавки" %}</h4>
+                            <button class="text-gray-600 hover:text-gray-800" data-modal-close>✕</button>
+                        </div>
+                        <div class="grid grid-cols-3 sm:grid-cols-4 gap-3" id="addons-modal-grid">
+                            {% for addon in product.addons.all %}
+                            <div class="modal-addon-tile addon-tile border-2 rounded-xl p-3 bg-white border-gray-200 hover:border-red-500 cursor-pointer transition" data-addon-id="{{ addon.id }}" data-addon-price="{{ addon.price|floatformat:0|cut:' ' }}">
+                                <div class="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden mb-2 relative">
+                                    {% if addon.image %}
+                                    <img src="{{ addon.image.url }}" alt="{{ addon.name }}" class="w-full h-full object-cover">
+                                    {% else %}
+                                    <span class="text-gray-400 text-xl">📦</span>
+                                    {% endif %}
+                                    <span class="addon-check hidden absolute -top-2 -right-2 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs shadow-lg">✔</span>
+                                </div>
+                                <div class="text-[11px] font-semibold text-center">{{ addon.name }}</div>
+                                <div class="text-[11px] text-red-600 font-bold text-center">+{{ addon.price|floatformat:0 }} ₸</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="mt-4 text-right">
+                            <button class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700" data-modal-close>{% trans "Готово" %}</button>
+                        </div>
                     </div>
                 </div>
 
@@ -112,6 +204,9 @@
                         const basePrice = {{ product.get_discounted_price|default:0|floatformat:0|cut:' ' }};
                         const productId = {{ product.pk }};
                         
+                        // Global map to track selected addons: { addonId: price }
+                        const selectedAddons = {};
+
                         function getCsrfToken() {
                             var el = document.querySelector('[name=csrfmiddlewaretoken]');
                             var token = el ? el.value : null;
@@ -124,7 +219,32 @@
                             }
                             return token || '';
                         }
-                        
+
+                        function syncSizeSavings() {
+                            document.querySelectorAll('input[name="size"]').forEach(radio => {
+                                const btn = radio.closest('label')?.querySelector('.size-btn');
+                                const savingLabel = btn?.querySelector('.size-saving');
+                                const checkmark = btn?.querySelector('.checkmark');
+                                if (!btn || !savingLabel || !checkmark) return;
+                                const original = parseFloat(radio.dataset.originalPrice || '0');
+                                const discounted = parseFloat(radio.dataset.price || '0');
+                                const saving = Math.round(original - discounted);
+                                if (saving > 0) {
+                                    savingLabel.textContent = `-${saving} ₸ {% trans "экономия" %}`;
+                                    savingLabel.classList.remove('hidden');
+                                }
+                                if (radio.checked) {
+                                    checkmark.classList.remove('hidden');
+                                    btn.classList.add('pill-card-active', 'border-red-600', 'bg-red-50');
+                                    btn.classList.remove('border-gray-200');
+                                } else {
+                                    checkmark.classList.add('hidden');
+                                    btn.classList.remove('pill-card-active', 'border-red-600', 'bg-red-50');
+                                    btn.classList.add('border-gray-200');
+                                }
+                            });
+                        }
+
                         // Функция пересчёта цены
                         function updatePrice() {
                             let totalPrice = basePrice;
@@ -137,191 +257,400 @@
                                 originalPrice = parseFloat(selectedSize.dataset.originalPrice);
                             }
 
-                            // Добавляем цены выбранных добавок
-                            const selectedAddons = document.querySelectorAll('input[name="addon"]:checked');
-                            selectedAddons.forEach(addon => {
-                                totalPrice += parseFloat(addon.dataset.addonPrice);
+                            // Добавляем цены выбранных добавок из глобального объекта selectedAddons
+                            Object.values(selectedAddons).forEach(addonPrice => {
+                                totalPrice += addonPrice;
                             });
 
-                            // Обновляем отображение цены (без дробных частей)
-                            document.getElementById('price-display').textContent = Math.round(totalPrice) + ' ₸';
-                            // Обновляем только основную зачеркнутую цену (цены в карточках размеров остаются свои)
-                            if (originalPrice !== null) {
+                            const rounded = Math.round(totalPrice);
+                            document.getElementById('price-display').textContent = rounded + ' ₸';
+                            document.getElementById('sticky-price').textContent = rounded + ' ₸';
+
+                            let saving = 0;
+                            const stickyOriginal = document.getElementById('sticky-original-price');
+                            if (originalPrice !== null && originalPrice > totalPrice) {
                                 const el = document.getElementById('original-price-display');
                                 if (el) el.textContent = Math.round(originalPrice) + ' ₸';
+                                if (stickyOriginal) {
+                                    stickyOriginal.textContent = Math.round(originalPrice) + ' ₸';
+                                    stickyOriginal.classList.remove('hidden');
+                                }
+                                saving = Math.round(originalPrice - totalPrice);
+                            } else if (stickyOriginal) {
+                                stickyOriginal.classList.add('hidden');
                             }
+                            // no per-size summary saving chip on page
                         }
-                    
-                    // Слушатель на размеры
-                    document.querySelectorAll('input[name="size"]').forEach(radio => {
-                        radio.addEventListener('change', function() {
-                            // Убираем выделение со всех
+
+                        function handleSizeChange(radio) {
                             document.querySelectorAll('.size-btn').forEach(btn => {
-                                btn.classList.remove('border-red-600', 'bg-red-50');
+                                btn.classList.remove('pill-card-active', 'border-red-600', 'bg-red-50');
                                 btn.classList.add('border-gray-200');
+                                const mark = btn.querySelector('.checkmark');
+                                if (mark) mark.classList.add('hidden');
                             });
-                            // Добавляем выделение на выбранный
-                            const label = this.closest('label');
+                            const label = radio.closest('label');
                             const sizeBtn = label ? label.querySelector('.size-btn') : null;
                             if (sizeBtn) {
-                                sizeBtn.classList.add('border-red-600', 'bg-red-50');
+                                sizeBtn.classList.add('pill-card-active', 'border-red-600', 'bg-red-50');
                                 sizeBtn.classList.remove('border-gray-200');
+                                const mark = sizeBtn.querySelector('.checkmark');
+                                if (mark) mark.classList.remove('hidden');
                             }
                             updatePrice();
-                        });
-                    });
-                    
-                    // Инициализируем цену при загрузке
-                    updatePrice();
-                    
-                    // Слушатель на добавки — синхронизируем классы при изменении и инициализируем состояние
-                    document.querySelectorAll('.addon-card').forEach(card => {
-                        const checkbox = card.querySelector('input[name="addon"]');
-                        if (checkbox) {
-                            const syncState = () => {
-                                if (checkbox.checked) {
-                                    card.classList.add('border-red-600', 'bg-red-50');
-                                    card.classList.remove('border-gray-200');
-                                } else {
-                                    card.classList.remove('border-red-600', 'bg-red-50');
-                                    card.classList.add('border-gray-200');
-                                }
-                            };
+                            syncSizeSavings();
+                        }
 
-                            // Устанавливаем начальное состояние в соответствии с checkbox (на случай, если что-то предустановлено)
-                            syncState();
-
-                            // Обработчик изменения checkbox
-                            checkbox.addEventListener('change', function() {
-                                syncState();
-                                updatePrice();
-                            });
-
-                            // Клик по карточке переключает checkbox (кроме клика по самому checkbox)
-                            card.addEventListener('click', function(e) {
-                                if (e.target !== checkbox && !checkbox.contains(e.target)) {
-                                    e.preventDefault();
-                                    checkbox.checked = !checkbox.checked;
-                                    checkbox.dispatchEvent(new Event('change'));
-                                }
-                            });
-                        }
-                    });
-                    
-                    document.getElementById('add-to-cart-btn').addEventListener('click', function() {
-                        const quantity = document.getElementById('quantity-input').value;
-                        const csrfToken = getCsrfToken();
-                        
-                        if (!csrfToken) {
-                            console.error('CSRF token not found');
-                            return;
-                        }
-                        
-                        // Сбор информации о размере и добавках
-                        const selectedSize = document.querySelector('input[name="size"]:checked');
-                        const sizeId = selectedSize ? selectedSize.value : null;
-                        
-                        const selectedAddons = Array.from(document.querySelectorAll('input[name="addon"]:checked'))
-                            .map(addon => addon.value);
-                        
-                        let body = `quantity=${encodeURIComponent(quantity)}`;
-                        if (sizeId) {
-                            body += `&size_id=${encodeURIComponent(sizeId)}`;
-                        }
-                        if (selectedAddons.length > 0) {
-                            selectedAddons.forEach(addonId => {
-                                body += `&addon_ids=${encodeURIComponent(addonId)}`;
-                            });
-                        }
-                        
-                        const currentLang = window.location.pathname.split('/')[1] || 'ru';
-                        fetch(`/${currentLang}/cart/add/${productId}/`, {
-                            method: 'POST',
-                            credentials: 'same-origin',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                                'X-CSRFToken': csrfToken,
-                                'X-Requested-With': 'XMLHttpRequest'
-                            },
-                            body: body
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            const container = document.getElementById('toast-container');
-                            if (data.status === 'ok') {
-                                if (!container) {
-                                    const div = document.createElement('div');
-                                    div.id = 'toast-container';
-                                    div.className = 'fixed inset-x-0 top-6 z-[9999] flex flex-col items-center space-y-2';
-                                    document.body.prepend(div);
-                                }
-                                const toast = document.createElement('div');
-                                toast.className = 'toast-enter px-6 py-4 rounded-lg shadow-lg text-white bg-green-600 max-w-md pointer-events-auto';
-                                toast.setAttribute('data-message', data.message);
-                                // Build DOM nodes safely to avoid DOM XSS
-                                const inner = document.createElement('div');
-                                inner.className = 'flex items-center justify-between';
-                                const msgSpan = document.createElement('span');
-                                msgSpan.textContent = data.message || '';
-                                const closeBtn = document.createElement('button');
-                                closeBtn.className = 'ml-4 text-white hover:text-gray-200';
-                                closeBtn.textContent = '✕';
-                                closeBtn.addEventListener('click', function(){ toast.remove(); });
-                                inner.appendChild(msgSpan);
-                                inner.appendChild(closeBtn);
-                                toast.appendChild(inner);
-                                document.getElementById('toast-container').appendChild(toast);
-                                
-                                setTimeout(() => {
-                                    toast.classList.remove('toast-enter');
-                                    toast.classList.add('toast-exit');
-                                    setTimeout(() => toast.remove(), 300);
-                                }, 2000);
-                                
-                                // Обновляем счетчик корзины
-                                if (window.updateCartCount) {
-                                    window.updateCartCount();
-                                }
-                                
-                                // Обновляем панель доставки
-                                if (window.updateDeliveryPanel) {
-                                    window.updateDeliveryPanel();
-                                }
-                                
-                            } else if (data.status === 'error') {
-                                // Показываем toast с ошибкой
-                                if (!container) {
-                                    const div = document.createElement('div');
-                                    div.id = 'toast-container';
-                                    div.className = 'fixed inset-x-0 top-6 z-[9999] flex flex-col items-center space-y-2';
-                                    document.body.prepend(div);
-                                }
-                                const toast = document.createElement('div');
-                                toast.className = 'toast-enter px-6 py-4 rounded-lg shadow-lg text-white bg-red-600 max-w-md pointer-events-auto';
-                                const inner = document.createElement('div');
-                                inner.className = 'flex items-center justify-between';
-                                const msgSpan = document.createElement('span');
-                                msgSpan.textContent = data.message || 'Ошибка добавления товара';
-                                const closeBtn = document.createElement('button');
-                                closeBtn.className = 'ml-4 text-white hover:text-gray-200';
-                                closeBtn.textContent = '✕';
-                                closeBtn.addEventListener('click', function(){ toast.remove(); });
-                                inner.appendChild(msgSpan);
-                                inner.appendChild(closeBtn);
-                                toast.appendChild(inner);
-                                document.getElementById('toast-container').appendChild(toast);
-                                
-                                setTimeout(() => {
-                                    toast.classList.remove('toast-enter');
-                                    toast.classList.add('toast-exit');
-                                    setTimeout(() => toast.remove(), 300);
-                                }, 4000);
+                        function syncAddonState(card, checkbox) {
+                            const checkBadge = card.querySelector('.addon-check');
+                            if (checkbox.checked) {
+                                card.classList.add('border-red-600', 'bg-red-50', 'addon-tile-active');
+                                card.classList.remove('border-gray-200');
+                                if (checkBadge) checkBadge.classList.remove('hidden');
+                            } else {
+                                card.classList.remove('border-red-600', 'bg-red-50', 'addon-tile-active');
+                                card.classList.add('border-gray-200');
+                                if (checkBadge) checkBadge.classList.add('hidden');
                             }
-                        })
-                        .catch(err => console.error('Error:', err));
-                    });
+                        }
+
+                        function handleAddToCart() {
+                            const quantity = document.getElementById('quantity-input').value;
+                            const csrfToken = getCsrfToken();
+                            if (!csrfToken) {
+                                console.error('CSRF token not found');
+                                return;
+                            }
+
+                            const selectedSize = document.querySelector('input[name="size"]:checked');
+                            const sizeId = selectedSize ? selectedSize.value : null;
+
+                            // Get all selected addon IDs from the selectedAddons object (includes modal selections)
+                            const addonIds = Object.keys(selectedAddons);
+
+                            let body = `quantity=${encodeURIComponent(quantity)}`;
+                            if (sizeId) {
+                                body += `&size_id=${encodeURIComponent(sizeId)}`;
+                            }
+                            if (addonIds.length > 0) {
+                                addonIds.forEach(addonId => {
+                                    body += `&addon_ids=${encodeURIComponent(addonId)}`;
+                                });
+                            }
+
+                            const currentLang = window.location.pathname.split('/')[1] || 'ru';
+                            fetch(`/${currentLang}/cart/add/${productId}/`, {
+                                method: 'POST',
+                                credentials: 'same-origin',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                    'X-CSRFToken': csrfToken,
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                },
+                                body: body
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                const container = document.getElementById('toast-container');
+                                if (data.status === 'ok') {
+                                    if (!container) {
+                                        const div = document.createElement('div');
+                                        div.id = 'toast-container';
+                                        div.className = 'fixed left-1/2 -translate-x-1/2 top-6 z-[9999] flex flex-col items-center space-y-2 pointer-events-none w-max';
+                                        document.body.prepend(div);
+                                    }
+                                    const toast = document.createElement('div');
+                                    toast.className = 'toast-enter px-6 py-4 rounded-lg shadow-lg text-white bg-green-600 max-w-md transition-transform duration-150 ease-out';
+                                    toast.style.pointerEvents = 'auto';
+                                    toast.setAttribute('data-message', data.message);
+                                    const inner = document.createElement('div');
+                                    inner.className = 'flex items-center justify-between';
+                                    const msgSpan = document.createElement('span');
+                                    msgSpan.textContent = data.message || '';
+                                    const closeBtn = document.createElement('button');
+                                    closeBtn.className = 'ml-4 text-white hover:text-gray-200';
+                                    closeBtn.textContent = '✕';
+                                    closeBtn.addEventListener('click', function(){ toast.remove(); });
+                                    inner.appendChild(msgSpan);
+                                    inner.appendChild(closeBtn);
+                                    toast.appendChild(inner);
+                                    document.getElementById('toast-container').appendChild(toast);
+
+                                    setTimeout(() => {
+                                        toast.classList.remove('toast-enter');
+                                        toast.classList.add('toast-exit');
+                                        setTimeout(() => toast.remove(), 300);
+                                    }, 2000);
+
+                                    if (window.updateCartCount) {
+                                        window.updateCartCount();
+                                    }
+                                    if (window.updateDeliveryPanel) {
+                                        window.updateDeliveryPanel();
+                                    }
+
+                                } else if (data.status === 'error') {
+                                    if (!container) {
+                                        const div = document.createElement('div');
+                                        div.id = 'toast-container';
+                                        div.className = 'fixed left-1/2 -translate-x-1/2 top-6 z-[9999] flex flex-col items-center space-y-2 pointer-events-none w-max';
+                                        document.body.prepend(div);
+                                    }
+                                    const toast = document.createElement('div');
+                                    toast.className = 'toast-enter px-6 py-4 rounded-lg shadow-lg text-white bg-red-600 max-w-md';
+                                    toast.style.pointerEvents = 'auto';
+                                    const inner = document.createElement('div');
+                                    inner.className = 'flex items-center justify-between';
+                                    const msgSpan = document.createElement('span');
+                                    msgSpan.textContent = data.message || 'Ошибка добавления товара';
+                                    const closeBtn = document.createElement('button');
+                                    closeBtn.className = 'ml-4 text-white hover:text-gray-200';
+                                    closeBtn.textContent = '✕';
+                                    closeBtn.addEventListener('click', function(){ toast.remove(); });
+                                    inner.appendChild(msgSpan);
+                                    inner.appendChild(closeBtn);
+                                    toast.appendChild(inner);
+                                    document.getElementById('toast-container').appendChild(toast);
+
+                                    setTimeout(() => {
+                                        toast.classList.remove('toast-enter');
+                                        toast.classList.add('toast-exit');
+                                        setTimeout(() => toast.remove(), 300);
+                                    }, 4000);
+                                }
+                            })
+                            .catch(err => console.error('Error:', err));
+                        }
+
+                        // Слушатель на размеры
+                        document.querySelectorAll('input[name="size"]').forEach(radio => {
+                            radio.addEventListener('change', function() {
+                                handleSizeChange(this);
+                            });
+                        });
+
+                        // Слушатель на добавки — синхронизируем классы при изменении и инициализируем состояние
+                        document.querySelectorAll('.addon-card').forEach(card => {
+                            const checkbox = card.querySelector('input[name="addon"]');
+                            if (checkbox) {
+                                const syncState = () => {
+                                    syncAddonState(card, checkbox);
+                                };
+
+                                syncState();
+
+                                checkbox.addEventListener('change', function() {
+                                    syncState();
+                                    updatePrice();
+                                });
+
+                                card.addEventListener('click', function(e) {
+                                    if (e.target !== checkbox && !checkbox.contains(e.target)) {
+                                        e.preventDefault();
+                                        checkbox.checked = !checkbox.checked;
+                                        checkbox.dispatchEvent(new Event('change'));
+                                    }
+                                });
+                            }
+                        });
+
+                        document.getElementById('add-to-cart-btn').addEventListener('click', handleAddToCart);
+                        const stickyBtn = document.getElementById('sticky-add-to-cart-btn');
+                        if (stickyBtn) stickyBtn.addEventListener('click', handleAddToCart);
+
+                        // Инициализация визуальных состояний
+                        syncSizeSavings();
+                        updatePrice();
+
+                        // Sync main page addon checkboxes (работает всегда, даже без модального окна)
+                        document.querySelectorAll('input[name="addon"]').forEach(checkbox => {
+                            checkbox.addEventListener('change', function() {
+                                const addonId = this.value;
+                                const mainCard = this.closest('.addon-card');
+                                const price = parseFloat(this.getAttribute('data-addon-price')) || 0;
+                                
+                                if (this.checked) {
+                                    selectedAddons[addonId] = price;
+                                } else {
+                                    delete selectedAddons[addonId];
+                                }
+                                
+                                syncAddonState(mainCard, this);
+                                if (typeof syncModalTile === 'function') {
+                                    syncModalTile(addonId, this.checked);
+                                }
+                                updatePrice();
+                                if (typeof updateAddonsCountBadge === 'function') {
+                                    updateAddonsCountBadge();
+                                }
+                            });
+                        });
+
+                        // Addons modal logic with full interactivity (только если есть модальное окно)
+                        const showAllBtn = document.getElementById('show-all-addons');
+                        const addonsModal = document.getElementById('addons-modal');
+                        if (showAllBtn && addonsModal) {
+                            const openModal = () => { addonsModal.classList.remove('hidden'); document.body.style.overflow='hidden'; syncAllModalTiles(); };
+                            const closeModal = () => { addonsModal.classList.add('hidden'); document.body.style.overflow='auto'; };
+                            showAllBtn.addEventListener('click', openModal);
+                            addonsModal.querySelectorAll('[data-modal-close]').forEach(btn=>btn.addEventListener('click', closeModal));
+                            addonsModal.addEventListener('click', function(e){ if (e.target === addonsModal) closeModal(); });
+                            
+                            // Sync modal tiles - when modal opens, reflect current selections
+                            function syncAllModalTiles() {
+                                addonsModal.querySelectorAll('.modal-addon-tile').forEach(tile => {
+                                    const id = tile.getAttribute('data-addon-id');
+                                    const isSelected = selectedAddons.hasOwnProperty(id);
+                                    const checkBadge = tile.querySelector('.addon-check');
+                                    if (isSelected) {
+                                        tile.classList.add('border-red-600', 'bg-red-50');
+                                        tile.classList.remove('border-gray-200');
+                                        if (checkBadge) checkBadge.classList.remove('hidden');
+                                    } else {
+                                        tile.classList.remove('border-red-600', 'bg-red-50');
+                                        tile.classList.add('border-gray-200');
+                                        if (checkBadge) checkBadge.classList.add('hidden');
+                                    }
+                                });
+                            }
+                            
+                            // Update modal tile styling when addon selected/deselected
+                            function syncModalTile(addonId, isChecked) {
+                                const tile = document.querySelector(`.modal-addon-tile[data-addon-id="${addonId}"]`);
+                                const checkBadge = tile ? tile.querySelector('.addon-check') : null;
+                                if (tile) {
+                                    if (isChecked) {
+                                        tile.classList.add('border-red-600', 'bg-red-50');
+                                        tile.classList.remove('border-gray-200');
+                                        if (checkBadge) checkBadge.classList.remove('hidden');
+                                    } else {
+                                        tile.classList.remove('border-red-600', 'bg-red-50');
+                                        tile.classList.add('border-gray-200');
+                                        if (checkBadge) checkBadge.classList.add('hidden');
+                                    }
+                                }
+                                updateAddonsCountBadge();
+                            }
+                            
+                            // Update counter badge for show-all-addons button
+                            function updateAddonsCountBadge() {
+                                const countBadge = document.getElementById('addons-count');
+                                if (!countBadge) return;
+                                
+                                // Count addons not in first 6
+                                const firstSixIds = Array.from(document.querySelectorAll('.addon-card[data-addon-id]'))
+                                    .map(el => el.getAttribute('data-addon-id'));
+                                
+                                let extraCount = 0;
+                                Object.keys(selectedAddons).forEach(addonId => {
+                                    if (!firstSixIds.includes(addonId)) {
+                                        extraCount++;
+                                    }
+                                });
+                                
+                                if (extraCount > 0) {
+                                    countBadge.textContent = extraCount;
+                                    countBadge.style.display = 'flex';
+                                } else {
+                                    countBadge.style.display = 'none';
+                                }
+                            }
+
+                            // Clicking modal tile toggles corresponding checkbox in the main list
+                            addonsModal.querySelectorAll('.modal-addon-tile').forEach(tile => {
+                                tile.addEventListener('click', function(){
+                                    const id = this.getAttribute('data-addon-id');
+                                    const price = parseFloat(this.getAttribute('data-addon-price')) || 0;
+                                    
+                                    // Find corresponding checkbox or create virtual selection
+                                    let checkbox = document.querySelector(`input[name="addon"][value="${id}"]`);
+                                    if (checkbox) {
+                                        checkbox.checked = !checkbox.checked;
+                                        checkbox.dispatchEvent(new Event('change'));
+                                    } else {
+                                        // If addon is not in main list (beyond first 6), still track it
+                                        if (selectedAddons.hasOwnProperty(id)) {
+                                            delete selectedAddons[id];
+                                        } else {
+                                            selectedAddons[id] = price;
+                                        }
+                                        syncModalTile(id, selectedAddons.hasOwnProperty(id));
+                                        updatePrice();
+                                        updateAddonsCountBadge();
+                                    }
+                                });
+                            });
+                        }
+
+                        // Adjust chat button above sticky bar only on this page
+                        (function adjustChatForSticky(){
+                            const sticky = document.getElementById('sticky-bar');
+                            if (!sticky) return;
+                            const stickyHeight = sticky.offsetHeight || 64;
+                            const widget = document.getElementById('chat-widget');
+                            if (widget) {
+                                widget.style.bottom = (stickyHeight + 16) + 'px';
+                                widget.style.zIndex = 50;
+                            }
+                        })();
+
+                        // Hide delivery info bar on mobile for this product page to avoid overlap
+                        (function hideDeliveryBarMobile(){
+                            const isMobile = window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
+                            const bar = document.getElementById('delivery-info-bar');
+                            if (isMobile && bar) { bar.style.display = 'none'; }
+                        })();
                     }); // Закрытие DOMContentLoaded
                 </script>
+            </div>
+        </div>
+
+        <!-- Блок берут вместе / комбо -->
+        <div class="mt-10 md:mt-14">
+            <div class="flex items-center justify-between mb-4 md:mb-6">
+                <h3 class="text-xl md:text-2xl font-bold">{% trans "Берут вместе" %}</h3>
+                <span class="text-sm text-gray-500">{% trans "Популярные сочетания" %}</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                <div class="p-4 bg-white rounded-2xl border shadow-sm hover:shadow-md transition transform hover:-translate-y-[1px]">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center text-2xl">🍕</div>
+                        <div>
+                            <p class="font-semibold text-sm md:text-base">{% trans "Пицца + Соус + Напиток" %}</p>
+                            <p class="text-xs text-gray-500">{% trans "Хит комбо для вечера" %}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-sm md:text-base">
+                        <span class="font-bold text-red-600">{% trans "-10%" %}</span>
+                        <button class="text-xs md:text-sm px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">{% trans "Добавить" %}</button>
+                    </div>
+                </div>
+                <div class="p-4 bg-white rounded-2xl border shadow-sm hover:shadow-md transition transform hover:-translate-y-[1px]">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-yellow-100 to-amber-100 flex items-center justify-center text-2xl">🥤</div>
+                        <div>
+                            <p class="font-semibold text-sm md:text-base">{% trans "Две пиццы + напитки" %}</p>
+                            <p class="text-xs text-gray-500">{% trans "Для компании" %}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-sm md:text-base">
+                        <span class="font-bold text-red-600">{% trans "Бесплатная доставка" %}</span>
+                        <button class="text-xs md:text-sm px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">{% trans "Выбрать" %}</button>
+                    </div>
+                </div>
+                <div class="p-4 bg-white rounded-2xl border shadow-sm hover:shadow-md transition transform hover:-translate-y-[1px]">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-lime-100 to-emerald-100 flex items-center justify-center text-2xl">🌶️</div>
+                        <div>
+                            <p class="font-semibold text-sm md:text-base">{% trans "Острый сет" %}</p>
+                            <p class="text-xs text-gray-500">{% trans "Для любителей пикантного" %}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-sm md:text-base">
+                        <span class="font-bold text-red-600">{% trans "+ добавки в подарок" %}</span>
+                        <button class="text-xs md:text-sm px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">{% trans "Собрать" %}</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -369,19 +698,19 @@
             <div class="mb-6">
                 <div class="flex flex-wrap gap-2 mb-4" id="reviews-filter-buttons">
                     <button data-filter="all" 
-                       class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition bg-red-600 text-white">
+                       class="filter-btn px-4 py-2 rounded-full text-sm font-semibold transition bg-red-600 text-white shadow-sm">
                         {% trans "Все отзывы" %} (<span class="count-all">{{ reviews_count.all }}</span>)
                     </button>
                     <button data-filter="with_photo" 
-                       class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition bg-gray-200 text-gray-700 hover:bg-gray-300">
+                       class="filter-btn px-4 py-2 rounded-full text-sm font-semibold transition bg-gray-100 text-gray-700 hover:bg-gray-200">
                         {% trans "С фото" %} (<span class="count-with-photo">{{ reviews_count.with_photo }}</span>)
                     </button>
                     <button data-filter="positive" 
-                       class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition bg-gray-200 text-gray-700 hover:bg-gray-300">
+                       class="filter-btn px-4 py-2 rounded-full text-sm font-semibold transition bg-gray-100 text-gray-700 hover:bg-gray-200">
                         {% trans "Положительные" %} (<span class="count-positive">{{ reviews_count.positive }}</span>)
                     </button>
                     <button data-filter="negative" 
-                       class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition bg-gray-200 text-gray-700 hover:bg-gray-300">
+                       class="filter-btn px-4 py-2 rounded-full text-sm font-semibold transition bg-gray-100 text-gray-700 hover:bg-gray-200">
                         {% trans "Отрицательные" %} (<span class="count-negative">{{ reviews_count.negative }}</span>)
                     </button>
                 </div>
@@ -390,7 +719,7 @@
             <!-- Список отзывов -->
             <div class="space-y-3 md:space-y-4" id="reviews-list">
                 {% for review in reviews %}
-                <div class="border rounded-lg p-4 md:p-6{% if review.admin_comment %} bg-blue-50{% endif %}">
+                <div class="border rounded-xl p-4 md:p-6 {% if review.admin_comment %}bg-blue-50{% else %}bg-white{% endif %} shadow-sm hover:shadow transition">
                     <div class="flex justify-between items-start mb-3 gap-2">
                         <div class="flex items-center gap-2">
                             <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden flex-shrink-0">
@@ -401,7 +730,9 @@
                                 {% endif %}
                             </div>
                             <div>
-                                <h4 class="font-semibold text-sm md:text-base">{{ review.name }}</h4>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h4 class="font-semibold text-sm md:text-base">{{ review.name }}</h4>
+                                </div>
                                 <span class="text-xs text-gray-500">{{ review.created_at|date:"d.m.Y" }}</span>
                             </div>
                         </div>
@@ -414,18 +745,21 @@
                     <p class="text-gray-700 mb-3 text-sm md:text-base">{{ review.comment }}</p>
                     
                     {% if review.photo %}
-                    <img src="{{ review.photo.url }}" alt="Фото отзыва" class="w-64 h-64 md:w-96 md:h-96 object-cover rounded mb-3 cursor-pointer hover:opacity-90 transition" onclick="openImageModal('{{ review.photo.url|escapejs }}')">
+                    <div class="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
+                        <img src="{{ review.photo.url }}" alt="Фото отзыва" class="w-full aspect-square object-cover rounded-lg cursor-pointer hover:opacity-90 transition" onclick="openImageModal('{{ review.photo.url|escapejs }}')">
+                    </div>
                     {% endif %}
                     
                     <!-- Админ комментарий (если есть) -->
                     {% if review.admin_comment %}
-                    <div class="bg-white border-l-4 border-blue-500 p-3 md:p-4 mt-4 rounded-r">
+                    <div class="admin-bubble bg-blue-50 border border-blue-200 p-3 md:p-4 mt-4 rounded-2xl shadow-sm">
                         <div class="flex items-start gap-2 mb-2">
                             <div class="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">
                                 <i class="fa-solid fa-shield text-blue-600"></i>
                             </div>
-                            <div>
+                            <div class="flex-1">
                                 <p class="text-[10px] md:text-xs font-semibold text-blue-700">{% trans "Администратор" %}</p>
+                                <p class="text-[10px] md:text-xs text-gray-500 mt-1">{{ review.updated_at|default:review.created_at|date:"d.m.Y" }}</p>
                             </div>
                         </div>
                         <p class="text-xs md:text-sm text-gray-700 ml-10">{{ review.admin_comment }}</p>
@@ -438,7 +772,7 @@
                         {% csrf_token %}
                         <div class="flex flex-col sm:flex-row gap-2">
                             <input type="text" name="admin_comment" placeholder="{% trans "Ответить на отзыв..." %}" class="flex-1 px-2 md:px-3 py-1 md:py-1.5 border rounded text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                            <button type="submit" class="bg-blue-600 text-white px-3 md:px-4 py-1 md:py-1.5 rounded text-xs md:text-sm hover:bg-blue-700 whitespace-nowrap">{% trans "Ответить" %}</button>
+                            <button type="submit" class="bg-blue-600 text-white px-3 md:px-4 py-1 md:py-1.5 rounded text-xs md:text-sm hover:bg-blue-700 whitespace-nowrap transition">{% trans "Ответить" %}</button>
                         </div>
                     </form>
                     {% endif %}
@@ -459,121 +793,137 @@
     </div>
 
     <script>
-        // AJAX фильтрация отзывов
+        // AJAX фильтрация отзывов с skeleton и обновленными карточками
         document.addEventListener('DOMContentLoaded', function() {
             const filterButtons = document.querySelectorAll('.filter-btn');
             const reviewsList = document.getElementById('reviews-list');
             const productId = {{ product.pk }};
             const orderIdParam = '{{ order_id|default:"" }}';
-            
+
+            const renderSkeleton = () => {
+                const skeletonCard = `
+                    <div class="border rounded-xl p-4 md:p-6 bg-white shadow-sm">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 rounded-full skeleton"></div>
+                            <div class="flex-1 space-y-2">
+                                <div class="h-3 w-24 rounded skeleton"></div>
+                                <div class="h-3 w-16 rounded skeleton"></div>
+                            </div>
+                        </div>
+                        <div class="h-3 w-32 rounded skeleton mb-2"></div>
+                        <div class="h-3 w-full rounded skeleton mb-2"></div>
+                        <div class="h-3 w-3/5 rounded skeleton"></div>
+                    </div>
+                `;
+                reviewsList.innerHTML = skeletonCard.repeat(3);
+            };
+
+            const renderReviews = (data, currentLang) => {
+                if (!data.has_reviews) {
+                    reviewsList.innerHTML = '<p class="text-gray-500 text-sm md:text-base">{% trans "Пока нет отзывов. Будьте первым!" %}</p>';
+                    return;
+                }
+                let reviewsHtml = '';
+                data.reviews.forEach(review => {
+                    let stars = '';
+                    for (let i = 1; i <= 5; i++) {
+                        stars += i <= review.rating ? '★' : '☆';
+                    }
+
+                    const avatarHtml = review.avatar_url
+                        ? `<img src="${review.avatar_url}" alt="${review.name}" class="w-full h-full object-cover">`
+                        : review.name.charAt(0).toUpperCase();
+
+                    const photoHtml = review.photo_url ? `
+                        <div class="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
+                            <img src="${review.photo_url}" alt="Фото отзыва" class="w-full aspect-square object-cover rounded-lg cursor-pointer hover:opacity-90 transition" onclick="openImageModal('${review.photo_url}')">
+                        </div>
+                    ` : '';
+
+                    const verified = '';
+
+                    const adminCommentHtml = review.admin_comment ? `
+                        <div class="admin-bubble bg-blue-50 border border-blue-200 p-3 md:p-4 mt-4 rounded-2xl shadow-sm">
+                            <div class="flex items-start gap-2 mb-2">
+                                <div class="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                    <i class="fa-solid fa-shield text-blue-600"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-[10px] md:text-xs font-semibold text-blue-700">{% trans "Администратор" %}</p>
+                                    <p class="text-[10px] md:text-xs text-gray-500 mt-1">${review.admin_comment_date || review.created_at}</p>
+                                </div>
+                            </div>
+                            <p class="text-xs md:text-sm text-gray-700 ml-10">${review.admin_comment}</p>
+                        </div>
+                    ` : '';
+
+                    const adminFormHtml = review.user_is_staff ? `
+                        <form method="POST" action="/${currentLang}/reviews/${review.id}/admin-comment/" class="mt-3 md:mt-4 pt-3 md:pt-4 border-t">
+                            <input type="hidden" name="csrfmiddlewaretoken" value="${getCsrfToken()}">
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <input type="text" name="admin_comment" placeholder="{% trans 'Ответить на отзыв...' %}" class="flex-1 px-2 md:px-3 py-1 md:py-1.5 border rounded text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <button type="submit" class="bg-blue-600 text-white px-3 md:px-4 py-1 md:py-1.5 rounded text-xs md:text-sm hover:bg-blue-700 whitespace-nowrap transition">{% trans "Ответить" %}</button>
+                            </div>
+                        </form>
+                    ` : '';
+
+                    reviewsHtml += `
+                        <div class="border rounded-xl p-4 md:p-6 ${review.admin_comment ? 'bg-blue-50' : 'bg-white'} shadow-sm hover:shadow transition">
+                            <div class="flex justify-between items-start mb-3 gap-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden flex-shrink-0">
+                                        ${avatarHtml}
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <h4 class="font-semibold text-sm md:text-base">${review.name}</h4>
+                                            ${verified}
+                                        </div>
+                                        <span class="text-xs text-gray-500">${review.created_at}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-yellow-500 mb-2 text-sm md:text-base">${stars}</div>
+                            <p class="text-gray-700 mb-3 text-sm md:text-base">${review.comment}</p>
+                            ${photoHtml}
+                            ${adminCommentHtml}
+                            ${adminFormHtml}
+                        </div>
+                    `;
+                });
+                reviewsList.innerHTML = reviewsHtml;
+            };
+
             filterButtons.forEach(button => {
                 button.addEventListener('click', function(e) {
                     e.preventDefault();
                     const filter = this.getAttribute('data-filter');
-                    
-                    // Обновляем стили кнопок
+
                     filterButtons.forEach(btn => {
-                        btn.classList.remove('bg-red-600', 'text-white');
-                        btn.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                        btn.classList.remove('bg-red-600', 'text-white', 'shadow-sm');
+                        btn.classList.add('bg-gray-100', 'text-gray-700');
                     });
-                    this.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
-                    this.classList.add('bg-red-600', 'text-white');
-                    
-                    // Получаем язык из URL
+                    this.classList.add('bg-red-600', 'text-white', 'shadow-sm');
+                    this.classList.remove('bg-gray-100', 'text-gray-700');
+
                     const currentLang = window.location.pathname.split('/')[1] || 'ru';
-                    
-                    // Загружаем отзывы через API
+
                     let url = `/${currentLang}/api/products/${productId}/reviews/?filter=${filter}`;
                     if (orderIdParam) {
                         url += `&order_id=${orderIdParam}`;
                     }
-                    
+
+                    renderSkeleton();
+
                     fetch(url)
                         .then(response => response.json())
                         .then(data => {
                             if (data.status === 'success') {
-                                // Обновляем счетчики
                                 document.querySelector('.count-all').textContent = data.reviews_count.all;
                                 document.querySelector('.count-with-photo').textContent = data.reviews_count.with_photo;
                                 document.querySelector('.count-positive').textContent = data.reviews_count.positive;
                                 document.querySelector('.count-negative').textContent = data.reviews_count.negative;
-                                
-                                // Обновляем список отзывов
-                                if (data.has_reviews) {
-                                    let reviewsHtml = '';
-                                    data.reviews.forEach(review => {
-                                        let stars = '';
-                                        for (let i = 1; i <= 5; i++) {
-                                            stars += i <= review.rating ? '★' : '☆';
-                                        }
-                                        
-                                        let avatarHtml = '';
-                                        if (review.avatar_url) {
-                                            avatarHtml = `<img src="${review.avatar_url}" alt="${review.name}" class="w-full h-full object-cover">`;
-                                        } else {
-                                            avatarHtml = review.name.charAt(0).toUpperCase();
-                                        }
-                                        
-                                        let photoHtml = '';
-                                        if (review.photo_url) {
-                                            photoHtml = `<img src="${review.photo_url}" alt="Фото отзыва" class="w-64 h-64 md:w-96 md:h-96 object-cover rounded mb-3 cursor-pointer hover:opacity-90 transition" onclick="openImageModal('${review.photo_url}')">`;
-                                        }
-                                        
-                                        let adminCommentHtml = '';
-                                        if (review.admin_comment) {
-                                            adminCommentHtml = `
-                                                <div class="bg-white border-l-4 border-blue-500 p-3 md:p-4 mt-4 rounded-r">
-                                                    <div class="flex items-start gap-2 mb-2">
-                                                        <div class="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">
-                                                            <i class="fa-solid fa-shield text-blue-600"></i>
-                                                        </div>
-                                                        <div>
-                                                            <p class="text-[10px] md:text-xs font-semibold text-blue-700">{% trans "Администратор" %}</p>
-                                                        </div>
-                                                    </div>
-                                                    <p class="text-xs md:text-sm text-gray-700 ml-10">${review.admin_comment}</p>
-                                                </div>
-                                            `;
-                                        }
-                                        
-                                        let adminFormHtml = '';
-                                        if (review.user_is_staff) {
-                                            adminFormHtml = `
-                                                <form method="POST" action="/${currentLang}/reviews/${review.id}/admin-comment/" class="mt-3 md:mt-4 pt-3 md:pt-4 border-t">
-                                                    <input type="hidden" name="csrfmiddlewaretoken" value="${getCsrfToken()}">
-                                                    <div class="flex flex-col sm:flex-row gap-2">
-                                                        <input type="text" name="admin_comment" placeholder="{% trans "Ответить на отзыв..." %}" class="flex-1 px-2 md:px-3 py-1 md:py-1.5 border rounded text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                                                        <button type="submit" class="bg-blue-600 text-white px-3 md:px-4 py-1 md:py-1.5 rounded text-xs md:text-sm hover:bg-blue-700 whitespace-nowrap">{% trans "Ответить" %}</button>
-                                                    </div>
-                                                </form>
-                                            `;
-                                        }
-                                        
-                                        reviewsHtml += `
-                                            <div class="border rounded-lg p-4 md:p-6${review.admin_comment ? ' bg-blue-50' : ''}">
-                                                <div class="flex justify-between items-start mb-3 gap-2">
-                                                    <div class="flex items-center gap-2">
-                                                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden flex-shrink-0">
-                                                            ${avatarHtml}
-                                                        </div>
-                                                        <div>
-                                                            <h4 class="font-semibold text-sm md:text-base">${review.name}</h4>
-                                                            <span class="text-xs text-gray-500">${review.created_at}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="text-yellow-500 mb-2 text-sm md:text-base">${stars}</div>
-                                                <p class="text-gray-700 mb-3 text-sm md:text-base">${review.comment}</p>
-                                                ${photoHtml}
-                                                ${adminCommentHtml}
-                                                ${adminFormHtml}
-                                            </div>
-                                        `;
-                                    });
-                                    reviewsList.innerHTML = reviewsHtml;
-                                } else {
-                                    reviewsList.innerHTML = '<p class="text-gray-500 text-sm md:text-base">{% trans "Пока нет отзывов. Будьте первым!" %}</p>';
-                                }
+                                renderReviews(data, currentLang);
                             }
                         })
                         .catch(error => {
@@ -581,7 +931,7 @@
                         });
                 });
             });
-            
+
             function getCsrfToken() {
                 const cookieValue = document.cookie
                     .split('; ')

@@ -137,11 +137,24 @@ def build_cart_items(cart):
         size_id = item.get('size_id')
         addons_info = item.get('addons_info', [])
         addon_ids = item.get('addon_ids', [])
+        
+        # Используем original_price из сессии, если есть, иначе рассчитываем
+        original_price = item.get('original_price')
+        if original_price is None:
+            # Для старых записей в сессии без original_price
+            original_price = item['price']
+            if product.discount > 0 and size_id:
+                try:
+                    size = product.sizes.get(pk=size_id)
+                    original_price = float(size.price)
+                except:
+                    pass
 
         cart_items.append({
             'product': product,
             'quantity': item['quantity'],
             'price': item['price'],
+            'original_price': original_price,
             'subtotal': subtotal,
             'size_name': size_name,
             'size_id': size_id,
@@ -329,6 +342,7 @@ def filter_reviews_api(request, pk):
             'avatar_url': avatar_url,
             'created_at': review.created_at.strftime('%d.%m.%Y'),
             'admin_comment': review.admin_comment,
+            'admin_comment_date': review.admin_comment and review.created_at.strftime('%d.%m.%Y') or '',
             'user_is_staff': request.user.is_staff if request.user.is_authenticated else False,
         })
     
@@ -465,6 +479,7 @@ def add_to_cart(request, pk):
     
     # Рассчитываем цену
     price = float(product.get_discounted_price() or 0)
+    original_price = float(product.get_min_price() or price)  # Оригинальная цена без скидки
     size_name = None
     addons_info = []
     
@@ -472,6 +487,7 @@ def add_to_cart(request, pk):
         try:
             size = Size.objects.get(id=size_id, product=product)
             price = float(size.get_discounted_price())
+            original_price = float(size.price)  # Оригинальная цена размера
             size_name = size.name
         except Size.DoesNotExist:
             pass
@@ -497,6 +513,7 @@ def add_to_cart(request, pk):
         cart[cart_key] = {
             'quantity': quantity,
             'price': price,
+            'original_price': original_price,
             'product_id': product_id,
             'size_id': size_id,
             'size_name': size_name,
@@ -528,11 +545,17 @@ def cart_view(request):
     categories = Category.objects.all()
     cart = get_cart(request)
     cart_items, total = build_cart_items(cart)
+    
+    # Рекомендованные товары (популярные или из тех же категорий)
+    recommended_products = Product.objects.filter(
+        discount__gt=0
+    ).order_by('-created_at')[:4]
 
     return render(request, 'webapp/cart.html', {
         'categories': categories,
         'cart_items': cart_items,
-        'total': total
+        'total': total,
+        'recommended_products': recommended_products
     })
 
 def cart_count_api(request):
