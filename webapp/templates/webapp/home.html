@@ -87,7 +87,7 @@
                     {% endif %}
                     
                     {% if product.image %}
-                    <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" class="w-32 h-32 md:w-full md:h-auto md:aspect-square object-cover rounded md:mb-3 flex-shrink-0 md:group-hover:scale-95 transition-transform duration-300">
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-32 h-32 md:w-full md:h-auto md:aspect-square object-cover rounded md:mb-3 flex-shrink-0 md:group-hover:scale-95 transition-transform duration-300">
                     {% else %}
                     <div class="w-32 h-32 md:w-full md:aspect-square bg-gray-100 rounded md:mb-3 flex items-center justify-center flex-shrink-0">
                         <span class="text-gray-400 text-xs md:text-sm">{% trans "Нет фото" %}</span>
@@ -99,7 +99,7 @@
                         
                         <!-- Рейтинг и отзывы -->
                         {% if product.average_rating %}
-                        <div class="flex items-center gap-1 mb-2 text-xs">
+                        <div class="flex items-center gap-1 text-xs">
                             <span class="text-yellow-500">{% for i in "12345" %}{% if forloop.counter <= product.average_rating|floatformat:0|add:"0" %}★{% else %}☆{% endif %}{% endfor %}</span>
                             <span class="text-gray-600">({{ product.reviews_count|default:0 }})</span>
                         </div>
@@ -154,7 +154,7 @@
                     {% endif %}
                     
                     {% if product.image %}
-                    <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" class="w-32 h-32 md:w-full md:h-auto md:aspect-square object-cover rounded md:mb-3 flex-shrink-0 md:group-hover:scale-95 transition-transform duration-300">
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-32 h-32 md:w-full md:h-auto md:aspect-square object-cover rounded md:mb-3 flex-shrink-0 md:group-hover:scale-95 transition-transform duration-300">
                     {% else %}
                     <div class="w-32 h-32 md:w-full md:aspect-square bg-gray-100 rounded md:mb-3 flex items-center justify-center flex-shrink-0">
                         <span class="text-gray-400 text-xs md:text-sm">{% trans "Нет фото" %}</span>
@@ -166,7 +166,7 @@
                         
                         <!-- Рейтинг и отзывы -->
                         {% if product.average_rating %}
-                        <div class="flex items-center gap-1 mb-2 text-xs">
+                        <div class="flex items-center gap-1 text-xs">
                             <span class="text-yellow-500">{% for i in "12345" %}{% if forloop.counter <= product.average_rating|floatformat:0|add:"0" %}★{% else %}☆{% endif %}{% endfor %}</span>
                             <span class="text-gray-600">({{ product.reviews_count|default:0 }})</span>
                         </div>
