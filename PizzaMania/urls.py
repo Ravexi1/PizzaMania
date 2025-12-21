@@ -25,6 +25,8 @@ from django.utils.translation import get_language
 urlpatterns = [
     path('', RedirectView.as_view(url='/ru/', permanent=False)),
     path('i18n/', include('django.conf.urls.i18n')),
+    # API routes are not localized
+    path('api/', include('crm.urls')),
 ]
 
 urlpatterns += i18n_patterns(

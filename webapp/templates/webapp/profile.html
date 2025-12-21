@@ -193,13 +193,18 @@
                                 <span class="text-sm text-gray-500 ml-3">{{ order_data.order.created_at|date:"d.m.Y H:i" }}</span>
                             </div>
                             <span class="px-3 py-1 rounded-full text-xs font-semibold
-                                {% if order_data.order.status == 'pending' %}bg-yellow-100 text-yellow-800
-                                {% elif order_data.order.status == 'processing' %}bg-blue-100 text-blue-800
+                                {% if order_data.order.status == 'new' or order_data.order.status == 'waiting_cook' %}bg-blue-100 text-blue-800
+                                {% elif order_data.order.status == 'cooking' %}bg-yellow-100 text-yellow-800
+                                {% elif order_data.order.status == 'waiting_courier' %}bg-purple-100 text-purple-800
+                                {% elif order_data.order.status == 'delivering' %}bg-indigo-100 text-indigo-800
                                 {% elif order_data.order.status == 'completed' %}bg-green-100 text-green-800
                                 {% elif order_data.order.status == 'cancelled' %}bg-red-100 text-red-800
                                 {% endif %}">
-                                {% if order_data.order.status == 'pending' %}{% trans "Ожидает" %}
-                                {% elif order_data.order.status == 'processing' %}{% trans "Готовится" %}
+                                {% if order_data.order.status == 'new' %}{% trans "Новый" %}
+                                {% elif order_data.order.status == 'waiting_cook' %}{% trans "Ожидает повара" %}
+                                {% elif order_data.order.status == 'cooking' %}{% trans "Готовится" %}
+                                {% elif order_data.order.status == 'waiting_courier' %}{% trans "Ожидает курьера" %}
+                                {% elif order_data.order.status == 'delivering' %}{% trans "Доставляется" %}
                                 {% elif order_data.order.status == 'completed' %}{% trans "Завершен" %}
                                 {% elif order_data.order.status == 'cancelled' %}{% trans "Отменён" %}
                                 {% endif %}

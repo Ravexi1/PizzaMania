@@ -18,13 +18,18 @@
                 </div>
                 <div class="text-left sm:text-right">
                     <span class="inline-block px-2 md:px-3 py-1 rounded-full text-white text-xs md:text-sm font-semibold
-                        {% if order.status == 'new' %}bg-blue-500
-                        {% elif order.status == 'processing' %}bg-yellow-500
+                        {% if order.status == 'new' or order.status == 'waiting_cook' %}bg-blue-500
+                        {% elif order.status == 'cooking' %}bg-yellow-500
+                        {% elif order.status == 'waiting_courier' %}bg-purple-500
+                        {% elif order.status == 'delivering' %}bg-indigo-500
                         {% elif order.status == 'completed' %}bg-green-500
                         {% else %}bg-red-500
                         {% endif %}">
                         {% if order.status == 'new' %}{% trans "Новый" %}
-                        {% elif order.status == 'processing' %}{% trans "В обработке" %}
+                        {% elif order.status == 'waiting_cook' %}{% trans "Ожидает повара" %}
+                        {% elif order.status == 'cooking' %}{% trans "Готовится" %}
+                        {% elif order.status == 'waiting_courier' %}{% trans "Ожидает курьера" %}
+                        {% elif order.status == 'delivering' %}{% trans "Доставляется" %}
                         {% elif order.status == 'completed' %}{% trans "Завершен" %}
                         {% else %}{% trans "Отменен" %}
                         {% endif %}

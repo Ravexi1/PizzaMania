@@ -101,7 +101,10 @@ class UserProfile(models.Model):
 class Order(models.Model):
     STATUS_CHOICES = [
         ('new', 'Новый'),
-        ('processing', 'В обработке'),
+        ('waiting_cook', 'Ожидает повара'),
+        ('cooking', 'Готовится'),
+        ('waiting_courier', 'Ожидает курьера'),
+        ('delivering', 'Доставляется'),
         ('completed', 'Завершен'),
         ('cancelled', 'Отменен'),
     ]

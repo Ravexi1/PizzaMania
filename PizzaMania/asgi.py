@@ -33,12 +33,13 @@ if settings.DEBUG and ASGIStaticFilesHandler:
 
 # И только ПОТОМ импортируем всё, что тянет модели
 import webapp.routing
+import crm.routing
 
 application = ProtocolTypeRouter({
     'http': django_asgi_app,
     'websocket': AuthMiddlewareStack(
         URLRouter(
-            webapp.routing.websocket_urlpatterns
+            webapp.routing.websocket_urlpatterns + crm.routing.websocket_urlpatterns
         )
     ),
 })

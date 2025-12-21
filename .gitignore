@@ -31,3 +31,8 @@ staticfiles/
 # keep .env.example tracked, but ignore actual .env files
 .env.local
 .env.*
+
+# JavaScript / Frontend
+node_modules/
+dist/
+.eslintcache

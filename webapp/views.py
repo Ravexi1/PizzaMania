@@ -847,6 +847,7 @@ def checkout(request):
             entrance=entrance,
             apartment=apartment,
             courier_comment=courier_comment,
+            status='waiting_cook',
             total_price=Decimal('0.00'),
             delivery_price=Decimal('0.00')
         )
