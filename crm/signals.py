@@ -122,6 +122,10 @@ def create_lead_from_order(sender, instance: Order, created, **kwargs):
 
 @receiver(post_save, sender=Chat)
 def create_lead_from_chat(sender, instance: Chat, created, **kwargs):
+    # Disabled: operator work should not create leads from chats
+    from django.conf import settings
+    if not getattr(settings, 'CRM_CREATE_LEADS_FROM_CHAT_REVIEW', False):
+        return
     if not created:
         return
     contact = get_or_create_contact_from_chat(instance)
@@ -140,6 +144,10 @@ def create_lead_from_chat(sender, instance: Chat, created, **kwargs):
 
 @receiver(post_save, sender=Review)
 def create_lead_from_review(sender, instance: Review, created, **kwargs):
+    # Disabled: operator work should not create leads from reviews
+    from django.conf import settings
+    if not getattr(settings, 'CRM_CREATE_LEADS_FROM_CHAT_REVIEW', False):
+        return
     if not created:
         return
     contact = get_or_create_contact_from_review(instance)

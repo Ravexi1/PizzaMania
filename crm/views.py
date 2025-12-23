@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
@@ -9,6 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from .models import Contact, PipelineStage, Tag, Lead, LeadStage, Note, Task
+from webapp.models import Chat, Message, Review
 from .serializers import (
     ContactSerializer,
     PipelineStageSerializer,
@@ -17,6 +18,9 @@ from .serializers import (
     LeadStageSerializer,
     NoteSerializer,
     TaskSerializer,
+    ChatSerializer,
+    MessageSerializer,
+    ReviewSerializer,
 )
 from .permissions import IsOperatorAssignedOrManager
 
@@ -27,6 +31,14 @@ class IsCRMManagerOrReadOnly(permissions.BasePermission):
             return request.user.is_authenticated
         # Managers can write; operators can write for leads they are assigned to in specific actions
         return request.user.is_authenticated and (request.user.is_superuser or request.user.groups.filter(name='CRM Manager').exists())
+
+
+def is_crm_operator(user):
+    return user.is_authenticated and (
+        user.is_superuser
+        or user.groups.filter(name='CRM Manager').exists()
+        or user.groups.filter(name='Operator').exists()
+    )
 
 
 class ContactViewSet(viewsets.ModelViewSet):
@@ -120,6 +132,7 @@ class LeadViewSet(viewsets.ModelViewSet):
                 to_stage=new_stage,
                 changed_by=request.user if request.user.is_authenticated else None,
             )
+            now = timezone.now()
             lead.stage = new_stage
             lead.status = 'won' if new_stage.is_won else ('lost' if new_stage.is_lost else lead.status)
             
@@ -130,7 +143,8 @@ class LeadViewSet(viewsets.ModelViewSet):
                     # Cook finished - archive their lead without setting stage
                     lead.is_archived = True
                     lead.stage = None
-                    lead.save(update_fields=['is_archived', 'stage', 'status'])
+                    lead.updated_at = now
+                    lead.save(update_fields=['is_archived', 'stage', 'status', 'updated_at'])
                     
                     if lead.assignee:
                         from .services import auto_assign_waiting_lead
@@ -168,7 +182,8 @@ class LeadViewSet(viewsets.ModelViewSet):
                     lead.is_archived = True
                     lead.stage = new_stage
                     lead.status = 'won'
-                    lead.save(update_fields=['is_archived', 'stage', 'status'])
+                    lead.updated_at = now
+                    lead.save(update_fields=['is_archived', 'stage', 'status', 'updated_at'])
                     
                     if lead.assignee:
                         from .services import auto_assign_waiting_lead
@@ -179,7 +194,8 @@ class LeadViewSet(viewsets.ModelViewSet):
                 # Regular leads (not order-related) - update normally
                 lead.stage = new_stage
                 lead.status = 'won' if new_stage.is_won else ('lost' if new_stage.is_lost else lead.status)
-                lead.save(update_fields=['stage', 'status'])
+                lead.updated_at = now
+                lead.save(update_fields=['stage', 'status', 'updated_at'])
             
             # notify via channels
             channel_layer = get_channel_layer()
@@ -226,7 +242,8 @@ class LeadViewSet(viewsets.ModelViewSet):
         lead.is_archived = True
         lead.stage = cancelled_stage
         lead.status = 'lost'
-        lead.save(update_fields=['is_archived', 'stage', 'status'])
+        lead.updated_at = timezone.now()
+        lead.save(update_fields=['is_archived', 'stage', 'status', 'updated_at'])
         
         # If this is an order-related lead, cancel the order
         if lead.related_order:
@@ -335,3 +352,198 @@ class LeadStageViewSet(viewsets.ReadOnlyModelViewSet):
         if lead_id:
             queryset = queryset.filter(lead_id=lead_id)
         return queryset.order_by('-changed_at')
+
+
+class ChatViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    serializer_class = ChatSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        if not is_crm_operator(self.request.user):
+            return Chat.objects.none()
+        return Chat.objects.filter(is_active=True).prefetch_related('messages', 'operator', 'user').order_by('-created_at')
+
+    @action(detail=True, methods=['get'])
+    def messages(self, request, pk=None):
+        chat = self.get_object()
+        msgs = chat.messages.order_by('created_at')
+        return Response(MessageSerializer(msgs, many=True).data)
+
+    @action(detail=True, methods=['post'])
+    def send(self, request, pk=None):
+        chat = self.get_object()
+        was_inactive = not chat.is_active
+        is_owner = chat.user == request.user if request.user.is_authenticated else False
+        is_assigned_operator = chat.operator == request.user
+        
+        if not (is_owner or is_assigned_operator):
+            return Response({'detail': 'Forbidden'}, status=403)
+        
+        text = request.data.get('text', '').strip()
+        if not text:
+            return Response({'detail': 'text required'}, status=400)
+        
+        msg = Message.objects.create(
+            chat=chat,
+            sender_user=request.user if request.user.is_authenticated else None,
+            sender_name=request.user.get_full_name() or request.user.username if request.user.is_authenticated else request.data.get('sender_name', ''),
+            text=text,
+        )
+
+        # If operator sends to a closed chat, reopen it so everyone sees it again
+        if was_inactive:
+            chat.is_active = True
+            chat.save(update_fields=['is_active'])
+        
+        try:
+            from asgiref.sync import async_to_sync
+            from channels.layers import get_channel_layer
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(f'chat_{chat.id}', {
+                'type': 'chat.message',
+                'message': msg.text,
+                'sender_name': msg.sender_name,
+                'sender_user_id': msg.sender_user.id if msg.sender_user else None,
+                'is_system': False,
+                'created_at': msg.created_at.isoformat(),
+            })
+            if was_inactive:
+                async_to_sync(channel_layer.group_send)('crm', {
+                    'type': 'chat.reopened',
+                    'chat': {
+                        'id': chat.id,
+                        'user_name': chat.user_name,
+                        'last_message': msg.text[:200],
+                        'last_message_at': msg.created_at.isoformat(),
+                        'operator': chat.operator and {
+                            'id': chat.operator.id,
+                            'username': chat.operator.username,
+                            'first_name': chat.operator.first_name,
+                        },
+                        'is_active': True,
+                    },
+                })
+            # Notify operators to refresh list/counters
+            async_to_sync(channel_layer.group_send)('crm', {
+                'type': 'chat.updated',
+                'chat_id': chat.id,
+                'last_message': msg.text[:200],
+                'last_message_at': msg.created_at.isoformat(),
+            })
+        except Exception:
+            pass
+        
+        return Response(MessageSerializer(msg).data)
+
+    @action(detail=True, methods=['post'])
+    def assign(self, request, pk=None):
+        if not is_crm_operator(request.user):
+            return Response({'detail': 'Forbidden'}, status=403)
+        chat = self.get_object()
+        
+        if chat.operator and chat.operator != request.user:
+            return Response({'detail': 'Chat already assigned to another operator'}, status=400)
+        
+        chat.operator = request.user
+        chat.save(update_fields=['operator'])
+        
+        name = request.user.get_full_name() or request.user.username
+        text = f'Оператор {name} подключился к чату.'
+        msg = Message.objects.create(
+            chat=chat,
+            sender_user=request.user,
+            sender_name=name,
+            text=text,
+            is_system=True,
+        )
+        
+        try:
+            from asgiref.sync import async_to_sync
+            from channels.layers import get_channel_layer
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(f'chat_{chat.id}', {
+                'type': 'chat.message',
+                'message': text,
+                'sender_name': name,
+                'sender_user_id': request.user.id,
+                'is_system': True,
+                'created_at': msg.created_at.isoformat(),
+            })
+            # Notify all operators via crm group
+            async_to_sync(channel_layer.group_send)('crm', {
+                'type': 'chat.assigned',
+                'chat_id': chat.id,
+                'operator_id': request.user.id,
+                'operator_name': name,
+            })
+        except Exception:
+            pass
+        
+        return Response(self.get_serializer(chat).data)
+
+    @action(detail=True, methods=['post'])
+    def close(self, request, pk=None):
+        if not is_crm_operator(request.user):
+            return Response({'detail': 'Forbidden'}, status=403)
+        chat = self.get_object()
+        chat.is_active = False
+        chat.operator = None  # Remove operator assignment
+        chat.save(update_fields=['is_active', 'operator'])
+        
+        try:
+            from asgiref.sync import async_to_sync
+            from channels.layers import get_channel_layer
+            channel_layer = get_channel_layer()
+            # Notify all operators via crm group
+            async_to_sync(channel_layer.group_send)('crm', {
+                'type': 'chat.closed',
+                'chat_id': chat.id,
+            })
+        except Exception:
+            pass
+        
+        return Response({'status': 'closed'})
+
+    @action(detail=False, methods=['get'])
+    def counters(self, request):
+        if not is_crm_operator(request.user):
+            return Response({'detail': 'Forbidden'}, status=403)
+        new_chats = 0
+        for chat in self.get_queryset():
+            last = chat.messages.order_by('-created_at').first()
+            if not last or last.is_system:
+                continue
+            if last.sender_user and last.sender_user.is_staff:
+                continue
+            new_chats += 1
+
+        new_reviews = Review.objects.filter(admin_comment='').count()
+        return Response({'new_chats': new_chats, 'new_reviews': new_reviews})
+
+    @action(detail=False, methods=['get'])
+    def history(self, request):
+        """Return closed (inactive) chats for history tab."""
+        if not is_crm_operator(request.user):
+            return Response({'detail': 'Forbidden'}, status=403)
+        qs = Chat.objects.filter(is_active=False).prefetch_related('messages', 'operator', 'user').order_by('-updated_at' if hasattr(Chat, 'updated_at') else '-id')
+        return Response(self.get_serializer(qs, many=True).data)
+
+
+class ReviewViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    serializer_class = ReviewSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        if not is_crm_operator(self.request.user):
+            return Review.objects.none()
+        return Review.objects.select_related('product', 'order', 'user').all().order_by('-created_at')
+
+    @action(detail=True, methods=['post'])
+    def reply(self, request, pk=None):
+        if not is_crm_operator(request.user):
+            return Response({'detail': 'Forbidden'}, status=403)
+        review = self.get_object()
+        comment = request.data.get('admin_comment', '').strip()
+        review.admin_comment = comment
+        review.save(update_fields=['admin_comment'])
+        return Response(self.get_serializer(review).data)

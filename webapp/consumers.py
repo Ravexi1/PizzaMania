@@ -44,7 +44,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 }))
                 return
 
-            msg = await self._create_message(text, user_id, user_name)
+            msg, was_inactive = await self._create_message(text, user_id, user_name)
 
             payload = {
                 'type': 'chat.message',
@@ -54,6 +54,30 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'created_at': msg.created_at.isoformat(),
             }
             await self.channel_layer.group_send(self.group_name, payload)
+
+            try:
+                # Notify CRM about updates and possible reopen
+                chat_data = await self._get_chat_data(msg.chat.id)
+                if was_inactive:
+                    await self.channel_layer.group_send('crm', {
+                        'type': 'chat.reopened',
+                        'chat': chat_data,
+                    })
+                else:
+                    # Send new chat notification to operators
+                    await self.channel_layer.group_send('crm', {
+                        'type': 'new.chat',
+                        'chat': chat_data,
+                    })
+                # Always send chat updated notification
+                await self.channel_layer.group_send('crm', {
+                    'type': 'chat.updated',
+                    'chat_id': msg.chat.id,
+                    'last_message': msg.text[:200],
+                    'last_message_at': msg.created_at.isoformat(),
+                })
+            except Exception:
+                pass
 
     @database_sync_to_async
     def _check_rate_limit(self, user_key):
@@ -78,13 +102,35 @@ class ChatConsumer(AsyncWebsocketConsumer):
             except Exception:
                 user = None
         chat = Chat.objects.get(id=self.chat_id)
+        was_inactive = not chat.is_active
+        if was_inactive:
+            chat.is_active = True
+            chat.save(update_fields=['is_active'])
         m = Message.objects.create(
             chat=chat,
             sender_user=user,
             sender_name=user_name or (user.get_full_name() if user else ''),
             text=text
         )
-        return m
+        return m, was_inactive
+
+    @database_sync_to_async
+    def _get_chat_data(self, chat_id):
+        """Get chat data for notifications"""
+        chat = Chat.objects.select_related('operator', 'user').get(id=chat_id)
+        last_msg = chat.messages.order_by('-created_at').first()
+        return {
+            'id': chat.id,
+            'user_name': chat.user_name or (chat.user.get_username() if chat.user else 'Гость'),
+            'last_message': last_msg.text[:200] if last_msg else '',
+            'last_message_at': last_msg.created_at.isoformat() if last_msg else None,
+            'operator': chat.operator and {
+                'id': chat.operator.id,
+                'username': chat.operator.username,
+                'first_name': chat.operator.first_name,
+            },
+            'is_active': chat.is_active,
+        }
 
     async def chat_message(self, event):
         await self.send(text_data=json.dumps({

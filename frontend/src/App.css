@@ -145,6 +145,262 @@
   margin-bottom: 20px;
 }
 
+/* Operator inbox */
+.operator-inbox {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.operator-inbox .inbox-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.operator-inbox .badges {
+  display: flex;
+  gap: 10px;
+}
+
+.operator-inbox .badge {
+  background: #fff;
+  color: #333;
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+.operator-inbox .inbox-grid {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.operator-inbox .panel {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  padding: 16px;
+}
+
+.operator-inbox .panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.operator-inbox .chat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.operator-inbox .chat-card {
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 12px;
+  background: #fafafa;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.operator-inbox .chat-card.unread {
+  border-color: #ffc107;
+  background: #fff9e6;
+}
+
+.operator-inbox .chat-card.active {
+  border-color: #667eea;
+  background: #f1f3ff;
+}
+
+.operator-inbox .chat-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.operator-inbox .chat-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #666;
+}
+
+.operator-inbox .chat-preview {
+  margin-top: 6px;
+  color: #444;
+  font-size: 13px;
+}
+
+.operator-inbox .chat-card .btn-link {
+  margin-top: 8px;
+  display: inline-block;
+  background: #667eea;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.operator-inbox .chat-panel {
+  min-height: 520px;
+}
+
+.operator-inbox .chat-window {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+}
+
+.operator-inbox .messages {
+  flex: 1;
+  background: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.operator-inbox .message {
+  max-width: 80%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid #eee;
+}
+
+.operator-inbox .message.from-operator {
+  align-self: flex-end;
+  background: #e8ebff;
+  border-color: #d5ddff;
+}
+
+.operator-inbox .message.system {
+  align-self: center;
+  background: #f1f1f1;
+  color: #555;
+}
+
+.operator-inbox .message-meta {
+  font-size: 11px;
+  color: #666;
+  margin-top: 4px;
+  display: flex;
+  gap: 6px;
+}
+
+.operator-inbox .message-input {
+  display: flex;
+  gap: 8px;
+}
+
+.operator-inbox .message-input input {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.operator-inbox .message-input button {
+  padding: 10px 14px;
+  background: #667eea;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.operator-inbox .reviews-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+}
+
+.operator-inbox .review-card {
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 12px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.operator-inbox .review-card.unreplied {
+  border-color: #ffc107;
+  background: #fff9e6;
+}
+
+.operator-inbox .review-head {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+}
+
+.operator-inbox .review-comment {
+  margin: 8px 0;
+  color: #444;
+  white-space: pre-line;
+}
+
+.operator-inbox .review-reply {
+  margin: 6px 0;
+  padding: 8px;
+  background: #f4f6ff;
+  border-radius: 8px;
+  color: #333;
+}
+
+.operator-inbox .reply-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.operator-inbox .reply-box textarea {
+  min-height: 80px;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-family: inherit;
+}
+
+.operator-inbox .reply-box button {
+  align-self: flex-start;
+  padding: 8px 12px;
+  background: #667eea;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.operator-inbox .dot {
+  width: 10px;
+  height: 10px;
+  background: #dc3545;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.operator-inbox .empty {
+  color: #666;
+  text-align: center;
+  padding: 40px 0;
+}
+
 .lead-info {
   background: white;
   padding: 20px;
@@ -759,5 +1015,106 @@
 .order-item p {
   margin: 4px 0;
   font-size: 0.95em;
+}
+
+/* Tab System */
+.tabs {
+  display: flex;
+  gap: 10px;
+  border-bottom: 2px solid #eee;
+}
+
+.tab {
+  background: none;
+  border: none;
+  padding: 12px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
+  position: relative;
+  margin: 0;
+}
+
+.tab:hover {
+  color: #333;
+}
+
+.tab.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+}
+
+/* Button Variants */
+.btn-small {
+  padding: 6px 10px;
+  font-size: 12px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #333;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-small:hover {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.btn-primary {
+  background: #667eea;
+  color: #fff;
+  border-color: #667eea;
+}
+
+.btn-primary:hover {
+  background: #5568d3;
+  border-color: #5568d3;
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: #fff;
+  border-color: #dc3545;
+}
+
+.btn-danger:hover {
+  background: #c82333;
+  border-color: #c82333;
+}
+
+/* Operator Badge */
+.operator-badge {
+  display: inline-block;
+  background: #667eea;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Chat Actions Container */
+.chat-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.operator-inbox .chat-card {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Spinner Loading */
+.spinner {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+  font-size: 16px;
 }
 

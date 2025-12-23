@@ -153,8 +153,8 @@ export const AnalyticsDashboard = () => {
               <p className="metric-subtitle">{averageTimes.deliveries_completed} доставок</p>
             </div>
             <div className="metric-card">
-              <h3>Общее время заказа</h3>
-              <p className="metric-value">{averageTimes.avg_total_time_minutes} мин</p>
+              <h3>Среднее время заказа</h3>
+              <p className="metric-value">{averageTimes.avg_order_time_minutes} мин</p>
             </div>
           </div>
         </div>

@@ -155,6 +155,51 @@ export const getAnalyticsFunnel = async () => {
   return response.data;
 };
 
+export const getChatCounters = async () => {
+  const response = await apiClient.get('/chats/counters/');
+  return response.data;
+};
+
+export const getChats = async () => {
+  const response = await apiClient.get('/chats/');
+  return response.data;
+};
+
+export const getChatMessages = async (chatId) => {
+  const response = await apiClient.get(`/chats/${chatId}/messages/`);
+  return response.data;
+};
+
+export const sendChatMessage = async (chatId, text) => {
+  const response = await apiClient.post(`/chats/${chatId}/send/`, { text });
+  return response.data;
+};
+
+export const assignChat = async (chatId) => {
+  const response = await apiClient.post(`/chats/${chatId}/assign/`);
+  return response.data;
+};
+
+export const closeChat = async (chatId) => {
+  const response = await apiClient.post(`/chats/${chatId}/close/`);
+  return response.data;
+};
+
+export const getReviews = async () => {
+  const response = await apiClient.get('/reviews/');
+  return response.data;
+};
+
+export const replyReview = async (reviewId, admin_comment) => {
+  const response = await apiClient.post(`/reviews/${reviewId}/reply/`, { admin_comment });
+  return response.data;
+};
+
+export const getChatHistory = async () => {
+  const response = await apiClient.get('/chats/history/');
+  return response.data;
+};
+
 export const getAnalyticsTeamPerformance = async () => {
   const response = await apiClient.get('/analytics/team_performance/');
   return response.data;

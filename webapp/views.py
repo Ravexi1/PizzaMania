@@ -1411,6 +1411,22 @@ def chat_create(request):
     if text:
         Message.objects.create(chat=chat, sender_user=request.user if request.user.is_authenticated else None, sender_name=name or '', text=text)
 
+    # Broadcast creation to CRM operators
+    try:
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)('crm', {
+            'type': 'chat.assigned',  # optional: considered as presence, better separate type
+            'chat_id': chat.id,
+            'operator_id': None,
+            'operator_name': None,
+        })
+        async_to_sync(channel_layer.group_send)('crm', {
+            'type': 'chat.reopened',
+            'chat_id': chat.id,
+        })
+    except Exception:
+        pass
+
     res = {'status': 'ok', 'chat_id': chat.id}
     if token:
         res['token'] = token
@@ -1461,7 +1477,37 @@ def chat_send(request, chat_id):
     if not text:
         return JsonResponse({'status': 'error', 'message': 'Empty message'}, status=400)
 
-    msg = Message.objects.create(chat=chat, sender_user=request.user if request.user.is_authenticated else None, sender_name=(request.user.get_full_name() or request.user.username) if request.user.is_authenticated else request.POST.get('name', ''), text=text)
+    was_inactive = not chat.is_active
+    msg = Message.objects.create(
+        chat=chat,
+        sender_user=request.user if request.user.is_authenticated else None,
+        sender_name=(request.user.get_full_name() or request.user.username) if request.user.is_authenticated else request.POST.get('name', ''),
+        text=text
+    )
+
+    # Reopen chat on any inbound message if it was inactive, then notify operators
+    try:
+        if was_inactive:
+            chat.is_active = True
+            chat.save(update_fields=['is_active'])
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)('crm', {
+                'type': 'chat.reopened',
+                'chat': {
+                    'id': chat.id,
+                    'user_name': chat.user_name,
+                    'last_message': msg.text[:200],
+                    'last_message_at': msg.created_at.isoformat(),
+                    'operator': chat.operator and {
+                        'id': chat.operator.id,
+                        'username': chat.operator.username,
+                        'first_name': chat.operator.first_name,
+                    },
+                    'is_active': True,
+                },
+            })
+    except Exception:
+        pass
 
     # Broadcast message to websocket group so listeners update in real-time
     try:
@@ -1472,6 +1518,13 @@ def chat_send(request, chat_id):
             'sender_name': msg.sender_name or (msg.sender_user.get_username() if msg.sender_user else ''),
             'is_system': msg.is_system,
             'created_at': msg.created_at.isoformat(),
+        })
+        # Also notify CRM operators to update counters/list
+        async_to_sync(channel_layer.group_send)('crm', {
+            'type': 'chat.updated',
+            'chat_id': chat.id,
+            'last_message': msg.text[:200],
+            'last_message_at': msg.created_at.isoformat(),
         })
     except Exception as e:
         logger.exception('Error broadcasting chat message: %s', e)

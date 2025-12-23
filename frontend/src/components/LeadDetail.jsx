@@ -10,6 +10,7 @@ export const LeadDetail = ({ leadId, onBack }) => {
   const [tags, setTags] = useState([]);
   const [stageHistory, setStageHistory] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
+  const [now, setNow] = useState(Date.now());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,6 +20,8 @@ export const LeadDetail = ({ leadId, onBack }) => {
     fetchTags();
     fetchStageHistory();
     getCurrentUser().then(setCurrentUser).catch(() => setCurrentUser(null));
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
   }, [leadId]);
 
   const fetchStageHistory = async () => {
@@ -65,6 +68,21 @@ export const LeadDetail = ({ leadId, onBack }) => {
       console.error('Error fetching lead:', error);
     }
     setLoading(false);
+  };
+
+  const formatDuration = () => {
+    if (!lead?.created_at) return null;
+    const start = new Date(lead.created_at).getTime();
+    const end = lead.is_archived && lead.updated_at ? new Date(lead.updated_at).getTime() : now;
+    const diffMs = Math.max(0, end - start);
+    const totalSeconds = Math.floor(diffMs / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    if (hours > 0) {
+      return `${hours}ч ${minutes}м`;
+    }
+    return `${minutes}м ${seconds.toString().padStart(2, '0')}с`;
   };
 
   const handleCancel = async () => {
@@ -139,6 +157,13 @@ export const LeadDetail = ({ leadId, onBack }) => {
             <strong>Стадия:</strong> 
             <span className="stage-label">{lead.stage?.name || 'Не указана'}</span>
           </div>
+
+          {(lead.source === 'order_cook' || lead.source === 'order_courier') && (
+            <div className="info-item">
+              <strong>Время в работе:</strong>
+              <span>{formatDuration()}{lead.is_archived ? ' (завершено)' : ''}</span>
+            </div>
+          )}
           
           <div className="info-item">
             <strong>Источник:</strong> <span>{lead.source}</span>

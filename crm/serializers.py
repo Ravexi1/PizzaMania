@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Contact, PipelineStage, Tag, Lead, LeadStage, Note, Task
-from webapp.models import Order, OrderItem
+from webapp.models import Order, OrderItem, Chat, Message, Review
 from django.contrib.auth.models import User
 
 
@@ -158,3 +158,62 @@ class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = ['id', 'lead', 'assignee', 'title', 'due_at', 'status', 'created_at', 'updated_at']
+
+
+class MessageSerializer(serializers.ModelSerializer):
+    sender_username = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Message
+        fields = ['id', 'text', 'is_system', 'created_at', 'sender_username', 'sender_name']
+
+    def get_sender_username(self, obj):
+        return obj.sender_user.username if obj.sender_user else None
+
+
+class ChatSerializer(serializers.ModelSerializer):
+    operator = UserMinimalSerializer(read_only=True)
+    last_message = serializers.SerializerMethodField()
+    last_message_at = serializers.SerializerMethodField()
+    unread_for_operator = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Chat
+        fields = ['id', 'user_name', 'user', 'operator', 'is_active', 'created_at', 'last_message', 'last_message_at', 'unread_for_operator']
+
+    def _last_msg(self, obj):
+        if not hasattr(obj, '_last_cached'):
+            obj._last_cached = obj.messages.order_by('-created_at').first()
+        return obj._last_cached
+
+    def get_last_message(self, obj):
+        last = self._last_msg(obj)
+        if not last:
+            return None
+        return last.text[:200]
+
+    def get_last_message_at(self, obj):
+        last = self._last_msg(obj)
+        return last.created_at if last else None
+
+    def get_unread_for_operator(self, obj):
+        last = self._last_msg(obj)
+        if not last:
+            return False
+        # Unread/new if last message not from operator
+        if last.is_system:
+            return False
+        if obj.operator and last.sender_user and last.sender_user == obj.operator:
+            return False
+        if last.sender_user and last.sender_user.is_staff:
+            return False
+        return True
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    order_id = serializers.IntegerField(source='order.id', read_only=True)
+
+    class Meta:
+        model = Review
+        fields = ['id', 'product_name', 'order_id', 'name', 'rating', 'comment', 'admin_comment', 'created_at']

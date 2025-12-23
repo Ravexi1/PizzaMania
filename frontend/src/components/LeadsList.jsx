@@ -7,10 +7,13 @@ import { ru } from 'date-fns/locale';
 export const LeadsList = ({ onOpenLead }) => {
   const { leads, loading, setLeads, setLoading } = useLeadStore();
   const [currentUser, setCurrentUser] = useState(null);
+  const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
     fetchLeads();
     fetchCurrentUser();
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
   }, []);
 
   const fetchCurrentUser = async () => {
@@ -33,6 +36,21 @@ export const LeadsList = ({ onOpenLead }) => {
     setLoading(false);
   };
 
+  const formatDuration = (lead) => {
+    if (!lead.created_at) return null;
+    const start = new Date(lead.created_at).getTime();
+    const end = lead.is_archived && lead.updated_at ? new Date(lead.updated_at).getTime() : now;
+    const diffMs = Math.max(0, end - start);
+    const totalSeconds = Math.floor(diffMs / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    if (hours > 0) {
+      return `${hours}ч ${minutes}м`;
+    }
+    return `${minutes}м ${seconds.toString().padStart(2, '0')}с`;
+  };
+
   if (loading) return <div className="spinner">Загрузка...</div>;
 
   return (
@@ -49,6 +67,11 @@ export const LeadsList = ({ onOpenLead }) => {
                 <p className="stage-badge"><strong>Стадия:</strong> {lead.stage.name}</p>
               )}
               <p>Источник: {lead.source}</p>
+              {(lead.source === 'order_cook' || lead.source === 'order_courier') && (
+                <p className="timer-line">
+                  Время в работе: {formatDuration(lead)}{lead.is_archived ? ' (завершено)' : ''}
+                </p>
+              )}
             {lead.contact && (
               <p>Контакт: {lead.contact.first_name} {lead.contact.last_name} ({lead.contact.phone})</p>
             )}

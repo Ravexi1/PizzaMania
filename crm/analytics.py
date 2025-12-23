@@ -215,13 +215,13 @@ class AnalyticsViewSet(viewsets.ViewSet):
         
         avg_delivery_time = sum(courier_times) / len(courier_times) if courier_times else 0
         
-        # Total order time = average cook time + average delivery time
-        avg_total_time = avg_cook_time + avg_delivery_time
+        # Average order time = average cook time + average delivery time
+        avg_order_time = avg_cook_time + avg_delivery_time
         
         return Response({
             'avg_cook_time_minutes': round(avg_cook_time, 1),
             'avg_delivery_time_minutes': round(avg_delivery_time, 1),
-            'avg_total_time_minutes': round(avg_total_time, 1),
+            'avg_order_time_minutes': round(avg_order_time, 1),
             'cook_orders_completed': len(cook_times),
             'deliveries_completed': len(courier_times),
         })

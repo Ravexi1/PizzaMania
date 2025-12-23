@@ -92,6 +92,9 @@ INSTALLED_APPS = [
     'crm.apps.CrmConfig',
 ]
 
+# CRM: do not auto-create leads from chats/reviews (operator work should not create leads)
+CRM_CREATE_LEADS_FROM_CHAT_REVIEW = False
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
