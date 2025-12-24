@@ -110,7 +110,12 @@ const OperatorInbox = () => {
           ...c,
           last_message: data.last_message || c.last_message,
           last_message_at: data.last_message_at || c.last_message_at,
+          unread_for_operator: typeof data.unread_for_operator === 'boolean' ? data.unread_for_operator : c.unread_for_operator,
         } : c));
+        // Play a sound when a chat gets a new message and appears active in the list
+        if (soundEnabled && data.last_message && selectedChatId !== data.chat_id) {
+          playSound();
+        }
       }
       if (data.type === 'chat_assigned') {
         setChats((prev) => prev.map((c) => c.id === data.chat_id ? {
@@ -129,7 +134,7 @@ const OperatorInbox = () => {
     return () => {
       try { wsCrmRef.current && wsCrmRef.current.close(); } catch (_) {}
     };
-  }, [notifyEnabled, playSound, soundEnabled, triggerNotification]);
+  }, [notifyEnabled, playSound, soundEnabled, triggerNotification, selectedChatId]);
 
   // No auto-scroll to bottom; newest messages will be on top
 
@@ -449,20 +454,25 @@ const OperatorInbox = () => {
               )}
             </div>
             {selectedChatId ? (
-              <div className="chat-window" style={{ position: 'relative' }}>
+              <div className="chat-window" style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: 520 }}>
                 <div
                   className="messages"
                   ref={messagesContainerRef}
                   onScroll={onMessagesScroll}
-                  style={{ height: 420, overflowY: 'auto', borderTop: '1px solid #eee', borderBottom: '1px solid #eee' }}
+                  style={{ flex: 1, overflowY: 'auto', borderTop: '1px solid #eee', borderBottom: '1px solid #eee' }}
                 >
+                  {visibleMsgCount < messages.length && (
+                    <div style={{ textAlign: 'center', margin: '8px 0' }}>
+                      <button className="btn-small" onClick={() => setVisibleMsgCount((c) => Math.min(c + 30, messages.length))}>Показать ещё</button>
+                    </div>
+                  )}
                   {displayedMessages.map((msg, idx) => (
                     <React.Fragment key={msg.id || idx}>
                       {newSeparatorIndex === idx && (
                         <div style={{ textAlign: 'center', margin: '6px 0', color: '#888' }}>Новые сообщения</div>
                       )}
                       <div className={`message ${msg.sender_user_id ? 'from-operator' : 'from-client'} ${msg.is_system ? 'system' : ''}`}>
-                        <div className="message-text">{msg.text}</div>
+                        <div className="message-text" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{msg.text}</div>
                         <div className="message-meta">
                           <span>{msg.sender_name || 'Клиент'}</span>
                           <span>{format(new Date(msg.created_at), 'dd.MM.yyyy HH:mm', { locale: ru })}</span>
@@ -470,14 +480,9 @@ const OperatorInbox = () => {
                       </div>
                     </React.Fragment>
                   ))}
-                  {visibleMsgCount < messages.length && (
-                    <div style={{ textAlign: 'center', margin: '8px 0' }}>
-                      <button className="btn-small" onClick={() => setVisibleMsgCount((c) => c + 30)}>Показать ещё</button>
-                    </div>
-                  )}
                 </div>
                 {selectedChat && selectedChat.operator && selectedChat.operator.id ? (
-                  <div className="message-input">
+                  <div className="message-input" style={{ display: 'flex', gap: 8, paddingTop: 8 }}>
                     <input
                       type="text"
                       value={newMessage}
@@ -493,7 +498,7 @@ const OperatorInbox = () => {
                 {showJumpToLatest && (
                   <button
                     className="btn-small"
-                    style={{ position: 'absolute', right: 16, bottom: 72 }}
+                    style={{ position: 'absolute', right: 16, bottom: 80 }}
                     onClick={() => {
                       const el = messagesContainerRef.current;
                       if (el) el.scrollTop = el.scrollHeight;
