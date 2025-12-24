@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { getLeads, getCurrentUser } from '../api';
 import { useLeadStore } from '../store';
 import { format } from 'date-fns';
@@ -9,23 +9,16 @@ export const LeadsList = ({ onOpenLead }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [now, setNow] = useState(Date.now());
 
-  useEffect(() => {
-    fetchLeads();
-    fetchCurrentUser();
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const fetchCurrentUser = async () => {
+  const fetchCurrentUser = useCallback(async () => {
     try {
       const user = await getCurrentUser();
       setCurrentUser(user);
     } catch (error) {
       console.error('Error fetching current user:', error);
     }
-  };
+  }, []);
 
-  const fetchLeads = async () => {
+  const fetchLeads = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getLeads();
@@ -34,7 +27,14 @@ export const LeadsList = ({ onOpenLead }) => {
       console.error('Error fetching leads:', error);
     }
     setLoading(false);
-  };
+  }, [setLeads, setLoading]);
+
+  useEffect(() => {
+    fetchLeads();
+    fetchCurrentUser();
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [fetchLeads, fetchCurrentUser]);
 
   const formatDuration = (lead) => {
     if (!lead.created_at) return null;

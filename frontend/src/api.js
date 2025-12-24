@@ -2,6 +2,12 @@ import axios from 'axios';
 
 const API_BASE = 'http://localhost:8000/api';
 
+// Derive WS base from API_BASE to ensure correct backend host:port
+const apiUrl = new URL(API_BASE);
+const WS_PROTOCOL = apiUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+const WS_HOST = apiUrl.host; // includes host:port
+export const getWsUrl = (path) => `${WS_PROTOCOL}//${WS_HOST}${path}`;
+
 // Function to get CSRF token from cookies
 function getCookie(name) {
   let cookieValue = null;
@@ -175,8 +181,9 @@ export const sendChatMessage = async (chatId, text) => {
   return response.data;
 };
 
-export const assignChat = async (chatId) => {
-  const response = await apiClient.post(`/chats/${chatId}/assign/`);
+export const assignChat = async (chatId, operatorId = null) => {
+  const payload = operatorId ? { operator_id: operatorId } : {};
+  const response = await apiClient.post(`/chats/${chatId}/assign/`, payload);
   return response.data;
 };
 

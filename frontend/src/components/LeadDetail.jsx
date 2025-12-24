@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { getLead, updateLead, setLeadStage, cancelLead, getStages, getOperators, getTags, getLeadStageHistory, getCurrentUser } from '../api';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -13,6 +13,52 @@ export const LeadDetail = ({ leadId, onBack }) => {
   const [now, setNow] = useState(Date.now());
   const [loading, setLoading] = useState(true);
 
+  const fetchStageHistory = useCallback(async () => {
+    try {
+      const data = await getLeadStageHistory(leadId);
+      setStageHistory(data.results || data);
+    } catch (error) {
+      console.error('Error fetching stage history:', error);
+    }
+  }, [leadId]);
+
+  const fetchStages = useCallback(async () => {
+    try {
+      const data = await getStages();
+      setStages(data.results || data);
+    } catch (error) {
+      console.error('Error fetching stages:', error);
+    }
+  }, []);
+
+  const fetchOperators = useCallback(async () => {
+    try {
+      const data = await getOperators();
+      setOperators(data.results || data);
+    } catch (error) {
+      console.error('Error fetching operators:', error);
+    }
+  }, []);
+
+  const fetchTags = useCallback(async () => {
+    try {
+      const data = await getTags();
+      setTags(data.results || data);
+    } catch (error) {
+      console.error('Error fetching tags:', error);
+    }
+  }, []);
+
+  const fetchLead = useCallback(async () => {
+    try {
+      const data = await getLead(leadId);
+      setLead(data);
+    } catch (error) {
+      console.error('Error fetching lead:', error);
+    }
+    setLoading(false);
+  }, [leadId]);
+
   useEffect(() => {
     fetchLead();
     fetchStages();
@@ -22,53 +68,7 @@ export const LeadDetail = ({ leadId, onBack }) => {
     getCurrentUser().then(setCurrentUser).catch(() => setCurrentUser(null));
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
-  }, [leadId]);
-
-  const fetchStageHistory = async () => {
-    try {
-      const data = await getLeadStageHistory(leadId);
-      setStageHistory(data.results || data);
-    } catch (error) {
-      console.error('Error fetching stage history:', error);
-    }
-  };
-
-  const fetchStages = async () => {
-    try {
-      const data = await getStages();
-      setStages(data.results || data);
-    } catch (error) {
-      console.error('Error fetching stages:', error);
-    }
-  };
-
-  const fetchOperators = async () => {
-    try {
-      const data = await getOperators();
-      setOperators(data.results || data);
-    } catch (error) {
-      console.error('Error fetching operators:', error);
-    }
-  };
-
-  const fetchTags = async () => {
-    try {
-      const data = await getTags();
-      setTags(data.results || data);
-    } catch (error) {
-      console.error('Error fetching tags:', error);
-    }
-  };
-
-  const fetchLead = async () => {
-    try {
-      const data = await getLead(leadId);
-      setLead(data);
-    } catch (error) {
-      console.error('Error fetching lead:', error);
-    }
-    setLoading(false);
-  };
+  }, [fetchLead, fetchStages, fetchOperators, fetchTags, fetchStageHistory]);
 
   const formatDuration = () => {
     if (!lead?.created_at) return null;

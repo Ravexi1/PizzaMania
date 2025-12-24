@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   getChats,
   getChatMessages,
@@ -9,7 +9,9 @@ import {
   replyReview,
   getChatCounters,
   getChatHistory,
+  getOperators,
 } from '../api';
+import { getWsUrl, getCurrentUser } from '../api';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
@@ -23,23 +25,65 @@ const OperatorInbox = () => {
   const [newMessage, setNewMessage] = useState('');
   const [replyDrafts, setReplyDrafts] = useState({});
   const [counters, setCounters] = useState({ new_chats: 0, new_reviews: 0 });
+  const [currentUser, setCurrentUser] = useState(null);
+  const [operators, setOperators] = useState([]);
+  const [notifyEnabled, setNotifyEnabled] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const wsRef = useRef(null);
   const wsCrmRef = useRef(null);
-  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const [visibleMsgCount, setVisibleMsgCount] = useState(30);
   const [visibleReviewCount, setVisibleReviewCount] = useState(20);
+  const [openedAt, setOpenedAt] = useState(null);
+  const [showJumpToLatest, setShowJumpToLatest] = useState(false);
+
+  const playSound = useCallback(() => {
+    if (!soundEnabled) return;
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.2);
+    } catch (e) {
+      // Fallback: ignore sound errors
+    }
+  }, [soundEnabled]);
+
+  const triggerNotification = useCallback((title, body) => {
+    if (!notifyEnabled || !('Notification' in window)) return;
+    if (Notification.permission === 'granted') {
+      new Notification(title, { body });
+    } else if (Notification.permission !== 'denied') {
+      Notification.requestPermission();
+    }
+  }, [notifyEnabled]);
+
+  useEffect(() => {
+    if (notifyEnabled && 'Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, [notifyEnabled]);
 
   useEffect(() => {
     fetchData();
+    // load current user for permission-based UI
+    getCurrentUser().then(setCurrentUser).catch(() => setCurrentUser(null));
+    getOperators().then((data) => setOperators(data.results || data)).catch(() => setOperators([]));
     const interval = setInterval(fetchCounters, 15000);
     return () => clearInterval(interval);
   }, []);
 
   // Connect to CRM-wide websocket for global updates (assign/close/reopen/new)
   useEffect(() => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws/crm/`;
+    const wsUrl = getWsUrl('/ws/crm/');
     wsCrmRef.current = new WebSocket(wsUrl);
     wsCrmRef.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
@@ -49,6 +93,17 @@ const OperatorInbox = () => {
           return [{...data.chat}, ...filtered];
         });
         setClosedChats((prev) => prev.filter((c) => c.id !== data.chat.id));
+        if (notifyEnabled) {
+          triggerNotification('Чат снова активен', `Чат #${data.chat.id} открыт`);
+        }
+        if (soundEnabled) playSound();
+      }
+      if (data.type === 'new_chat' && data.chat) {
+        setChats((prev) => [{ ...data.chat }, ...prev.filter((c) => c.id !== data.chat.id)]);
+        if (notifyEnabled) {
+          triggerNotification('Новый чат', `Чат #${data.chat.id} ${data.chat.user_name || ''}`);
+        }
+        if (soundEnabled) playSound();
       }
       if (data.type === 'chat_updated' && data.chat_id) {
         setChats((prev) => prev.map((c) => c.id === data.chat_id ? {
@@ -56,6 +111,15 @@ const OperatorInbox = () => {
           last_message: data.last_message || c.last_message,
           last_message_at: data.last_message_at || c.last_message_at,
         } : c));
+      }
+      if (data.type === 'chat_assigned') {
+        setChats((prev) => prev.map((c) => c.id === data.chat_id ? {
+          ...c,
+          operator: { id: data.operator_id, username: data.operator_name }
+        } : c));
+      }
+      if (data.type === 'chat_closed') {
+        setChats((prev) => prev.filter((c) => c.id !== data.chat_id));
       }
       if (['chat_assigned', 'chat_closed', 'chat_reopened', 'chat_updated'].includes(data.type)) {
         fetchCounters();
@@ -65,18 +129,14 @@ const OperatorInbox = () => {
     return () => {
       try { wsCrmRef.current && wsCrmRef.current.close(); } catch (_) {}
     };
-  }, []);
+  }, [notifyEnabled, playSound, soundEnabled, triggerNotification]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  // No auto-scroll to bottom; newest messages will be on top
 
   useEffect(() => {
     if (!selectedChatId) return;
     
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws/chat/${selectedChatId}/`;
-    
+    const wsUrl = getWsUrl(`/ws/chat/${selectedChatId}/`);
     wsRef.current = new WebSocket(wsUrl);
     
     wsRef.current.onopen = () => {
@@ -85,15 +145,28 @@ const OperatorInbox = () => {
     
     wsRef.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      
-      if (data.type === 'message') {
+
+      const isMessage = data.type === 'message' || (data.message && !data.type);
+      if (isMessage) {
+        const text = data.text || data.message;
+        const container = messagesContainerRef.current;
+        const nearBottom = container ? (container.scrollTop + container.clientHeight >= container.scrollHeight - 10) : true;
         setMessages((prev) => [...prev, {
           id: Date.now(),
-          text: data.text,
+          text,
           sender_name: data.sender_name,
-          is_system: data.is_system,
+          sender_user_id: data.sender_user_id,
+          is_system: !!data.is_system,
           created_at: data.created_at,
         }]);
+        if (nearBottom) {
+          requestAnimationFrame(() => {
+            const el = messagesContainerRef.current;
+            if (el) el.scrollTop = el.scrollHeight;
+          });
+        } else {
+          setShowJumpToLatest(true);
+        }
       } else if (data.type === 'chat_assigned') {
         setChats((prev) => prev.map((c) => 
           c.id === data.chat_id ? { ...c, operator: { id: data.operator_id, username: data.operator_name } } : c
@@ -153,9 +226,15 @@ const OperatorInbox = () => {
   const openChat = async (chatId) => {
     setSelectedChatId(chatId);
     setVisibleMsgCount(30);
+    setOpenedAt(Date.now());
     try {
       const data = await getChatMessages(chatId);
       setMessages(data.results || data);
+      setShowJumpToLatest(false);
+      requestAnimationFrame(() => {
+        const el = messagesContainerRef.current;
+        if (el) el.scrollTop = el.scrollHeight;
+      });
     } catch (error) {
       console.error('Error loading messages:', error);
     }
@@ -177,9 +256,27 @@ const OperatorInbox = () => {
       await assignChat(chatId);
       openChat(chatId);
       fetchCounters();
+      setChats((prev) => prev.map((c) => c.id === chatId ? {
+        ...c,
+        operator: currentUser ? { id: currentUser.id, username: currentUser.username, first_name: currentUser.first_name } : c.operator
+      } : c));
     } catch (error) {
       console.error('Error assigning chat:', error);
       alert('Не удалось взять чат');
+    }
+  };
+
+  const handleReassignChat = async (chatId, operatorId) => {
+    if (!operatorId) return;
+    try {
+      await assignChat(chatId, operatorId);
+      setChats((prev) => prev.map((c) => c.id === chatId ? {
+        ...c,
+        operator: operators.find((o) => o.id === operatorId) || c.operator,
+      } : c));
+    } catch (error) {
+      console.error('Error reassigning chat:', error);
+      alert('Не удалось переназначить чат');
     }
   };
 
@@ -210,7 +307,34 @@ const OperatorInbox = () => {
   };
 
   const selectedChat = chats.find((c) => c.id === selectedChatId);
+  const canManageAssignments = currentUser && (currentUser.is_superuser || (currentUser.groups || []).includes('CRM Manager'));
+  // Chronological order: newest messages at the bottom
   const displayedMessages = messages.slice(Math.max(0, messages.length - visibleMsgCount));
+
+  const onMessagesScroll = (e) => {
+    const el = e.currentTarget;
+    const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 10;
+    setShowJumpToLatest(!nearBottom);
+    if (el.scrollTop <= 0 && visibleMsgCount < messages.length) {
+      const prevHeight = el.scrollHeight;
+      setVisibleMsgCount((c) => Math.min(c + 30, messages.length));
+      requestAnimationFrame(() => {
+        const newHeight = el.scrollHeight;
+        el.scrollTop = newHeight - prevHeight;
+      });
+    }
+  };
+
+  // Compute index to render separator for new vs earlier messages
+  const newSeparatorIndex = (() => {
+    if (!openedAt) return -1;
+    const startIdx = Math.max(0, messages.length - visibleMsgCount);
+    for (let i = startIdx; i < messages.length; i++) {
+      const t = new Date(messages[i].created_at).getTime();
+      if (t > openedAt) return i - startIdx;
+    }
+    return -1;
+  })();
   const displayedReviews = reviews.slice(0, visibleReviewCount);
 
   if (loading) {
@@ -244,6 +368,16 @@ const OperatorInbox = () => {
           >
             История
           </button>
+        </div>
+        <div className="header-controls" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginTop: 8 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+            <input type="checkbox" checked={notifyEnabled} onChange={(e) => setNotifyEnabled(e.target.checked)} />
+            Уведомления
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+            <input type="checkbox" checked={soundEnabled} onChange={(e) => setSoundEnabled(e.target.checked)} />
+            Звук
+          </label>
         </div>
       </div>
 
@@ -292,30 +426,55 @@ const OperatorInbox = () => {
           <div className="panel chat-panel">
             <div className="panel-header">
               <h3>{selectedChat ? `Чат #${selectedChat.id}` : 'Выберите чат'}</h3>
-              {selectedChat && (
+              {selectedChat && canManageAssignments && (
+                <select
+                  style={{ marginRight: 8 }}
+                  value={selectedChat.operator?.id || ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (!val) return;
+                    handleReassignChat(selectedChat.id, parseInt(val, 10));
+                  }}
+                >
+                  <option value="">Назначить...</option>
+                  {operators.map((op) => (
+                    <option key={op.id} value={op.id}>{op.first_name || op.username}</option>
+                  ))}
+                </select>
+              )}
+              {selectedChat && currentUser && selectedChat.operator && selectedChat.operator.id === currentUser.id && (
                 <button className="btn-small btn-danger" onClick={() => handleCloseChat(selectedChat.id)}>
                   Завершить
                 </button>
               )}
             </div>
             {selectedChatId ? (
-              <div className="chat-window">
-                <div className="messages">
+              <div className="chat-window" style={{ position: 'relative' }}>
+                <div
+                  className="messages"
+                  ref={messagesContainerRef}
+                  onScroll={onMessagesScroll}
+                  style={{ height: 420, overflowY: 'auto', borderTop: '1px solid #eee', borderBottom: '1px solid #eee' }}
+                >
                   {displayedMessages.map((msg, idx) => (
-                    <div key={idx} className={`message ${msg.sender_user_id ? 'from-operator' : 'from-client'} ${msg.is_system ? 'system' : ''}`}>
-                      <div className="message-text">{msg.text}</div>
-                      <div className="message-meta">
-                        <span>{msg.sender_name || 'Клиент'}</span>
-                        <span>{format(new Date(msg.created_at), 'dd.MM.yyyy HH:mm', { locale: ru })}</span>
+                    <React.Fragment key={msg.id || idx}>
+                      {newSeparatorIndex === idx && (
+                        <div style={{ textAlign: 'center', margin: '6px 0', color: '#888' }}>Новые сообщения</div>
+                      )}
+                      <div className={`message ${msg.sender_user_id ? 'from-operator' : 'from-client'} ${msg.is_system ? 'system' : ''}`}>
+                        <div className="message-text">{msg.text}</div>
+                        <div className="message-meta">
+                          <span>{msg.sender_name || 'Клиент'}</span>
+                          <span>{format(new Date(msg.created_at), 'dd.MM.yyyy HH:mm', { locale: ru })}</span>
+                        </div>
                       </div>
-                    </div>
+                    </React.Fragment>
                   ))}
                   {visibleMsgCount < messages.length && (
                     <div style={{ textAlign: 'center', margin: '8px 0' }}>
                       <button className="btn-small" onClick={() => setVisibleMsgCount((c) => c + 30)}>Показать ещё</button>
                     </div>
                   )}
-                  <div ref={messagesEndRef} />
                 </div>
                 {selectedChat && selectedChat.operator && selectedChat.operator.id ? (
                   <div className="message-input">
@@ -330,6 +489,19 @@ const OperatorInbox = () => {
                   </div>
                 ) : (
                   <div className="empty">Возьмите чат чтобы писать сообщения</div>
+                )}
+                {showJumpToLatest && (
+                  <button
+                    className="btn-small"
+                    style={{ position: 'absolute', right: 16, bottom: 72 }}
+                    onClick={() => {
+                      const el = messagesContainerRef.current;
+                      if (el) el.scrollTop = el.scrollHeight;
+                      setShowJumpToLatest(false);
+                    }}
+                  >
+                    К последним
+                  </button>
                 )}
               </div>
             ) : (

@@ -440,18 +440,27 @@ class ChatViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Gen
         if not is_crm_operator(request.user):
             return Response({'detail': 'Forbidden'}, status=403)
         chat = self.get_object()
-        
-        if chat.operator and chat.operator != request.user:
+
+        # Determine target operator (allow managers to reassign)
+        target_operator = request.user
+        requested_operator_id = request.data.get('operator_id')
+        is_manager = request.user.is_superuser or request.user.groups.filter(name='CRM Manager').exists()
+        if requested_operator_id and is_manager:
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            target_operator = User.objects.filter(id=requested_operator_id).first() or request.user
+
+        if chat.operator and chat.operator != request.user and not is_manager:
             return Response({'detail': 'Chat already assigned to another operator'}, status=400)
-        
-        chat.operator = request.user
+
+        chat.operator = target_operator
         chat.save(update_fields=['operator'])
-        
-        name = request.user.get_full_name() or request.user.username
+
+        name = target_operator.get_full_name() or target_operator.username
         text = f'Оператор {name} подключился к чату.'
         msg = Message.objects.create(
             chat=chat,
-            sender_user=request.user,
+            sender_user=target_operator,
             sender_name=name,
             text=text,
             is_system=True,
@@ -465,7 +474,7 @@ class ChatViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Gen
                 'type': 'chat.message',
                 'message': text,
                 'sender_name': name,
-                'sender_user_id': request.user.id,
+                'sender_user_id': target_operator.id,
                 'is_system': True,
                 'created_at': msg.created_at.isoformat(),
             })
@@ -473,7 +482,7 @@ class ChatViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Gen
             async_to_sync(channel_layer.group_send)('crm', {
                 'type': 'chat.assigned',
                 'chat_id': chat.id,
-                'operator_id': request.user.id,
+                'operator_id': target_operator.id,
                 'operator_name': name,
             })
         except Exception:
@@ -486,6 +495,9 @@ class ChatViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Gen
         if not is_crm_operator(request.user):
             return Response({'detail': 'Forbidden'}, status=403)
         chat = self.get_object()
+        # Only the operator who took the chat can close it
+        if not chat.operator or chat.operator_id != request.user.id:
+            return Response({'detail': 'Only the assigned operator can close this chat'}, status=403)
         chat.is_active = False
         chat.operator = None  # Remove operator assignment
         chat.save(update_fields=['is_active', 'operator'])
