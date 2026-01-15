@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:8000/api';
+const API_BASE = 'http://127.0.0.1:8000/api';
 
 // Derive WS base from API_BASE to ensure correct backend host:port
 const apiUrl = new URL(API_BASE);
