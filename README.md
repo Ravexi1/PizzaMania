@@ -1,4 +1,4 @@
-# 🍕 PizzaMania — Full-Stack Pizza Ordering Platform
+# PizzaMania — Full-Stack Pizza Ordering Platform
 
 > A modern, full-featured pizza e-commerce platform with real-time chat support, CRM system, and comprehensive order management built with Django, React, and WebSockets.
 
@@ -10,7 +10,7 @@
 
 ---
 
-## 🎓 Skills Demonstrated
+## Skills Demonstrated
 
 ### Backend Development
 - [x] Django & Django REST Framework expertise
@@ -59,27 +59,27 @@
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-### 🛒 E-Commerce
+### E-Commerce
 - **Product Catalog** — Categories, sizes, add-ons with dynamic pricing
 - **Smart Shopping Cart** — Real-time quantity updates, persistent sessions
 - **Checkout System** — Multi-step order process with address validation
 - **Promo Codes** — Percentage/fixed/free-product discounts with usage limits
 - **Bonus System** — User loyalty points earned on orders, redeemable for discounts
 
-### 💬 Real-Time Support
+### Real-Time Support
 - **Live Chat** — WebSocket-powered customer support with operators
 - **Chat Persistence** — Full message history and context preservation
 - **Operator Join** — Support staff can take over chat conversations
 - **System Messages** — Automated notifications for status changes
 
-### ⭐ Reviews & Ratings
+### Reviews & Ratings
 - **Product Reviews** — 1-5 star ratings with photo uploads
 - **Review Management** — Admin comments, moderation, filtering
 - **Average Ratings** — Cached product ratings for performance
 
-### 🎯 CRM System
+### CRM System
 - **Lead Management** — Track customer interactions across chat, orders, reviews
 - **Pipeline Workflow** — Customizable sales pipeline with multiple stages
 - **Task Management** — Assign tasks to team members with due dates
@@ -87,12 +87,12 @@
 - **Analytics Dashboard** — KPI metrics, revenue tracking, SLA monitoring
 - **Role-Based Access** — CRM Manager, Operator, Cook, Courier roles
 
-### 🌍 Internationalization
+### Internationalization
 - **Multi-Language Support** — English, Russian, Kazakh with easy switching
 - **Dynamic Translation** — Django i18n for backend, translated content
 - **Language-Specific URLs** — Clean URL patterns with language prefixes
 
-### 🔐 Security
+### Security
 - **CSRF Protection** — Django security middleware with cookie-based tokens
 - **Session Management** — Secure user authentication and authorization
 - **CORS Support** — Frontend and backend communication with proper origin checks
@@ -100,7 +100,7 @@
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ### Backend Stack
 - **Framework**: Django 5.2 with Django REST Framework
@@ -123,7 +123,7 @@
 
 ---
 
-## 📊 Project Structure
+## Project Structure
 
 ```
 PizzaMania/
@@ -177,7 +177,7 @@ PizzaMania/
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Python 3.10+
@@ -242,9 +242,9 @@ npm start  # Opens http://127.0.0.1:3000
 
 ---
 
-## 💡 Key Features Demo
+## Key Features Demo
 
-### 🛒 Ordering Flow
+### Ordering Flow
 ```
 User → Browse Products → Add to Cart → Apply Promo Code 
 → Checkout → Confirm Address → Order Created → Email Confirmation
@@ -268,7 +268,7 @@ Chat features:
 - System notifications for joins/leaves
 - Optional operator name visibility
 
-### 🎯 CRM Workflow
+### CRM Workflow
 ```
 Lead Created (from chat/order) → Assigned to Operator
 → Update Status/Stage → Add Tasks/Notes → Track SLA
@@ -281,7 +281,7 @@ CRM roles:
 - **Cook**: Track order preparation issues
 - **Courier**: Track delivery issues
 
-### 📈 Analytics
+### Analytics
 - **Overview**: Total/new/in-progress/won/lost leads
 - **Revenue**: Total and by source breakdown
 - **Funnel**: Leads by pipeline stage
@@ -289,7 +289,7 @@ CRM roles:
 
 ---
 
-## 📡 API Endpoints
+## API Endpoints
 
 ### REST API (Base: `/api/`)
 
@@ -333,7 +333,7 @@ ws://127.0.0.1:8000/ws/crm/              # CRM lead updates
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 ### Backend
 
@@ -377,7 +377,7 @@ ws://127.0.0.1:8000/ws/crm/              # CRM lead updates
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Run all tests
@@ -392,7 +392,7 @@ pytest webapp/tests/test_models.py -v
 
 ---
 
-## 📦 Dependencies
+## Dependencies
 
 ### Backend
 - Django 5.2
@@ -417,7 +417,7 @@ See [requirements.txt](requirements.txt) for full list with versions.
 
 ---
 
-## 🔐 Security Features
+## Security Features
 
 - ✅ CSRF token protection on all state-changing requests
 - ✅ Secure session cookie handling
@@ -430,7 +430,7 @@ See [requirements.txt](requirements.txt) for full list with versions.
 
 ---
 
-## 🌐 Internationalization
+## Internationalization
 
 Supported languages:
 - 🇬🇧 English
@@ -444,7 +444,7 @@ Switch via URL prefix:
 
 ---
 
-## 📊 Database Models
+## Database Models
 
 ### Core Models
 - **Product** — Items in catalog with categories and pricing
@@ -461,7 +461,7 @@ Switch via URL prefix:
 
 ---
 
-## 🚀 Deployment
+## Deployment
 
 The project is production-ready with:
 - ✅ Gunicorn/Daphne ASGI deployment
@@ -474,7 +474,7 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for full instructions.
 
 ---
 
-## 💼 Use Cases
+## Use Cases
 
 ### For Customers
 1. Browse pizza catalog with sizes and add-ons
@@ -502,7 +502,7 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for full instructions.
 
 ---
 
-## 🎯 Future Enhancements
+## Future Enhancements
 
 - [ ] Payment gateway integration (Stripe, PayPal)
 - [ ] SMS notifications
@@ -517,13 +517,13 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for full instructions.
 
 ---
 
-## 📝 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 👨‍💻 Author
+## Author
 
 **Your Name / Portfolio**
 - [GitHub](https://github.com/Ravexi1)
@@ -531,7 +531,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [Django Documentation](https://docs.djangoproject.com/)
 - [React Documentation](https://react.dev/)
@@ -540,7 +540,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 📧 Support
+## Support
 
 For questions or issues:
 1. Check [DOCUMENTATION.md](DOCUMENTATION.md)
