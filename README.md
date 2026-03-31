@@ -8,6 +8,8 @@
 [![React 18](https://img.shields.io/badge/React-18-61dafb.svg)](https://react.dev/)
 [![WebSocket](https://img.shields.io/badge/WebSocket-Channels-orange.svg)](https://channels.readthedocs.io/)
 
+# Site preview
+> https://ravexi.pythonanywhere.com/ru/
 ---
 
 ## Skills Demonstrated
@@ -525,7 +527,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Author
 
-**Your Name / Portfolio**
+**Artur Artyomov / Portfolio**
 - [GitHub](https://github.com/Ravexi1)
 - [LinkedIn](https://www.linkedin.com/in/artur-artyomov-03912a339/)
 
